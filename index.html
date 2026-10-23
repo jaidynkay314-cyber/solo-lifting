@@ -530,7 +530,8 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) persi
 
 /* ================= SYNC (Supabase REST) ================= */
 const api = (path, opts = {}) => fetch(`${CFG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
-  ...opts, headers: { apikey: CFG.key, Authorization: `Bearer ${CFG.key}`, "Content-Type": "application/json", ...(opts.headers || {}) }
+  // new-style publishable keys go in apikey only; legacy anon keys (JWTs) also go in Authorization
+  ...opts, headers: { apikey: CFG.key, ...(CFG.key.startsWith("eyJ") ? { Authorization: `Bearer ${CFG.key}` } : {}), "Content-Type": "application/json", ...(opts.headers || {}) }
 });
 function setNet(s) { S.net = s; const el = $("#net"); if (el) { el.dataset.s = s; el.textContent = netText(); } }
 const netText = () => !ONLINE ? "This phone only" : S.net === "ok" ? (Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length ? "Saving" : "Synced") : S.net === "busy" ? "Syncing" : "Offline, will sync";

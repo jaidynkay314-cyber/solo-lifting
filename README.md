@@ -10,12 +10,12 @@ Live at: https://jaidynkay314-cyber.github.io/solo-lifting/
 
 1. Go to supabase.com, sign up (GitHub login works) and click **New project**. Any name, any database password, region **Sydney**. Wait a minute for it to start.
 2. Open **SQL Editor**, then **New query**. Paste in all of `supabase-setup.sql` and click **Run**. It should say "Success".
-3. Open **Project Settings**, then **API**. Copy the **Project URL** and the **anon public** key.
+3. Click **Connect** (or **Project Settings**, then **API Keys**). Copy the **Project URL** and the **publishable** key (`sb_publishable_...`). An older **anon public** key (`eyJ...`) also works.
 4. In the GitHub repo, open `config.js`, click the pencil, paste them between the quotes, and commit:
    ```js
    window.SL_CONFIG = {
      url: "https://xxxx.supabase.co",
-     key: "eyJ..."
+     key: "sb_publishable_..."
    };
    ```
 5. Open the app. The top corner should say **Synced**.
