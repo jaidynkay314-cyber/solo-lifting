@@ -299,6 +299,39 @@ details.hist summary::-webkit-details-marker { display: none; }
   :root.pz .quest .title { animation: shake 6s infinite; }
   @keyframes shake { 0%, 94%, 100% { transform: none; } 95% { transform: translate(-2px, 1px) skewX(-4deg); } 96% { transform: translate(3px, -1px) skewX(3deg); } 97% { transform: translate(-1px, 0); } }
 }
+
+/* rotating warning glitch */
+#warnTxt { display: inline; }
+#warnTxt.gl { display: inline-block; animation: wg .46s steps(7); }
+@keyframes wg { 0% { transform: none; } 15% { transform: translate(-3px, 0) skewX(-10deg); text-shadow: 2px 0 #ff2a3d, -2px 0 #6fe0ff; clip-path: inset(0 0 55% 0); }
+  30% { transform: translate(4px, 0); clip-path: inset(40% 0 10% 0); opacity: .5; } 45% { transform: translate(-2px, 1px); clip-path: inset(10% 0 60% 0); text-shadow: -2px 0 #ff2a3d, 2px 0 #6fe0ff; }
+  60% { transform: translate(2px, 0); clip-path: inset(60% 0 0 0); opacity: .7; } 80% { transform: translate(-1px, 0); clip-path: none; } 100% { transform: none; opacity: 1; } }
+/* program editor */
+.pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pgrid label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; min-width: 0; }
+.pgrid label.wide { grid-column: 1 / -1; }
+.pgrid input, .pgrid select { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 11px; font-family: var(--font-body); font-size: 16px; letter-spacing: 0; text-transform: none; color: var(--fg); min-width: 0; width: 100%; }
+.floor { margin: 0; font-size: 13.5px; padding: 6px 10px; border: 1px solid var(--edge-dim); }
+.floor.ok { border-color: var(--glow); color: var(--glow); }
+.floor.bad { border-color: var(--gold); color: var(--gold); }
+.prows { display: flex; flex-direction: column; gap: 8px; }
+.prow { border: 1px solid var(--edge-dim); background: var(--panel); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.pn b { display: block; font-family: var(--font-display); font-size: 18px; letter-spacing: .03em; }
+.pn small { color: var(--muted); font-size: 12px; }
+.pc { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.step { display: inline-flex; align-items: center; gap: 8px; }
+.step b { font-family: var(--font-display); font-size: 20px; min-width: 18px; text-align: center; }
+.step .btn, .mv .btn { padding: 4px 11px; }
+.rng { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
+.rng input { width: 52px; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 6px 6px; text-align: center; font-size: 16px; }
+.mv { display: inline-flex; gap: 4px; }
+.psum { display: flex; flex-direction: column; }
+.psum div { display: grid; grid-template-columns: 44px 1fr; gap: 0 10px; padding: 6px 0; border-top: 1px solid var(--edge-dim); }
+.psum div:first-child { border-top: 0; }
+.psum b { font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--glow); grid-row: span 2; }
+.psum span { font-weight: 600; min-width: 0; }
+.psum small { color: var(--muted); font-size: 12px; min-width: 0; }
+.mrow { display: inline-flex; gap: 3px; }
 </style>
 <script src="config.js"></script>
 </head>
@@ -318,7 +351,7 @@ details.hist summary::-webkit-details-marker { display: none; }
 <button class="win update" id="updateBar" hidden>Update available<small>Tap to refresh</small></button>
 
 <script>
-/* ================= PROGRAM ================= */
+/* ================= DEFAULT SCRIPT (everyone starts here) ================= */
 const PROGRAM = {
   UA: { short: "Mon", name: "Upper A", label: "Upper A", focus: "Push focus", cardio: { goal: "Treadmill: walk 5, then run", min: 10 }, ex: [
     ["chest-press", "Machine chest press", 3, 8, 12], ["lat-pulldown", "Lat pulldown (wide grip)", 3, 8, 12],
@@ -347,11 +380,16 @@ for (const d of DAYS) for (const [id, name, sets, lo, hi] of PROGRAM[d].ex) if (
 const EXSTAT = {};
 for (const id of Object.keys(EX)) EXSTAT[id] = ["LA", "LB"].includes(EX[id].day) ? "AGI" : "STR";
 EXSTAT.crunch = "END"; EXSTAT["back-ext"] = "END";
-const BOSS_POOL = Object.keys(EX).filter(id => !["back-ext", "crunch"].includes(id));
+// a day plan: { name, label, focus, cardio (min), ex: [[id, sets, lo, hi], ...] }
+const DEFAULT = {};
+for (const d of DAYS) DEFAULT[d] = { name: PROGRAM[d].name, label: PROGRAM[d].label, focus: PROGRAM[d].focus, cardio: PROGRAM[d].cardio.min, ex: PROGRAM[d].ex.map(([id, , s, lo, hi]) => [id, s, lo, hi]) };
+const CARDIO_GOAL = d => d === "WK" ? "Easy jog" : "Cardio: walk 5, then run";
+// fairness floor: a day only counts as a quest if its plan is at least this big
+const FLOOR = { sets: d => d === "WK" ? 0 : d === "FR" ? 6 : 12, cardio: d => d === "WK" || d === "FR" ? 15 : 10 };
+const RANGE = { wr: [8, 12], r: [10, 20], s: [30, 60] };
 
-/* ================= BONUS LIBRARY =================
-   [id, name, category, type, stat, outdoor]
-   type: wr = weight x reps, r = reps, s = seconds per set, min = minutes (+ optional km) */
+/* ================= EXERCISE LIBRARY =================
+   [id, name, category, type, stat, outdoor]; type: wr = weight x reps, r = reps, s = seconds per set, min = minutes (+ km) */
 const LIB = [
   ["pushups", "Push-ups", "Bodyweight", "r", "STR"], ["diamond-pushups", "Diamond push-ups", "Bodyweight", "r", "STR"],
   ["pullups-bw", "Pull-ups or chin-ups", "Bodyweight", "r", "STR"], ["dips", "Dips", "Bodyweight", "r", "STR"],
@@ -390,73 +428,95 @@ const LIB = [
   ["dance", "Dancing", "Active and recovery", "min", "VIT"], ["yoga", "Yoga", "Active and recovery", "min", "END"],
   ["stretch", "Stretching or mobility", "Active and recovery", "min", "END"]
 ];
-const LIBX = {};
-for (const [id, name, cat, type, stat, outdoor] of LIB) LIBX[id] = { id, name, cat, type, stat, outdoor: !!outdoor };
-const LIB_CATS = ["Bodyweight", "Free weights", "Machines and cables", "Cardio", "Active and recovery"];
-const CORE = new Set(["crunch", "situps", "crunches", "leg-raises"]);
+const LIB_CATS = ["Gym machines", "Machines and cables", "Free weights", "Bodyweight", "Custom", "Cardio", "Active and recovery"];
+const CORE = new Set(["crunch", "situps", "crunches", "leg-raises", "ab-machine"]);
 const BONUS_CAP = 200;
+const TYPE_TXT = { wr: "Weight × reps", r: "Reps only", s: "Seconds", min: "Minutes" };
+let CATALOGUE = null;
+function catalogue() {
+  if (CATALOGUE) return CATALOGUE;
+  const c = {};
+  for (const id of Object.keys(EX)) c[id] = { id, name: EX[id].name, cat: "Gym machines", type: "wr", stat: EXSTAT[id] };
+  for (const [id, name, cat, type, stat, outdoor] of LIB) c[id] = { id, name, cat, type, stat, outdoor: !!outdoor };
+  for (const x of Object.values(S.custom)) if (x && x.id && !c[x.id]) c[x.id] = { id: x.id, name: x.name, cat: "Custom", type: x.type, stat: x.stat, by: x.created_by, custom: true };
+  return (CATALOGUE = c);
+}
+const CX = id => catalogue()[id];
+const typeOf = id => (CX(id) && CX(id).type) || "wr";
+const setOk = (type, s) => !!s && (type === "wr" ? (s.w != null || s.r != null) : type === "r" ? s.r != null : s.s != null);
+const filled = s => setOk("wr", s);
 
 /* ================= ACHIEVEMENTS ================= */
-const RAR = [ // name, max est. days, colour, XP reward
-  ["Common", 7, "#9fb3cc", 10], ["Uncommon", 45, "#5ee39a", 25], ["Rare", 150, "#4c9bff", 50],
-  ["Epic", 365, "#b46bff", 100], ["Legendary", 730, "#ffc861", 250], ["Mythic", 1e9, "#ff4fa3", 500]];
+const RAR = [["Common", 7, "#9fb3cc", 10], ["Uncommon", 45, "#5ee39a", 25], ["Rare", 150, "#4c9bff", 50], ["Epic", 365, "#b46bff", 100], ["Legendary", 730, "#ffc861", 250], ["Mythic", 1e9, "#ff4fa3", 500]];
 const rarityFor = days => RAR.findIndex(r => days <= r[1]);
-const ACH = [], ACH_CATS = [], ACHX = {};
+const fmtN = n => n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${Math.round(n / 1e3)}k` : (+n).toLocaleString("en-AU");
+const plural = (n, w) => `${fmtN(n)} ${w}${n === 1 ? "" : "s"}`;
+let ACH = [], ACHX = {}, ACH_CATS = [], achSig = null;
 function cat(name, icon, metric, est, list, desc, opts = {}) {
-  ACH_CATS.push({ name, icon, metric });
+  ACH_CATS.push({ name, icon, metric, mastery: !!opts.mastery });
   for (const [n, title] of list) {
     const rar = rarityFor(typeof est === "function" ? est(n) : n / est);
-    const a = { id: `${metric}:${n}`, cat: name, name: title, desc: desc(n), icon, metric, n, rar, xp: opts.noXp ? 0 : RAR[rar][3] };
+    const a = { id: `${metric}:${n}`, cat: name, name: title, desc: desc(n), icon, metric, n, rar, xp: opts.noXp ? 0 : RAR[rar][3], mastery: !!opts.mastery };
     ACH.push(a); ACHX[a.id] = a;
   }
 }
-const fmtN = n => n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${Math.round(n / 1e3)}k` : n.toLocaleString("en-AU");
-const plural = (n, w) => `${fmtN(n)} ${w}${n === 1 ? "" : "s"}`;
-cat("Quests", "⚔️", "quests", .7, [[1, "First Quest"], [5, "Warming Up"], [10, "Double Digits"], [25, "Quarter Century"], [50, "Half Century"], [100, "Centurion"], [150, "Relentless"], [200, "Bicentennial"], [300, "Spartan"], [400, "Unbroken"], [500, "Quest Machine"], [750, "Living Legend"], [1000, "Monarch of Iron"]], n => `Clear ${plural(n, "daily quest")}`);
-cat("Dedication", "📅", "days", .75, [[1, "Day One"], [7, "One Week In"], [14, "Fortnight"], [30, "Month of Iron"], [60, "Habit Formed"], [100, "Triple Digits"], [180, "Half a Year of Sweat"], [250, "Gym Rat"], [365, "Three Hundred and Sixty Five"], [500, "Five Hundred Club"], [730, "Two Year Titan"], [1000, "The Thousand Days"]], n => `Train on ${plural(n, "different day")}`);
-cat("Streaks", "🔥", "bestStreak", .35, [[3, "Spark"], [5, "Kindling"], [10, "On Fire"], [15, "Blaze"], [20, "Wildfire"], [30, "Inferno"], [40, "Firestorm"], [50, "Supernova"], [75, "Eternal Flame"], [100, "Phoenix"], [150, "Sun Forged"], [200, "Undying"], [260, "A Year Without Mercy"]], n => `Reach a ${n}-quest streak`);
-cat("Penalty Zone", "💀", "penSurvived", .03, [[1, "Escape Artist"], [3, "Repeat Offender"], [5, "Hardened"], [10, "Penalty Veteran"], [25, "Zone Dweller"], [50, "King of the Wasteland"]], n => `Survive the Penalty Zone ${n === 1 ? "once" : n + " times"}`);
-cat("Sets", "🏋️", "sets", 12, [[10, "Ten Sets"], [100, "Century of Sets"], [250, "Set Collector"], [500, "Set Hoarder"], [1000, "Thousand Sets"], [2500, "Iron Regular"], [5000, "Iron Veteran"], [10000, "Ten Thousand Sets"], [25000, "Iron Avalanche"], [40000, "Set Sovereign"]], n => `Log ${plural(n, "set")}`);
-cat("Reps", "🔁", "reps", 130, [[100, "Rep Rookie"], [1000, "Thousand Reps"], [5000, "Rep Grinder"], [10000, "Ten Thousand Reps"], [25000, "Rep Machine"], [50000, "Rep Factory"], [100000, "Hundred Thousand"], [250000, "Rep Overlord"], [500000, "Half a Million"], [1000000, "The Millionaire"]], n => `Complete ${plural(n, "rep")}`);
-cat("Tonnage", "🪨", "volume", 3000, [[1000, "One Tonne"], [5000, "Five Tonnes"], [10000, "Ten Tonnes"], [25000, "Truckload"], [50000, "Fifty Tonnes"], [100000, "Hundred Tonnes"], [250000, "Freight Train"], [500000, "Cargo Ship"], [1000000, "Thousand Tonnes"], [2500000, "Mountain Mover"]], n => `Lift ${fmtN(n / 1000)} tonne${n === 1000 ? "" : "s"} in total (weight x reps)`);
-cat("Cardio", "🫀", "cardioMin", 12, [[60, "First Hour"], [300, "Five Hours"], [600, "Ten Hours"], [1500, "A Day of Running"], [3000, "Fifty Hours"], [6000, "Hundred Hours"], [10000, "Ten Thousand Minutes"], [20000, "Iron Lungs"], [40000, "Perpetual Motion"]], n => `Log ${fmtN(n)} minutes of cardio`);
-cat("Distance", "🏃", "km", 1.3, [[5, "First 5K"], [10, "Ten K"], [21.1, "Half Marathon"], [42.2, "Full Marathon"], [100, "Hundred K"], [250, "Long Hauler"], [500, "Five Hundred K"], [1000, "Thousand Kilometres"], [2000, "Ultra Machine"], [4000, "Across the Continent"]], n => `Cover ${n} km`);
-cat("Level", "⭐", "level", L => 50 * L * (L + 1) / 170, [[5, "D-Rank Hunter"], [10, "C-Rank Hunter"], [15, "Steady Climber"], [20, "B-Rank Hunter"], [25, "Seasoned"], [30, "Elite"], [35, "A-Rank Hunter"], [40, "Rare Talent"], [45, "Near the Peak"], [50, "S-Rank Hunter"], [60, "Beyond S"], [75, "Transcendent"], [100, "Monarch"]], n => `Reach Level ${n}`, { noXp: true });
-cat("Upper body", "💪", "upperQ", .25, [[1, "First Push"], [10, "Pressing On"], [25, "Upper Hand"], [50, "Armoured"], [100, "Titan Torso"], [200, "Atlas"], [300, "Colossus"]], n => `Clear ${plural(n, "Upper A or B quest")}`);
-cat("Leg day", "🦵", "lowerQ", .25, [[1, "Didn't Skip"], [10, "Leg Day Regular"], [25, "Leg Day Survivor"], [50, "Tree Trunks"], [100, "Quad Squad Captain"], [200, "Pillars of Iron"], [300, "Earthshaker"]], n => `Clear ${plural(n, "Lower A or B quest")}`);
-cat("Fridays", "🎯", "friQ", .12, [[1, "Finisher"], [10, "Friday Regular"], [25, "Thank Gym It's Friday"], [50, "Weekend Earned"], [100, "Friday Legend"]], n => `Clear ${plural(n, "Friday quest")}`);
-cat("Recovery runs", "🌅", "wkQ", .1, [[1, "Weekend Warrior"], [10, "Sunday Strider"], [25, "Rest Day Rebel"], [50, "No Days Off"], [100, "Weekend Myth"]], n => `Clear ${plural(n, "weekend recovery quest")}`);
-cat("Records", "🏆", "prs", .3, [[1, "New Record"], [10, "Record Breaker"], [25, "PR Hunter"], [50, "Record Collector"], [100, "Hall of Records"], [250, "Unbeaten"], [500, "History Maker"]], n => `Set ${plural(n, "personal record")}`);
-cat("Weekly boss", "👹", "bossWins", .085, [[1, "First Blood"], [5, "Boss Hunter"], [10, "Raid Leader"], [25, "Dungeon Breaker"], [52, "A Year of Bosses"], [104, "Boss of Bosses"]], n => `Defeat ${plural(n, "weekly boss")}`);
-cat("Perfect weeks", "📆", "perfectWeeks", .1, [[1, "Perfect Week"], [4, "Four Flawless Weeks"], [12, "Quarter of Perfection"], [26, "Half Year Flawless"], [52, "Flawless Year"], [104, "Two Flawless Years"]], n => `Clear every weekday quest in ${plural(n, "week")}`);
-cat("Perfect months", "🗓️", "perfectMonths", .02, [[1, "Perfect Month"], [3, "Perfect Quarter"], [6, "Perfect Half"], [12, "Perfect Year"], [24, "Perfect Era"]], n => `Clear every weekday quest in ${plural(n, "calendar month")}`);
-cat("Bonus training", "✨", "bonusLogs", .4, [[1, "Extra Credit"], [10, "Overachiever"], [50, "Side Quester"], [100, "Bonus Hunter"], [250, "Insatiable"], [500, "Always More"], [1000, "Infinite Drive"]], n => `Log ${plural(n, "bonus exercise")}`);
-cat("Push-ups", "🤜", "pushups", 10, [[100, "Hundred Push-ups"], [500, "Five Hundred"], [1000, "Thousand Push-ups"], [5000, "Ground Pounder"], [10000, "Ten Thousand Push-ups"], [25000, "Earth Pusher"], [50000, "Planet Mover"]], n => `Do ${fmtN(n)} push-ups`);
-cat("Core", "🧱", "core", 30, [[500, "Core Initiate"], [2500, "Core Tempered"], [10000, "Iron Core"], [25000, "Abs of Steel"], [50000, "Core Overlord"], [100000, "Unbreakable Core"]], n => `Do ${fmtN(n)} core reps (crunches, sit-ups, leg raises)`);
-cat("Planks", "⏱️", "plankSec", 30, [[300, "Five Minutes Braced"], [1800, "Half Hour Hold"], [3600, "Hour of Plank"], [18000, "Five Hours Braced"], [36000, "Ten Hour Wall"]], n => `Hold planks for ${n / 60 >= 60 ? n / 3600 + " hours" : n / 60 + " minutes"} in total`);
-cat("Outdoors", "🌿", "outdoorMin", 15, [[60, "Green Thumb"], [300, "Backyard Athlete"], [1000, "Yard Warrior"], [3000, "Land Tamer"], [6000, "Property Titan"], [12000, "One with the Land"]], n => `Log ${fmtN(n)} minutes of outdoor activity`);
-cat("Dawn", "🌄", "dawn", .1, [[1, "Dawn Hunter"], [10, "Early Riser"], [50, "Sunrise Regular"], [100, "Before the Birds"]], n => `Log ${plural(n, "session")} before 7am`);
-cat("Night", "🌙", "night", .1, [[1, "Night Owl"], [10, "After Dark"], [50, "Midnight Regular"], [100, "Creature of the Night"]], n => `Log ${plural(n, "session")} after 8pm`);
-cat("Strength", "💥", "STR", .5, [[15, "Stronger"], [25, "Mighty"], [50, "Powerhouse"], [100, "Juggernaut"], [200, "Titan Strength"], [400, "Godlike Might"]], n => `Reach ${n} STR`);
-cat("Agility", "⚡", "AGI", .5, [[15, "Nimble"], [25, "Swift"], [50, "Fleet"], [100, "Lightning Legs"], [200, "Windrunner"], [400, "Untouchable"]], n => `Reach ${n} AGI`);
-cat("Vitality", "❤️", "VIT", .4, [[15, "Hardy"], [25, "Vital"], [50, "Lionheart"], [100, "Iron Heart"], [200, "Endless Engine"], [400, "Immortal Heart"]], n => `Reach ${n} VIT`);
-cat("Endurance", "🛡️", "END", .3, [[15, "Steady"], [25, "Tough"], [50, "Resolute"], [100, "Unyielding"], [200, "Indomitable"], [400, "Eternal Will"]], n => `Reach ${n} END`);
-cat("Milestones", "🎂", "anniv", 1, [[30, "First Month"], [100, "Hundred Days"], [365, "One Year Anniversary"], [730, "Two Years Strong"], [1095, "Three Years Strong"], [1825, "Five Years Strong"]], n => `Keep training ${n} days after your first session`);
-cat("Comebacks", "🔄", "comebacks", .02, [[1, "The Comeback"], [5, "Never Down for Long"], [10, "Unkillable"]], n => `Clear a quest after a week or more away, ${n === 1 ? "once" : n + " times"}`);
-const MACHINE_TIERS = [[5, "Initiate"], [25, "Adept"], [50, "Master"], [100, "Grandmaster"]];
+function baseAchievements() {
+  cat("Quests", "⚔️", "quests", .7, [[1, "First Quest"], [5, "Warming Up"], [10, "Double Digits"], [25, "Quarter Century"], [50, "Half Century"], [100, "Centurion"], [150, "Relentless"], [200, "Bicentennial"], [300, "Spartan"], [400, "Unbroken"], [500, "Quest Machine"], [750, "Living Legend"], [1000, "Monarch of Iron"]], n => `Clear ${plural(n, "daily quest")}`);
+  cat("Dedication", "📅", "days", .75, [[1, "Day One"], [7, "One Week In"], [14, "Fortnight"], [30, "Month of Iron"], [60, "Habit Formed"], [100, "Triple Digits"], [180, "Half a Year of Sweat"], [250, "Gym Rat"], [365, "Three Hundred and Sixty Five"], [500, "Five Hundred Club"], [730, "Two Year Titan"], [1000, "The Thousand Days"]], n => `Train on ${plural(n, "different day")}`);
+  cat("Streaks", "🔥", "bestStreak", .35, [[3, "Spark"], [5, "Kindling"], [10, "On Fire"], [15, "Blaze"], [20, "Wildfire"], [30, "Inferno"], [40, "Firestorm"], [50, "Supernova"], [75, "Eternal Flame"], [100, "Phoenix"], [150, "Sun Forged"], [200, "Undying"], [260, "A Year Without Mercy"]], n => `Reach a ${n}-quest streak`);
+  cat("Penalty Zone", "💀", "penSurvived", .03, [[1, "Escape Artist"], [3, "Repeat Offender"], [5, "Hardened"], [10, "Penalty Veteran"], [25, "Zone Dweller"], [50, "King of the Wasteland"]], n => `Survive the Penalty Zone ${n === 1 ? "once" : n + " times"}`);
+  cat("Sets", "🏋️", "sets", 12, [[10, "Ten Sets"], [100, "Century of Sets"], [250, "Set Collector"], [500, "Set Hoarder"], [1000, "Thousand Sets"], [2500, "Iron Regular"], [5000, "Iron Veteran"], [10000, "Ten Thousand Sets"], [25000, "Iron Avalanche"], [40000, "Set Sovereign"]], n => `Log ${plural(n, "set")}`);
+  cat("Reps", "🔁", "reps", 130, [[100, "Rep Rookie"], [1000, "Thousand Reps"], [5000, "Rep Grinder"], [10000, "Ten Thousand Reps"], [25000, "Rep Machine"], [50000, "Rep Factory"], [100000, "Hundred Thousand"], [250000, "Rep Overlord"], [500000, "Half a Million"], [1000000, "The Millionaire"]], n => `Complete ${plural(n, "rep")}`);
+  cat("Tonnage", "🪨", "volume", 3000, [[1000, "One Tonne"], [5000, "Five Tonnes"], [10000, "Ten Tonnes"], [25000, "Truckload"], [50000, "Fifty Tonnes"], [100000, "Hundred Tonnes"], [250000, "Freight Train"], [500000, "Cargo Ship"], [1000000, "Thousand Tonnes"], [2500000, "Mountain Mover"]], n => `Lift ${fmtN(n / 1000)} tonne${n === 1000 ? "" : "s"} in total (weight x reps)`);
+  cat("Cardio", "🫀", "cardioMin", 12, [[60, "First Hour"], [300, "Five Hours"], [600, "Ten Hours"], [1500, "A Day of Running"], [3000, "Fifty Hours"], [6000, "Hundred Hours"], [10000, "Ten Thousand Minutes"], [20000, "Iron Lungs"], [40000, "Perpetual Motion"]], n => `Log ${fmtN(n)} minutes of cardio`);
+  cat("Distance", "🏃", "km", 1.3, [[5, "First 5K"], [10, "Ten K"], [21.1, "Half Marathon"], [42.2, "Full Marathon"], [100, "Hundred K"], [250, "Long Hauler"], [500, "Five Hundred K"], [1000, "Thousand Kilometres"], [2000, "Ultra Machine"], [4000, "Across the Continent"]], n => `Cover ${n} km`);
+  cat("Level", "⭐", "level", L => 50 * L * (L + 1) / 170, [[5, "D-Rank Hunter"], [10, "C-Rank Hunter"], [15, "Steady Climber"], [20, "B-Rank Hunter"], [25, "Seasoned"], [30, "Elite"], [35, "A-Rank Hunter"], [40, "Rare Talent"], [45, "Near the Peak"], [50, "S-Rank Hunter"], [60, "Beyond S"], [75, "Transcendent"], [100, "Monarch"]], n => `Reach Level ${n}`, { noXp: true });
+  cat("Upper body", "💪", "upperQ", .25, [[1, "First Push"], [10, "Pressing On"], [25, "Upper Hand"], [50, "Armoured"], [100, "Titan Torso"], [200, "Atlas"], [300, "Colossus"]], n => `Clear ${plural(n, "Monday or Wednesday quest")}`);
+  cat("Leg day", "🦵", "lowerQ", .25, [[1, "Didn't Skip"], [10, "Leg Day Regular"], [25, "Leg Day Survivor"], [50, "Tree Trunks"], [100, "Quad Squad Captain"], [200, "Pillars of Iron"], [300, "Earthshaker"]], n => `Clear ${plural(n, "Tuesday or Thursday quest")}`);
+  cat("Fridays", "🎯", "friQ", .12, [[1, "Finisher"], [10, "Friday Regular"], [25, "Thank Gym It's Friday"], [50, "Weekend Earned"], [100, "Friday Legend"]], n => `Clear ${plural(n, "Friday quest")}`);
+  cat("Recovery runs", "🌅", "wkQ", .1, [[1, "Weekend Warrior"], [10, "Sunday Strider"], [25, "Rest Day Rebel"], [50, "No Days Off"], [100, "Weekend Myth"]], n => `Clear ${plural(n, "weekend quest")}`);
+  cat("Records", "🏆", "prs", .3, [[1, "New Record"], [10, "Record Breaker"], [25, "PR Hunter"], [50, "Record Collector"], [100, "Hall of Records"], [250, "Unbeaten"], [500, "History Maker"]], n => `Set ${plural(n, "personal record")}`);
+  cat("Weekly boss", "👹", "bossWins", .085, [[1, "First Blood"], [5, "Boss Hunter"], [10, "Raid Leader"], [25, "Dungeon Breaker"], [52, "A Year of Bosses"], [104, "Boss of Bosses"]], n => `Defeat ${plural(n, "weekly boss")}`);
+  cat("Perfect weeks", "📆", "perfectWeeks", .1, [[1, "Perfect Week"], [4, "Four Flawless Weeks"], [12, "Quarter of Perfection"], [26, "Half Year Flawless"], [52, "Flawless Year"], [104, "Two Flawless Years"]], n => `Clear every weekday quest in ${plural(n, "week")}`);
+  cat("Perfect months", "🗓️", "perfectMonths", .02, [[1, "Perfect Month"], [3, "Perfect Quarter"], [6, "Perfect Half"], [12, "Perfect Year"], [24, "Perfect Era"]], n => `Clear every weekday quest in ${plural(n, "calendar month")}`);
+  cat("Bonus training", "✨", "bonusLogs", .4, [[1, "Extra Credit"], [10, "Overachiever"], [50, "Side Quester"], [100, "Bonus Hunter"], [250, "Insatiable"], [500, "Always More"], [1000, "Infinite Drive"]], n => `Log ${plural(n, "bonus exercise")}`);
+  cat("Push-ups", "🤜", "pushups", 10, [[100, "Hundred Push-ups"], [500, "Five Hundred"], [1000, "Thousand Push-ups"], [5000, "Ground Pounder"], [10000, "Ten Thousand Push-ups"], [25000, "Earth Pusher"], [50000, "Planet Mover"]], n => `Do ${fmtN(n)} push-ups`);
+  cat("Core", "🧱", "core", 30, [[500, "Core Initiate"], [2500, "Core Tempered"], [10000, "Iron Core"], [25000, "Abs of Steel"], [50000, "Core Overlord"], [100000, "Unbreakable Core"]], n => `Do ${fmtN(n)} core reps (crunches, sit-ups, leg raises)`);
+  cat("Planks", "⏱️", "plankSec", 30, [[300, "Five Minutes Braced"], [1800, "Half Hour Hold"], [3600, "Hour of Plank"], [18000, "Five Hours Braced"], [36000, "Ten Hour Wall"]], n => `Hold planks for ${n / 60 >= 60 ? n / 3600 + " hours" : n / 60 + " minutes"} in total`);
+  cat("Outdoors", "🌿", "outdoorMin", 15, [[60, "Green Thumb"], [300, "Backyard Athlete"], [1000, "Yard Warrior"], [3000, "Land Tamer"], [6000, "Property Titan"], [12000, "One with the Land"]], n => `Log ${fmtN(n)} minutes of outdoor activity`);
+  cat("Dawn", "🌄", "dawn", .1, [[1, "Dawn Hunter"], [10, "Early Riser"], [50, "Sunrise Regular"], [100, "Before the Birds"]], n => `Log ${plural(n, "session")} before 7am`);
+  cat("Night", "🌙", "night", .1, [[1, "Night Owl"], [10, "After Dark"], [50, "Midnight Regular"], [100, "Creature of the Night"]], n => `Log ${plural(n, "session")} after 8pm`);
+  cat("Strength", "💥", "STR", .5, [[15, "Stronger"], [25, "Mighty"], [50, "Powerhouse"], [100, "Juggernaut"], [200, "Titan Strength"], [400, "Godlike Might"]], n => `Reach ${n} STR`);
+  cat("Agility", "⚡", "AGI", .5, [[15, "Nimble"], [25, "Swift"], [50, "Fleet"], [100, "Lightning Legs"], [200, "Windrunner"], [400, "Untouchable"]], n => `Reach ${n} AGI`);
+  cat("Vitality", "❤️", "VIT", .4, [[15, "Hardy"], [25, "Vital"], [50, "Lionheart"], [100, "Iron Heart"], [200, "Endless Engine"], [400, "Immortal Heart"]], n => `Reach ${n} VIT`);
+  cat("Endurance", "🛡️", "END", .3, [[15, "Steady"], [25, "Tough"], [50, "Resolute"], [100, "Unyielding"], [200, "Indomitable"], [400, "Eternal Will"]], n => `Reach ${n} END`);
+  cat("Milestones", "🎂", "anniv", 1, [[30, "First Month"], [100, "Hundred Days"], [365, "One Year Anniversary"], [730, "Two Years Strong"], [1095, "Three Years Strong"], [1825, "Five Years Strong"]], n => `Keep training ${n} days after your first session`);
+  cat("Comebacks", "🔄", "comebacks", .02, [[1, "The Comeback"], [5, "Never Down for Long"], [10, "Unkillable"]], n => `Clear a quest after a week or more away, ${n === 1 ? "once" : n + " times"}`);
+}
 const SHORT = { "chest-press": "Chest press", "lat-pulldown": "Lat pulldown", "shoulder-press": "Shoulder press", "cable-row": "Cable row",
   pushdown: "Pushdown", "lateral-raise": "Lateral raise", "leg-press": "Leg press", "leg-ext": "Leg extension", "seated-curl": "Seated leg curl",
   abductor: "Abductor", calf: "Calf raise", crunch: "Cable crunch", pullup: "Pull-up", "incline-press": "Incline press", "cs-row": "Chest-supported row",
   "rear-delt": "Rear delt", "cable-curl": "Cable curl", "oh-ext": "Overhead extension", "hip-thrust": "Hip thrust", "lying-curl": "Leg curl",
   "leg-press-wide": "Wide leg press", kickback: "Glute kickback", adductor: "Adductor", "back-ext": "Back extension" };
-for (const id of Object.keys(EX)) {
-  const short = SHORT[id] || EX[id].name;
-  cat(short, "⚙️", "m:" + id, .14, MACHINE_TIERS.map(([n, t]) => [n, `${short} ${t}`]), n => `Log ${short.toLowerCase()} in ${n} sessions`);
+const shortName = id => SHORT[id] || (CX(id) ? CX(id).name.replace(/\s*\(.*\)/, "") : id);
+const MASTERY = [[5, "Initiate"], [25, "Adept"], [50, "Master"], [100, "Grandmaster"]];
+/* mastery tiers exist for every set-based exercise anyone has put in a plan or logged */
+function ensureAchievements() {
+  const ids = new Set(Object.keys(EX));
+  for (const b of Object.values(S.sessions)) { for (const id of Object.keys(b.ex || {})) ids.add(id); for (const e of b.bonus || []) ids.add(e.id); for (const id of b.extra || []) ids.add(id); }
+  for (const h of Object.values(S.hunters)) for (const d of Object.values(h.program || {})) for (const e of (d && d.ex) || []) ids.add(e[0]);
+  const list = [...ids].filter(id => CX(id) && CX(id).type !== "min").sort();
+  const sig = list.join(",") + "|" + list.map(shortName).join(",");
+  if (sig === achSig) return;
+  achSig = sig; ACH = []; ACHX = {}; ACH_CATS = [];
+  baseAchievements();
+  for (const id of list) { const sn = shortName(id); cat(sn, "⚙️", "m:" + id, .14, MASTERY.map(([n, t]) => [n, `${sn} ${t}`]), n => `Log ${sn.toLowerCase()} in ${n} sessions`, { mastery: true }); }
+  S.cache = {};
 }
 
 /* ================= FLAVOUR ================= */
 const RANKS = [[50, "S"], [35, "A"], [20, "B"], [10, "C"], [5, "D"], [1, "E"]];
-const PENALTY = [
+const WARN = [
   "Leave this quest unfinished and the System sends you to the Penalty Zone. Four hours. Sand. Things with too many legs.",
   "Unfinished quests are reported to the Penalty Zone. It has no machines. Only regret.",
   "The Penalty Zone has no rest timer. Finish your sets.",
@@ -464,7 +524,37 @@ const PENALTY = [
   "Incomplete quests carry a penalty. Rumour says it involves burpees and no water breaks.",
   "The System has detected a snack being considered. Finish the quest first.",
   "Your future self has filed a complaint. Clear the quest to dismiss it.",
-  "The System can see your gym bag by the door. It is not impressed."
+  "The System can see your gym bag by the door. It is not impressed.",
+  "Motivation is optional. The quest is not.",
+  "The System does not accept \"I'll go tomorrow\" as a valid input.",
+  "Notice: the couch has been flagged as a hostile entity.",
+  "The System has reviewed your excuses. None of them are valid.",
+  "Hunters who skip quests are 100% more likely to end up in the Penalty Zone. The System did the maths.",
+  "Your streaming service is asking if you're still watching. The System is asking if you're still training.",
+  "The weights will not lift themselves. The System checked.",
+  "Reminder: the Penalty Zone has excellent cardio facilities. All of them are mandatory.",
+  "Your protein shake believes in you. Don't let it down.",
+  "The System has hidden the TV remote until this quest is cleared. It hasn't. But it could.",
+  "A level up is waiting. So is the Penalty Zone. Choose wisely.",
+  "The System sees all. Especially skipped sets.",
+  "Rest is a reward. Rewards are for hunters who finish their quests.",
+  "The System has scheduled your sore muscles for tomorrow. Today, you lift."
+];
+const WARN_DAY = {
+  UA: ["It's Monday. The System knows. Push anyway.", "Push day. Chest first, complaints later."],
+  LA: ["Leg day detected. Tomorrow's stairs will be the real boss.", "Skipping leg day is how the Penalty Zone recruits."],
+  UB: ["Pull day. Row like the couch owes you money.", "Halfway through the week. The System is mildly impressed."],
+  LB: ["Thursday: the last full quest before Friday. Don't fumble it now.", "Glute day. Tomorrow's chairs will remember this."],
+  FR: ["Friday quest. Clear it and the weekend is yours.", "The weekend is a reward. Rewards must be earned."],
+  WK: ["Recovery day. Easy pace. The System is feeling generous.", "Weekends count. The System is still watching, just with sunglasses on."]
+};
+const WARN_PZ = [
+  "Fail this one and the penalty carries into tomorrow, with another 25 XP drained.",
+  "Every skipped set in here is noted. In red.",
+  "The Penalty Zone has one exit. It is shaped like a completed quest.",
+  "Your streak is gone. Your dignity is optional. Your sets are not.",
+  "Everyone on the board can see you're in the Penalty Zone. Just so you know.",
+  "The System turned the lights red for a reason."
 ];
 const PZ_LINES = [
   "You did not complete your last quest. The System does not forget.",
@@ -479,8 +569,8 @@ const CFG = window.SL_CONFIG || {};
 const ONLINE = !!(CFG.url && CFG.key);
 const LS = "solo.v2", OLD_LS = "liftlog.v1";
 const S = {
-  me: null, hunters: {}, sessions: {}, outbox: { s: {}, h: {} }, since: null, sound: true,
-  view: "log", viewing: null, day: null, date: null, ver: 0, cache: {}, seen: null, armed: null, net: ONLINE ? "busy" : "local", wasPz: null
+  me: null, hunters: {}, sessions: {}, custom: {}, outbox: { s: {}, h: {}, x: {} }, since: null, sinceX: null, sound: true, schemaOld: false,
+  view: "log", viewing: null, day: null, date: null, pday: "UA", creating: false, ver: 0, cache: {}, seen: null, armed: null, net: ONLINE ? "busy" : "local", wasPz: null
 };
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2, "0");
@@ -498,23 +588,23 @@ const dayForDate = s => ({ 0: "WK", 1: "UA", 2: "LA", 3: "UB", 4: "LB", 5: "FR",
 const keyOf = (h, date, day) => `${h}_${date}_${day}`;
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const wTxt = w => (w == null || w === 0) ? "BW" : `${+w}`;
-const setTxt = s => `${wTxt(s.w)}×${s.r ?? "?"}`;
-const filled = s => s && (s.w != null || s.r != null);
+const setTxt = (s, type = "wr") => type === "s" ? `${s.s}s` : type === "r" ? `${s.r}` : `${wTxt(s.w)}×${s.r ?? "?"}`;
 const num = v => { v = String(v).trim().replace(",", "."); return v === "" || isNaN(+v) ? null : +v; };
 const rnd = () => Math.random().toString(36).slice(2);
 const nameOf = id => (S.hunters[id] && S.hunters[id].name) || "Hunter";
 const sumBy = (arr, f) => arr.reduce((a, x) => a + (f(x) || 0), 0);
+const clone = o => JSON.parse(JSON.stringify(o));
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function load() {
   try {
     const raw = localStorage.getItem(LS);
-    if (raw) { Object.assign(S, JSON.parse(raw)); return; }
+    if (raw) { Object.assign(S, JSON.parse(raw)); S.outbox.x ||= {}; S.custom ||= {}; return; }
     const old = localStorage.getItem(OLD_LS);
     if (old) {
       const o = JSON.parse(old);
       S.sessions = o.sessions || {};
-      const names = o.names || {};
-      for (const [id, n] of Object.entries(names)) S.hunters[id] = { id, name: n === "Partner" ? "Paris" : n, title: null, local: true };
+      for (const [id, n] of Object.entries(o.names || {})) S.hunters[id] = { id, name: n === "Partner" ? "Paris" : n, title: null, local: true };
       for (const k of Object.keys(S.sessions)) S.outbox.s[k] = rnd();
     }
   } catch (e) {}
@@ -522,7 +612,7 @@ function load() {
 let persistT = null;
 function persistNow() {
   clearTimeout(persistT);
-  try { localStorage.setItem(LS, JSON.stringify({ me: S.me, hunters: S.hunters, sessions: S.sessions, outbox: S.outbox, since: S.since, sound: S.sound })); } catch (e) {}
+  try { localStorage.setItem(LS, JSON.stringify({ me: S.me, hunters: S.hunters, sessions: S.sessions, custom: S.custom, outbox: S.outbox, since: S.since, sinceX: S.sinceX, sound: S.sound, schemaOld: S.schemaOld })); } catch (e) {}
 }
 function persist() { clearTimeout(persistT); persistT = setTimeout(persistNow, 250); }
 addEventListener("pagehide", persistNow);
@@ -533,17 +623,18 @@ const api = (path, opts = {}) => fetch(`${CFG.url.replace(/\/$/, "")}/rest/v1/${
   // new-style publishable keys go in apikey only; legacy anon keys (JWTs) also go in Authorization
   ...opts, headers: { apikey: CFG.key, ...(CFG.key.startsWith("eyJ") ? { Authorization: `Bearer ${CFG.key}` } : {}), "Content-Type": "application/json", ...(opts.headers || {}) }
 });
+const pending = () => Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length + Object.keys(S.outbox.x).length;
 function setNet(s) { S.net = s; const el = $("#net"); if (el) { el.dataset.s = s; el.textContent = netText(); } }
-const netText = () => !ONLINE ? "This phone only" : S.net === "ok" ? (Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length ? "Saving" : "Synced") : S.net === "busy" ? "Syncing" : "Offline, will sync";
+const netText = () => !ONLINE ? "This phone only" : S.net === "ok" ? (pending() ? "Saving" : "Synced") : S.net === "busy" ? "Syncing" : "Offline, will sync";
 async function pull() {
   if (!ONLINE) return false;
   try {
     const q = S.since ? `&updated_at=gt.${encodeURIComponent(S.since)}` : "";
     let maxT = S.since, changed = false;
-    const hr = await api(`hunters?select=id,name,title,updated_at${q}`);
+    const hr = await api(`hunters?select=*${q}`);
     if (!hr.ok) throw hr.status;
     for (const h of await hr.json()) {
-      if (!S.outbox.h[h.id]) { S.hunters[h.id] = { id: h.id, name: h.name, title: h.title || null }; changed = true; }
+      if (!S.outbox.h[h.id]) { S.hunters[h.id] = { id: h.id, name: h.name, title: h.title || null, program: h.program || (S.hunters[h.id] && S.hunters[h.id].program) || null }; changed = true; }
       if (!maxT || h.updated_at > maxT) maxT = h.updated_at;
     }
     for (let from = 0; ; from += 1000) {
@@ -557,6 +648,15 @@ async function pull() {
       if (rows.length < 1000) break;
     }
     if (maxT) S.since = new Date(new Date(maxT).getTime() - 2000).toISOString();
+    // shared custom exercises (table added in the v4 update; older databases just skip this)
+    const qx = S.sinceX ? `&updated_at=gt.${encodeURIComponent(S.sinceX)}` : "";
+    const xr = await api(`exercises?select=*${qx}`);
+    if (xr.ok) {
+      S.schemaOld = false;
+      let mx = S.sinceX;
+      for (const x of await xr.json()) { if (!S.outbox.x[x.id]) { S.custom[x.id] = x; changed = true; CATALOGUE = null; } if (!mx || x.updated_at > mx) mx = x.updated_at; }
+      if (mx) S.sinceX = new Date(new Date(mx).getTime() - 2000).toISOString();
+    } else S.schemaOld = true;
     if (changed) S.ver++;
     persist(); setNet("ok");
     return changed;
@@ -564,31 +664,39 @@ async function pull() {
 }
 let pushing = false, pushT = null;
 const pushSoon = () => { clearTimeout(pushT); pushT = setTimeout(push, 1200); };
+const upsert = (table, rows) => api(table, { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) });
 async function push() {
   if (!ONLINE || pushing) return;
-  const hk = Object.keys(S.outbox.h), sk = Object.keys(S.outbox.s);
-  if (!hk.length && !sk.length) { setNet("ok"); return; }
+  const hk = Object.keys(S.outbox.h), sk = Object.keys(S.outbox.s), xk = Object.keys(S.outbox.x);
+  if (!hk.length && !sk.length && !xk.length) { setNet("ok"); return; }
   pushing = true;
   try {
+    if (xk.length && !S.schemaOld) {
+      const tok = { ...S.outbox.x };
+      const rows = xk.filter(id => S.custom[id]).map(id => { const x = S.custom[id]; return { id, name: x.name, type: x.type, stat: x.stat, cat: x.cat || "Custom", created_by: x.created_by || null }; });
+      if (rows.length) { const r = await upsert("exercises", rows); if (r.status === 404) S.schemaOld = true; else if (!r.ok) throw r.status; }
+      if (!S.schemaOld) for (const id of xk) if (S.outbox.x[id] === tok[id]) delete S.outbox.x[id];
+    }
     if (hk.length) {
       const tok = { ...S.outbox.h };
-      const rows = hk.filter(id => S.hunters[id]).map(id => ({ id, name: S.hunters[id].name, title: S.hunters[id].title || null }));
-      if (rows.length) { const r = await api("hunters", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) }); if (!r.ok) throw r.status; }
+      const rows = hk.filter(id => S.hunters[id]).map(id => { const h = S.hunters[id]; return { id, name: h.name, title: h.title || null, program: h.program || null }; });
+      if (rows.length) {
+        let r = await upsert("hunters", rows);
+        if (r.status === 400) { S.schemaOld = true; r = await upsert("hunters", rows.map(({ program, ...rest }) => rest)); }
+        if (!r.ok) throw r.status;
+      }
       for (const id of hk) if (S.outbox.h[id] === tok[id]) delete S.outbox.h[id];
     }
     if (sk.length) {
       const tok = { ...S.outbox.s };
       const rows = sk.map(k => { const [hunter, date] = k.split("_"); return { key: k, hunter, date, body: S.sessions[k] || null }; });
-      for (let i = 0; i < rows.length; i += 200) {
-        const r = await api("sessions", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows.slice(i, i + 200)) });
-        if (!r.ok) throw r.status;
-      }
+      for (let i = 0; i < rows.length; i += 200) { const r = await upsert("sessions", rows.slice(i, i + 200)); if (!r.ok) throw r.status; }
       for (const k of sk) if (S.outbox.s[k] === tok[k]) delete S.outbox.s[k];
     }
     persist(); setNet("ok");
   } catch (e) { setNet("off"); }
   pushing = false;
-  if (Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length && S.net === "ok") pushSoon();
+  if ((Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length) && S.net === "ok") pushSoon();
 }
 async function syncNow() {
   if (!ONLINE) return;
@@ -603,6 +711,34 @@ function dirtySession(k) {
 }
 function dirtyHunter(id) { S.outbox.h[id] = rnd(); S.ver++; persist(); pushSoon(); }
 
+/* ================= PROGRAMS ================= */
+function progDay(hid, day) {
+  const p = (S.hunters[hid] && S.hunters[hid].program) || {};
+  return p[day] ? { ...DEFAULT[day], ...p[day] } : DEFAULT[day];
+}
+// sessions remember the plan they were logged against; ones from before custom programs used the default script
+const planFor = (hid, day, b) => (b && b.plan) || (b ? DEFAULT[day] : progDay(hid, day));
+const planSets = plan => sumBy(plan.ex, e => e[1]);
+const meetsFloor = (plan, day) => planSets(plan) >= FLOOR.sets(day) && plan.cardio >= FLOOR.cardio(day);
+function reqs(plan, day, pen) {
+  return {
+    ex: plan.ex.filter(e => CX(e[0])).map(([id, sets, lo, hi]) => ({ id, name: CX(id).name, type: typeOf(id), sets: sets + (pen ? 1 : 0), base: sets, lo, hi })),
+    cardio: pen ? Math.max(25, plan.cardio) : plan.cardio, floor: meetsFloor(plan, day)
+  };
+}
+function myProgramEdit(day) {
+  const h = S.hunters[S.me];
+  h.program ||= {};
+  h.program[day] ||= clone(DEFAULT[day]);
+  return h.program[day];
+}
+function programChanged(day) {
+  // today's session (if started) switches to the new plan straight away
+  const k = keyOf(S.me, todayStr(), day), b = S.sessions[k];
+  if (b) { b.plan = clone(progDay(S.me, day)); dirtySession(k); }
+  dirtyHunter(S.me);
+}
+
 /* ================= RULES ================= */
 function cardioOf(b) {
   const c = (b && b.cardio) || {};
@@ -610,35 +746,31 @@ function cardioOf(b) {
   const total = (walk || run) ? (walk || 0) + (run || 0) : (c.mins ?? null);
   return { walk, run, total, dist: c.dist ?? null, kcal: c.kcal ?? null };
 }
-const cardioMeets = (b, min) => { const c = cardioOf(b); return !!c.total && c.total >= min; };
+const cardioMeets = (b, min) => { const c = cardioOf(b); return min <= 0 ? true : !!c.total && c.total >= min; };
 const pace = c => c.total && c.dist ? c.total / c.dist : null;
 const paceTxt = p => p ? `${Math.floor(p)}:${pad(Math.round((p % 1) * 60) % 60)} /km` : "";
-function reqs(day, pen) {
-  const p = PROGRAM[day];
-  return { ex: p.ex.map(([id, name, sets, lo, hi]) => ({ id, name, sets: sets + (pen ? 1 : 0), lo, hi })), cardio: pen ? Math.max(25, p.cardio.min) : p.cardio.min };
-}
-const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(filled).length >= e.sets;
+const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length >= e.sets;
 function questDone(b, pen) {
   if (!b || !PROGRAM[b.day] || b.excused) return false;
-  const r = reqs(b.day, pen);
-  return r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
+  const r = reqs(planFor(b.profile, b.day, b), b.day, pen);
+  return r.floor && r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
 }
 function bonusLogged(e) {
-  const L = LIBX[e.id]; if (!L) return false;
+  const L = CX(e.id); if (!L) return false;
   if (L.type === "min") return (+e.min || 0) > 0 || (+e.km || 0) > 0;
-  return (e.sets || []).some(s => L.type === "wr" ? filled(s) : L.type === "r" ? s.r != null : s.s != null);
+  return (e.sets || []).some(s => setOk(L.type, s));
 }
 function hasTraining(b) {
   if (!b || b.excused) return false;
   const c = cardioOf(b);
-  return !!(c.total || c.dist) || Object.values(b.ex || {}).some(a => a.some(filled)) || (b.bonus || []).some(bonusLogged);
+  return !!(c.total || c.dist) || Object.entries(b.ex || {}).some(([id, a]) => a.some(s => setOk(typeOf(id), s))) || (b.bonus || []).some(bonusLogged);
 }
 function isEmpty(b) {
   if (!b) return true;
   if (b.excused) return false;
   const c = cardioOf(b); if (c.total || c.dist || c.kcal) return false;
   if ((b.extra || []).length || (b.bonus || []).length) return false;
-  return !Object.values(b.ex || {}).some(arr => arr.some(filled));
+  return !Object.entries(b.ex || {}).some(([id, arr]) => arr.some(s => setOk(typeOf(id), s)));
 }
 function levelOf(xp) {
   let L = 1;
@@ -647,7 +779,12 @@ function levelOf(xp) {
   return { L, into: xp - base, need: next - base, rank: RANKS.find(r => L >= r[0])[1] };
 }
 const floorXp = L => 50 * (L - 1) * L;
-const bossFor = ws => { let h = 0; for (const c of ws) h = (h * 31 + c.charCodeAt(0)) >>> 0; return BOSS_POOL[h % BOSS_POOL.length]; };
+function bossPool(hid) {
+  const ids = new Set();
+  for (const d of ["UA", "LA", "UB", "LB", "FR"]) for (const e of progDay(hid, d).ex) if (typeOf(e[0]) === "wr" && e[0] !== "back-ext") ids.add(e[0]);
+  return [...ids].sort();
+}
+const bossFor = (ws, pool) => { if (!pool.length) return null; let h = 0; for (const c of ws) h = (h * 31 + c.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
 function statsOf(M) {
   const st = {};
   for (const k of ["STR", "AGI", "VIT", "END"]) st[k] = 10 + Math.floor(M.statSets[k] / 6) + Math.floor(M.statMin[k] / 20);
@@ -664,13 +801,16 @@ function metricVal(M, metric, st) {
   return M[metric] || 0;
 }
 
-/* Replay a hunter's whole history day by day: penalties, XP, levels, stats, records, achievements and feed events. */
+/* Replay a hunter's history day by day: penalties, XP, levels, stats, records, achievements and feed events. */
 function replay(hid) {
   const c = S.cache[hid]; if (c && c.ver === S.ver) return c.r;
   const byDate = {};
   for (const b of Object.values(S.sessions)) if (b.profile === hid && !isEmpty(b)) (byDate[b.date] ||= []).push(b);
-  const dates = Object.keys(byDate).sort(), today = todayStr();
-  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, peak: 1, ach: {}, events: [], best: {}, streak: 0, boss: null };
+  const dates = Object.keys(byDate).sort(), today = todayStr(), thisWeek = mondayOf(today), current = bossPool(hid);
+  // a week's boss comes from the plans the hunter actually used before that week, so editing a program never rewrites past bosses
+  const seen = new Set();
+  const poolFor = w => { const ids = new Set(seen); if (w === thisWeek) for (const id of current) ids.add(id); return ids.size ? [...ids].sort() : current; };
+  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, peak: 1, ach: {}, events: [], best: {}, bestReps: {}, streak: 0, boss: null };
   const M = R.M;
   const checkAch = d => {
     const st = statsOf(M);
@@ -686,41 +826,56 @@ function replay(hid) {
     for (let d = R.first; d <= last; d = addDays(d, 1)) {
       const bs = byDate[d] || [];
       const w = mondayOf(d);
-      if (w !== ws) { ws = w; bossId = bossFor(w); bossBest = R.best[bossId] ?? null; bossWon = false; }
+      if (w !== ws) { ws = w; bossId = bossFor(w, poolFor(w)); bossBest = bossId ? R.best[bossId] ?? null : null; bossWon = false; }
       R.pen[d] = owed;
       R.exc[d] = bs.some(b => b.excused);
       const done = bs.find(b => questDone(b, owed));
       R.clr[d] = !!done;
-      const active = bs.some(hasTraining);
       let xp = 0, bonusXp = 0, dawn = false, night = false;
-      if (active) {
+      if (bs.some(hasTraining)) {
         if (done && lastActive && daysBetween(lastActive, d) >= 7) { M.comebacks++; R.events.push({ d, type: "comeback" }); }
         M.days++; lastActive = d;
       }
-      const prTrack = (id, top, label) => {
-        if (!(top > 0)) return;
-        if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg` }); }
-        if (R.best[id] == null || top > R.best[id]) R.best[id] = top;
+      // one logged exercise (plan, extra or bonus) of any type
+      const logSets = (id, f, type, isPlan, label) => {
+        const L = CX(id) || { stat: "STR", type };
+        M.sets += f.length;
+        if (isPlan) xp += f.length * 10; else bonusXp += f.length * 10;
+        if (type !== "s") { M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0)); }
+        M.machine[id] = (M.machine[id] || 0) + 1;
+        M.statSets[L.stat || "STR"] += f.length;
+        if (CORE.has(id)) M.core += sumBy(f, s => s.r);
+        if (id === "pushups" || id === "diamond-pushups") M.pushups += sumBy(f, s => s.r);
+        if (id === "plank" || id === "side-plank") M.plankSec += sumBy(f, s => s.s);
+        if (type === "wr") {
+          const top = Math.max(...f.map(s => +s.w || 0));
+          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: label }); }
+          if (top > 0) {
+            if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg` }); }
+            if (R.best[id] == null || top > R.best[id]) R.best[id] = top;
+          }
+        } else {
+          const top = Math.max(...f.map(s => +(type === "r" ? s.r : s.s) || 0)), unit = type === "r" ? "reps" : "s";
+          if (top > 0) {
+            if (R.bestReps[id] != null && top > R.bestReps[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} ${unit}` }); }
+            if (R.bestReps[id] == null || top > R.bestReps[id]) R.bestReps[id] = top;
+          }
+        }
       };
       for (const b of bs) {
         if (b.excused) continue;
         if (hasTraining(b) && b.ts) { const hr = new Date(b.ts).getHours(); if (hr < 7) dawn = true; if (hr >= 20) night = true; }
+        const planIds = new Set(planFor(hid, b.day, b).ex.map(e => e[0]));
         for (const [id, arr] of Object.entries(b.ex || {})) {
-          const f = arr.filter(filled); if (!f.length) continue;
-          M.sets += f.length; xp += f.length * 10;
-          M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0));
-          M.machine[id] = (M.machine[id] || 0) + 1;
-          M.statSets[EXSTAT[id] || "STR"] += f.length;
-          if (CORE.has(id)) M.core += sumBy(f, s => s.r);
-          const top = Math.max(...f.map(s => +s.w || 0));
-          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: EX[id] ? EX[id].name : id }); }
-          prTrack(id, top, EX[id] ? EX[id].name : id);
+          const type = typeOf(id), f = arr.filter(s => setOk(type, s)); if (!f.length) continue;
+          if (!planIds.has(id)) M.bonusLogs++;
+          logSets(id, f, type, planIds.has(id), CX(id) ? CX(id).name : id);
         }
         const c = cardioOf(b);
         if (c.total) { M.cardioMin += c.total; xp += Math.round(c.total * 2); M.statMin.VIT += c.total; }
         if (c.dist) M.km += c.dist;
         for (const e of b.bonus || []) {
-          const L = LIBX[e.id]; if (!L || !bonusLogged(e)) continue;
+          const L = CX(e.id); if (!L || !bonusLogged(e)) continue;
           M.bonusLogs++;
           if (L.type === "min") {
             const m = +e.min || 0;
@@ -729,17 +884,10 @@ function replay(hid) {
             if (L.cat === "Cardio") M.cardioMin += m;
             if (L.outdoor) M.outdoorMin += m;
             if (+e.km) M.km += +e.km;
-          } else {
-            const f = (e.sets || []).filter(s => L.type === "wr" ? filled(s) : L.type === "r" ? s.r != null : s.s != null);
-            bonusXp += f.length * 10; M.sets += f.length; M.statSets[L.stat] += f.length;
-            if (L.type !== "s") { M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0)); }
-            if (e.id === "pushups" || e.id === "diamond-pushups") M.pushups += sumBy(f, s => s.r);
-            if (CORE.has(e.id)) M.core += sumBy(f, s => s.r);
-            if (e.id === "plank" || e.id === "side-plank") M.plankSec += sumBy(f, s => s.s);
-            if (L.type === "wr") prTrack("b:" + e.id, Math.max(...f.map(s => +s.w || 0)), L.name);
-          }
+          } else logSets(e.id, (e.sets || []).filter(s => setOk(L.type, s)), L.type, false, L.name);
         }
       }
+      for (const b of bs) for (const e of planFor(hid, b.day, b).ex) if (typeOf(e[0]) === "wr" && e[0] !== "back-ext") seen.add(e[0]);
       if (dawn) M.dawn++;
       if (night) M.night++;
       xp += Math.min(BONUS_CAP, bonusXp);
@@ -750,7 +898,7 @@ function replay(hid) {
         if (done.day === "FR") M.friQ++;
         if (done.day === "WK") M.wkQ++;
         if (owed) { M.penSurvived++; xp += 25; R.events.push({ d, type: "pzs" }); }
-        else R.events.push({ d, type: "clear", txt: PROGRAM[done.day].name });
+        else R.events.push({ d, type: "clear", txt: planFor(hid, done.day, done).name });
         owed = false; cur++;
       } else if (R.exc[d]) { /* excused: nothing changes */ }
       else if (isTraining(d) && d < today) {
@@ -777,7 +925,7 @@ function replay(hid) {
     R.streak = cur;
     R.boss = { id: bossId, best: bossBest, won: bossWon, week: ws };
   }
-  if (!R.boss) { const w = mondayOf(today); R.boss = { id: bossFor(w), best: null, won: false, week: w }; }
+  if (!R.boss || R.boss.week !== thisWeek) R.boss = { id: bossFor(thisWeek, poolFor(thisWeek)), best: null, won: false, week: thisWeek };
   R.lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
   R.stats = statsOf(M);
   R.inPz = !!(R.pen[today] && !R.clr[today] && !R.exc[today]);
@@ -789,25 +937,31 @@ function replay(hid) {
 const curKey = () => keyOf(S.me, S.date, S.day);
 function session(create) {
   const k = curKey();
-  if (!S.sessions[k] && create) S.sessions[k] = { profile: S.me, date: S.date, day: S.day, ex: {}, extra: [], bonus: [], ts: Date.now() };
+  if (!S.sessions[k] && create) S.sessions[k] = { profile: S.me, date: S.date, day: S.day, plan: clone(progDay(S.me, S.day)), ex: {}, extra: [], bonus: [], ts: Date.now() };
   const b = S.sessions[k];
   if (b) { b.ex ||= {}; b.extra ||= []; b.bonus ||= []; }
   return b;
 }
+const curPlan = () => planFor(S.me, S.day, session(false));
 const penHere = R => !!R.pen[S.date];
 function exList(R = replay(S.me)) {
-  const b = session(false), r = reqs(S.day, penHere(R));
+  const b = session(false), r = reqs(curPlan(), S.day, penHere(R));
   const base = r.ex.map(e => ({ ...e }));
-  for (const id of (b && b.extra) || []) if (EX[id] && !base.some(e => e.id === id)) base.push({ ...EX[id], extra: true });
+  for (const id of (b && b.extra) || []) {
+    const L = CX(id); if (!L || L.type === "min" || base.some(e => e.id === id)) continue;
+    const [lo, hi] = EX[id] ? [EX[id].lo, EX[id].hi] : RANGE[L.type];
+    base.push({ id, name: L.name, type: L.type, sets: EX[id] ? EX[id].sets : 3, base: 3, lo, hi, extra: true });
+  }
   return base;
 }
-function lastFor(id, beforeDate) {
+function lastFor(id, beforeDate, type) {
   let best = null;
   for (const b of Object.values(S.sessions)) {
     if (b.profile !== S.me || b.date >= beforeDate) continue;
-    const arr = (b.ex || {})[id];
-    if (!arr || !arr.some(filled)) continue;
-    if (!best || b.date > best.date) best = { date: b.date, sets: arr.filter(filled) };
+    let arr = (b.ex || {})[id];
+    if (!arr) { const e = (b.bonus || []).find(x => x.id === id); arr = e && e.sets; }
+    if (!arr || !arr.some(s => setOk(type, s))) continue;
+    if (!best || b.date > best.date) best = { date: b.date, sets: arr.filter(s => setOk(type, s)) };
   }
   return best;
 }
@@ -867,14 +1021,44 @@ function announce(R) {
   S.seen.keys = keys;
 }
 
+/* ================= ROTATING WARNINGS ================= */
+let warnI = -1, warnPoolSig = "";
+function warnPool(R, pen) {
+  if (pen) return WARN_PZ;
+  const pool = [...WARN, ...(WARN_DAY[S.day] || [])];
+  if (R.streak >= 2) pool.push(`Streak at ${R.streak}. It would be a shame if something happened to it.`);
+  if (R.streak >= 5) pool.push(`${R.streak} quests in a row. The System is starting to respect you. Slightly.`);
+  pool.push(`${R.lv.need - R.lv.into} XP to Level ${R.lv.L + 1}. The System is holding your rank hostage.`);
+  const rows = Object.keys(S.hunters).filter(id => id !== S.me).map(id => ({ id, xp: replay(id).xp })).sort((a, b) => b.xp - a.xp);
+  const ahead = rows.filter(r => r.xp > R.xp).pop(), behind = rows.find(r => r.xp <= R.xp);
+  if (ahead) pool.push(`${nameOf(ahead.id)} is ${fmtN(ahead.xp - R.xp)} XP ahead of you. The System suggests closing the gap.`);
+  else if (behind) pool.push(`You lead the board by ${fmtN(R.xp - behind.xp)} XP. ${nameOf(behind.id)} is coming.`);
+  return pool;
+}
+function warnText(R, pen) {
+  const pool = warnPool(R, pen), sig = pool.length + (pen ? "p" : "n");
+  if (sig !== warnPoolSig || warnI < 0 || warnI >= pool.length) { warnPoolSig = sig; warnI = Math.floor(Math.random() * pool.length); }
+  return pool[warnI];
+}
+setInterval(() => {
+  const el = $("#warnTxt"); if (!el || document.hidden || !S.me) return;
+  const R = replay(S.me), pool = warnPool(R, penHere(R));
+  let n = warnI; if (pool.length > 1) while (n === warnI) n = Math.floor(Math.random() * pool.length);
+  warnI = n;
+  if (reduced) { el.textContent = pool[n]; return; }
+  el.classList.add("gl");
+  setTimeout(() => { el.textContent = pool[n]; }, 170);
+  setTimeout(() => el.classList.remove("gl"), 460);
+}, 9000);
+
 /* ================= COMPONENTS ================= */
 const badge = (a, size = "") => a ? `<span class="badge ${size}" style="--rc:${RAR[a.rar][2]}" title="${esc(a.name)}">${a.icon}</span>` : "";
+const lockBadge = (a, size = "", locked = true) => badge(a, size).replace(`class="badge ${size}"`, `class="badge ${size}${locked ? " locked" : ""}"`);
 function titleOf(id, R) {
   const t = S.hunters[id] && S.hunters[id].title;
-  if (t && ACHX[t] && R.ach[t]) return ACHX[t];
-  return null;
+  return t && ACHX[t] && R.ach[t] ? ACHX[t] : null;
 }
-const rankBadge = R => `<span class="badge" style="--rc:${R.lv.L >= 50 ? RAR[5][2] : R.lv.L >= 35 ? RAR[4][2] : R.lv.L >= 20 ? RAR[3][2] : R.lv.L >= 10 ? RAR[2][2] : R.lv.L >= 5 ? RAR[1][2] : RAR[0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`;
+const rankBadge = R => `<span class="badge" style="--rc:${RAR[R.lv.L >= 50 ? 5 : R.lv.L >= 35 ? 4 : R.lv.L >= 20 ? 3 : R.lv.L >= 10 ? 2 : R.lv.L >= 5 ? 1 : 0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`;
 function spark(vals) {
   const W = 110, H = 34, P = 4;
   if (vals.length < 2) return "";
@@ -883,6 +1067,10 @@ function spark(vals) {
   const line = xy.map((c, i) => (i ? "L" : "M") + c[0].toFixed(1) + " " + c[1].toFixed(1)).join(" ");
   const end = xy[xy.length - 1];
   return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="a" d="${line} L${end[0].toFixed(1)} ${H} L${P} ${H} Z"/><path class="l" d="${line}"/><circle cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="3"/></svg>`;
+}
+function catalogueOptions(filter, valuePrefix) {
+  const all = Object.values(catalogue()).filter(filter);
+  return LIB_CATS.map(cn => { const items = all.filter(x => x.cat === cn).sort((a, b) => a.name.localeCompare(b.name)); return items.length ? `<optgroup label="${cn}">${items.map(x => `<option value="${valuePrefix}${esc(x.id)}">${esc(x.name)}</option>`).join("")}</optgroup>` : ""; }).join("");
 }
 
 /* ================= SHELL ================= */
@@ -916,14 +1104,17 @@ function applyTheme(R) {
 }
 function render() {
   if (!S.me || !S.hunters[S.me]) { document.documentElement.classList.remove("pz"); Cracks.stop(); S.wasPz = null; renderLogin(); return; }
+  ensureAchievements();
   if (!$("#statusWin")) shell();
-  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.view === S.view);
+  const tab = S.view === "program" ? "profile" : S.view;
+  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.view === tab);
   const R = replay(S.me);
   renderStatus(R);
   announce(R);
   if (S.view === "log") renderLog(R);
   else if (S.view === "board") renderBoard();
   else if (S.view === "profile") renderProfile(S.viewing || S.me);
+  else if (S.view === "program") renderProgram();
   else renderRecords();
 }
 function softRender() {
@@ -933,11 +1124,12 @@ function softRender() {
 }
 function refreshLive() {
   if (!S.me || !$("#statusWin")) return;
+  ensureAchievements();
   const R = replay(S.me);
   renderStatus(R); announce(R);
   const q = $("#quest"); if (q) { q.innerHTML = questHTML(R); tickClock(); }
   const bo = $("#bossCard"); if (bo) bo.outerHTML = bossHTML(R);
-  for (const btn of document.querySelectorAll(".days button")) btn.classList.toggle("clear", questDone(S.sessions[keyOf(S.me, S.date, btn.dataset.day)], penHere(R)));
+  for (const btn of document.querySelectorAll(".days button[data-day]")) btn.classList.toggle("clear", questDone(S.sessions[keyOf(S.me, S.date, btn.dataset.day)], penHere(R)));
   const nt = $("#net"); if (nt) nt.textContent = netText();
 }
 
@@ -955,7 +1147,6 @@ function renderLogin() {
   if (ONLINE && S.net !== "ok") pull().then(ch => { if (ch && !S.me) renderLogin(); });
 }
 function login(id) {
-  // a log carried over from the old version under the same name merges into the chosen hunter
   const nm = nameOf(id).toLowerCase();
   for (const h of Object.values(S.hunters)) {
     if (h.id === id || !h.local || h.name.toLowerCase() !== nm) continue;
@@ -967,17 +1158,16 @@ function login(id) {
     delete S.hunters[h.id];
   }
   S.me = id; S.view = "log"; S.viewing = null; S.seen = null; S.ver++;
-  // hunters carried over from the old single-phone version get published once they have a log
   for (const h of Object.values(S.hunters)) if (h.local && (h.id === id || Object.values(S.sessions).some(b => b.profile === h.id))) { delete h.local; dirtyHunter(h.id); }
   persist(); shell(); render(); syncNow();
 }
 
 /* ================= QUEST VIEW ================= */
 function questHTML(R) {
-  const p = PROGRAM[S.day], b = session(false), pen = penHere(R), r = reqs(S.day, pen);
-  const goals = r.ex.map(e => { const n = (((b && b.ex) || {})[e.id] || []).filter(filled).length; return `<li class="${n >= e.sets ? "ok" : ""}"><span>${esc(e.name)}</span><span>[${Math.min(n, e.sets)}/${e.sets}]</span></li>`; });
+  const plan = curPlan(), b = session(false), pen = penHere(R), r = reqs(plan, S.day, pen);
+  const goals = r.ex.map(e => { const n = (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length; return `<li class="${n >= e.sets ? "ok" : ""}"><span>${esc(e.name)}</span><span>[${Math.min(n, e.sets)}/${e.sets}]</span></li>`; });
   const c = cardioOf(b);
-  goals.unshift(`<li class="${cardioMeets(b, r.cardio) ? "ok" : ""}"><span>${esc(p.cardio.goal)}</span><span>[${c.total ? Math.round(c.total) : 0}/${r.cardio} min]</span></li>`);
+  if (r.cardio > 0) goals.unshift(`<li class="${cardioMeets(b, r.cardio) ? "ok" : ""}"><span>${esc(CARDIO_GOAL(S.day))}</span><span>[${c.total ? Math.round(c.total) : 0}/${r.cardio} min]</span></li>`);
   const done = questDone(b, pen), isToday = S.date === todayStr(), excused = b && b.excused;
   const seed = parseDate(S.date).getDate();
   const exBtn = label => `<button class="linkbtn${S.armed === "excuse" ? " armed" : ""}" data-act="excuse">${S.armed === "excuse" ? "Tap again to confirm" : label}</button>`;
@@ -985,45 +1175,47 @@ function questHTML(R) {
   if (excused) foot = `<div class="qfoot"><p class="note"><b>Excused.</b> Rest up. No penalty and no XP lost for this day.</p><button class="linkbtn" data-act="unexcuse">Undo</button></div>`;
   else if (done) foot = pen ? `<p class="cleared">Penalty survived<small>+75 XP. The Penalty Zone releases you. For now.</small></p>` : `<p class="cleared">Quest cleared<small>+50 XP. The Penalty Zone will have to wait.</small></p>`;
   else if (isToday) foot = `<div class="clock"><span>Time remaining</span><b id="clock">--:--:--</b></div>
-      <p class="warn"><b>WARNING</b> ${esc(pen ? "Fail this one and the penalty carries into tomorrow, with another 25 XP drained." : PENALTY[seed % PENALTY.length])}</p>
+      <p class="warn"><b>WARNING</b> <span id="warnTxt">${esc(warnText(R, pen))}</span></p>
       <div class="qfoot"><span></span>${exBtn("Sick or injured? Excuse today")}</div>`;
   else foot = `<div class="qfoot"><p class="note">Editing the log for ${fmtDate(S.date)}.</p>${S.date < todayStr() ? exBtn("Excuse this day") : ""}</div>`;
+  const floorNote = r.floor ? "" : `<p class="note alert"><b>Below the quest minimum.</b> This plan has ${planSets(plan)} sets and ${plan.cardio} min cardio; ${S.day === "WK" ? "" : `${FLOOR.sets(S.day)} sets and `}${FLOOR.cardio(S.day)} min are needed for it to count. Edit it in Profile, My program.</p>`;
   const head = pen
-    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(p.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">Every set +1 · Cardio ${r.cardio} min</span></p>`
-    : `<p class="tag">Daily quest</p><h1 class="title">${esc(p.name)}</h1><p class="sub">${esc(p.focus)}</p>`;
-  return `${head}<ul class="goals">${goals.join("")}</ul>${foot}`;
+    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">Every set +1 · Cardio ${r.cardio} min</span></p>`
+    : `<p class="tag">Daily quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(plan.focus || "")}</p>`;
+  return `${head}<ul class="goals">${goals.join("")}</ul>${floorNote}${foot}`;
 }
 function bossHTML(R) {
-  const B = R.boss, name = EX[B.id].name;
+  const B = R.boss;
+  if (!B || !B.id || !CX(B.id)) return `<span id="bossCard" hidden></span>`;
+  const name = CX(B.id).name;
   const txt = B.won ? `<b>Defeated.</b> +100 XP claimed. A new boss rises on Monday.`
     : B.best != null ? `Beat your record of <b>${B.best} kg</b> this week for +100 XP.`
     : `No record yet. Log it this week to set the bar for next time.`;
   return `<section class="win boss" id="bossCard"><span class="ico" aria-hidden="true">👹</span><div><p class="tag">Weekly boss</p><b>${esc(name)}</b><p>${txt}</p></div></section>`;
 }
-function setRow({ id, i, s, kind, ph, extra }) {
-  const dataA = kind === "b" ? `data-bi="${id}" data-j="${i}"` : `data-ex="${id}" data-i="${i}"`;
-  const pre = kind === "b" ? `b-${id}-${i}` : `${id}-${i}`;
-  if (kind === "r" || kind === "s") {
-    const f = kind;
-    return `<div class="set one${s[f] != null ? " done" : ""}"><span class="n">${i + 1}</span>
-      <div class="field"><input id="${f}-${pre}" ${dataA} data-f="${f}" inputmode="numeric" placeholder="${ph[f] ?? ""}" value="${s[f] ?? ""}" aria-label="Set ${i + 1} ${f === "s" ? "seconds" : "reps"}"><span>${f === "s" ? "sec" : "reps"}</span></div>
+/* one set row; attrs carries the data-* that tell the input handler where to write */
+function setRow(attrs, pre, i, s, type, ph, extra) {
+  if (type === "r" || type === "s") {
+    const f = type;
+    return `<div class="set one${s[f] != null ? " done" : ""}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
+      <div class="field"><input id="${f}-${pre}-${i}" ${attrs} data-f="${f}" inputmode="numeric" placeholder="${ph[f] ?? ""}" value="${s[f] ?? ""}" aria-label="Set ${i + 1} ${f === "s" ? "seconds" : "reps"}"><span>${f === "s" ? "sec" : "reps"}</span></div>
       <span class="tick" aria-hidden="true"></span></div>`;
   }
   return `<div class="set${s.r != null ? " done" : ""}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
-    <div class="field"><input id="w-${pre}" ${dataA} data-f="w" inputmode="decimal" placeholder="${ph.w ?? ""}" value="${s.w ?? ""}" aria-label="Set ${i + 1} weight"><span>kg</span></div>
+    <div class="field"><input id="w-${pre}-${i}" ${attrs} data-f="w" inputmode="decimal" placeholder="${ph.w ?? ""}" value="${s.w ?? ""}" aria-label="Set ${i + 1} weight"><span>kg</span></div>
     <span class="x">×</span>
-    <div class="field"><input id="r-${pre}" ${dataA} data-f="r" inputmode="numeric" placeholder="${ph.r ?? ""}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
+    <div class="field"><input id="r-${pre}-${i}" ${attrs} data-f="r" inputmode="numeric" placeholder="${ph.r ?? ""}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
     <span class="tick" aria-hidden="true"></span></div>`;
 }
 function renderLog(R) {
-  const p = PROGRAM[S.day], b = session(false), pen = penHere(R), r = reqs(S.day, pen), list = exList(R);
+  const plan = curPlan(), b = session(false), pen = penHere(R), r = reqs(plan, S.day, pen), list = exList(R);
   let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
-    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}"><b>${PROGRAM[d].short}</b><small>${esc(PROGRAM[d].label)}</small></button>`).join("")}</div>
+    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
   <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
   <section class="win quest" id="quest">${questHTML(R)}</section>${bossHTML(R)}`;
 
   const c = cardioOf(b), pc = pace(c);
-  h += `<article class="win ex${cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(p.cardio.goal)}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
+  h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(CARDIO_GOAL(S.day))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
     <div class="cgrid">
       <div class="field"><input id="c-walk" data-c="walk" inputmode="decimal" placeholder="5" value="${c.walk ?? ""}" aria-label="Walk minutes"><span>walk min</span></div>
       <div class="field"><input id="c-run" data-c="run" inputmode="decimal" placeholder="${pen ? 20 : 10}" value="${c.run ?? ""}" aria-label="Run minutes"><span>run min</span></div>
@@ -1034,30 +1226,33 @@ function renderLog(R) {
   for (const e of list) {
     const arr = (b && b.ex[e.id]) || [];
     const n = Math.max(e.sets, arr.length);
-    const base = e.extra ? e.sets : e.sets - (pen ? 1 : 0);
-    const last = lastFor(e.id, S.date);
-    const up = last && last.sets.length >= base && last.sets.slice(0, base).every(s => (s.r || 0) >= e.hi);
-    const boss = R.boss.id === e.id && !R.boss.won;
-    h += `<article class="win ex${exDone(b, e) ? " complete" : ""}" data-card="${e.id}">
-      <div class="ex-h"><h2>${boss ? "👹 " : ""}${esc(e.name)}</h2><span class="target">${pen && !e.extra ? `<em>${e.sets}</em>` : e.sets} × ${e.lo}–${e.hi}</span></div>
-      <p class="last">${last ? `Last <strong>${last.sets.map(setTxt).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>${up ? `<span class="chip">Up a plate</span>` : ""}` : "New skill unlocked: start light and find your working weight."}${R.best[e.id] ? ` <span>Best ${R.best[e.id]} kg</span>` : ""}</p>
+    const last = lastFor(e.id, S.date, e.type);
+    const key = e.type === "wr" ? "r" : e.type;
+    const up = last && last.sets.length >= e.base && last.sets.slice(0, e.base).every(s => (s[key] || 0) >= e.hi);
+    const boss = R.boss && R.boss.id === e.id && !R.boss.won;
+    const best = e.type === "wr" ? (R.best[e.id] ? ` <span>Best ${R.best[e.id]} kg</span>` : "") : (R.bestReps[e.id] ? ` <span>Best ${R.bestReps[e.id]}${e.type === "s" ? " s" : " reps"}</span>` : "");
+    const unit = e.type === "s" ? " s" : "";
+    h += `<article class="win ex${exDone(b, e) ? " complete" : ""}" data-card="${esc(e.id)}">
+      <div class="ex-h"><h2>${boss ? "👹 " : ""}${esc(e.name)}</h2><span class="target">${pen && !e.extra ? `<em>${e.sets}</em>` : e.sets} × ${e.lo}–${e.hi}${unit}</span></div>
+      <p class="last">${last ? `Last <strong>${last.sets.map(s => setTxt(s, e.type)).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>${up ? `<span class="chip">${e.type === "wr" ? "Up a plate" : "Push further"}</span>` : ""}` : e.extra ? "Bonus exercise. Log what you did." : "New skill unlocked: start light and find your working level."}${best}</p>
       <div class="sets">`;
     for (let i = 0; i < n; i++) {
       const s = arr[i] || {}, ls = last && last.sets[Math.min(i, last.sets.length - 1)];
-      h += setRow({ id: e.id, i, s, kind: "wr", ph: { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi }, extra: pen && !e.extra && i === e.sets - 1 });
+      h += setRow(`data-ex="${esc(e.id)}" data-i="${i}"`, esc(e.id), i, s, e.type,
+        { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi, s: ls && ls.s != null ? ls.s : e.lo }, pen && !e.extra && i === e.sets - 1);
     }
-    const rest = e.lo >= 12 ? 60 : 90;
+    const rest = e.lo >= 12 || e.type !== "wr" ? 60 : 90;
     h += `</div><div class="ex-actions">
-      ${last ? `<button class="btn" data-act="uselast" data-ex="${e.id}">Use last weights</button>` : ""}
-      <button class="btn" data-act="addset" data-ex="${e.id}">+ Set</button>
+      ${last && e.type === "wr" ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Use last weights</button>` : ""}
+      <button class="btn" data-act="addset" data-ex="${esc(e.id)}">+ Set</button>
       <button class="btn" data-act="rest" data-name="${esc(e.name)}" data-sec="${rest}">Rest ${rest} s</button>
-      ${e.extra ? `<button class="btn" data-act="remove" data-ex="${e.id}">Remove</button>` : ""}</div></article>`;
+      ${e.extra ? `<button class="btn" data-act="remove" data-ex="${esc(e.id)}">Remove</button>` : ""}</div></article>`;
   }
 
   const bonus = (b && b.bonus) || [];
-  if (bonus.length) h += `<div class="sect">Bonus training<small>Up to ${BONUS_CAP} XP a day</small></div>`;
+  if (bonus.length) h += `<div class="sect">Bonus activity<small>Up to ${BONUS_CAP} XP a day</small></div>`;
   bonus.forEach((e, bi) => {
-    const L = LIBX[e.id]; if (!L) return;
+    const L = CX(e.id); if (!L) return;
     const lb = lastBonus(e.id, S.date);
     h += `<article class="win ex${bonusLogged(e) ? " complete" : ""}" data-bcard="${bi}"><div class="ex-h"><h2>${esc(L.name)}</h2><span class="target">${L.stat}</span></div>`;
     if (L.type === "min") {
@@ -1065,23 +1260,14 @@ function renderLog(R) {
         ${L.cat === "Cardio" ? `<div class="field"><input id="bk-${bi}" data-bi="${bi}" data-bf="km" inputmode="decimal" placeholder="0.0" value="${e.km ?? ""}" aria-label="Distance in kilometres"><span>km</span></div>` : ""}</div>`;
     } else {
       const sets = e.sets || [];
-      const n = Math.max(3, sets.length);
-      h += `<p class="last">${lb ? `Last <strong>${(lb.e.sets || []).filter(s => s.w != null || s.r != null || s.s != null).map(s => L.type === "s" ? `${s.s}s` : L.type === "r" ? `${s.r}` : setTxt(s)).join(" · ")}</strong> <span>${fmtShort(lb.date)}</span>` : `${esc(L.cat)}. Log what you did.`}</p><div class="sets">`;
-      for (let j = 0; j < n; j++) {
-        const s = sets[j] || {}, ls = lb && (lb.e.sets || [])[j];
-        h += setRow({ id: bi, i: j, s, kind: L.type === "wr" ? "b" : L.type, ph: { w: ls && ls.w != null ? ls.w : "", r: ls && ls.r != null ? ls.r : "", s: ls && ls.s != null ? ls.s : "" } }).replace(/data-ex="[^"]*" data-i="[^"]*"/g, `data-bi="${bi}" data-j="${j}"`).replace(/id="(r|s)-[^"]*"/, `id="$1-b-${bi}-${j}"`);
-      }
-      h += `</div>`;
+      h += `<div class="sets">${Array.from({ length: Math.max(3, sets.length) }, (_, j) => setRow(`data-bi="${bi}" data-j="${j}"`, `b${bi}`, j, sets[j] || {}, L.type, {})).join("")}</div>`;
     }
     h += `<div class="ex-actions">${L.type !== "min" ? `<button class="btn" data-act="baddset" data-bi="${bi}">+ Set</button>` : ""}<button class="btn" data-act="bremove" data-bi="${bi}">Remove</button></div></article>`;
   });
 
   const inDay = new Set(list.map(e => e.id));
-  h += `<div class="add"><select id="addEx" aria-label="Add a bonus exercise"><option value="">+ Add bonus exercise</option>
-    ${LIB_CATS.map(cn => `<optgroup label="${cn}">${LIB.filter(x => x[2] === cn).map(x => `<option value="L:${x[0]}">${esc(x[1])}</option>`).join("")}</optgroup>`).join("")}
-    ${DAYS.filter(d => PROGRAM[d].ex.length).map(d => `<optgroup label="Program: ${PROGRAM[d].name}">${PROGRAM[d].ex.filter(x => !inDay.has(x[0]) && EX[x[0]].day === d).map(x => `<option value="P:${x[0]}">${esc(x[1])}</option>`).join("")}</optgroup>`).join("")}
-  </select></div>
-  <p class="note">Each set is 10 XP, each cardio minute 2 XP, a cleared quest 50. Bonus training earns XP and stat points up to ${BONUS_CAP} XP a day. Hit the top of the rep range on every set and the card shows <b>Up a plate</b>. A missed weekday drains 25 XP and sends you to the <b>Penalty Zone</b>.</p></div>`;
+  h += `<div class="add"><select id="addEx" aria-label="Add a bonus exercise"><option value="">+ Add bonus exercise</option>${catalogueOptions(x => !inDay.has(x.id), "A:")}</select></div>
+  <p class="note">Each set is 10 XP, each cardio minute 2 XP, a cleared quest 50. Bonus exercises earn XP and stat points up to ${BONUS_CAP} XP a day. Hit the top of the rep range on every set and the card tells you to go up. A missed weekday drains 25 XP and sends you to the <b>Penalty Zone</b>.</p></div>`;
   $("#view").innerHTML = h;
   tickClock();
 }
@@ -1093,6 +1279,50 @@ function tickClock() {
 }
 setInterval(tickClock, 1000);
 
+/* ================= PROGRAM EDITOR ================= */
+function renderProgram() {
+  const day = S.pday, plan = progDay(S.me, day), custom = !!((S.hunters[S.me].program || {})[day]);
+  const sets = planSets(plan), ok = meetsFloor(plan, day);
+  let h = `<div class="list"><button class="linkbtn" data-view="profile" style="align-self:flex-start">Back to profile</button>
+    <section class="win card"><p class="tag">My program</p><h1 class="title" style="font-size:26px">Edit your quests</h1>
+      <p>Changes apply from today. Quests you've already logged keep the plan they were done with. ${S.schemaOld ? "<b>Run supabase-update-v4.sql</b> so your program syncs between phones." : ""}</p></section>
+    <div class="days" role="group" aria-label="Day to edit">${DAYS.map(d => `<button data-pday="${d}" aria-pressed="${d === day}"><b>${PROGRAM[d].short}</b><small>${esc(progDay(S.me, d).label)}</small></button>`).join("")}</div>
+    <section class="win card">
+      <div class="pgrid">
+        <label>Quest name<input id="p-name" data-pf="name" maxlength="28" value="${esc(plan.name)}"></label>
+        <label>Short label<input id="p-label" data-pf="label" maxlength="10" value="${esc(plan.label)}"></label>
+        <label class="wide">Focus line<input id="p-focus" data-pf="focus" maxlength="60" value="${esc(plan.focus || "")}"></label>
+        <label>Cardio minutes<input id="p-cardio" data-pf="cardio" inputmode="numeric" value="${plan.cardio}"></label>
+      </div>
+      <p class="${ok ? "floor ok" : "floor bad"}">${sets} sets · ${plan.cardio} min cardio · ${ok ? "Meets the quest minimum" : `Needs at least ${day === "WK" ? "" : FLOOR.sets(day) + " sets and "}${FLOOR.cardio(day)} min cardio to count as a quest`}</p>
+    </section>
+    <div class="prows">`;
+  plan.ex.forEach(([id, n, lo, hi], i) => {
+    const L = CX(id) || { name: id, type: "wr", stat: "STR" };
+    h += `<div class="prow"><div class="pn"><b>${esc(L.name)}</b><small>${TYPE_TXT[L.type]} · ${L.stat}${L.custom ? " · custom" : ""}</small></div>
+      <div class="pc"><span class="step"><button class="btn" data-act="psets" data-i="${i}" data-d="-1" aria-label="One less set">−</button><b>${n}</b><button class="btn" data-act="psets" data-i="${i}" data-d="1" aria-label="One more set">+</button></span>
+        <span class="rng"><input id="plo-${i}" data-pr="lo" data-i="${i}" inputmode="numeric" value="${lo}" aria-label="Low end of range">–<input id="phi-${i}" data-pr="hi" data-i="${i}" inputmode="numeric" value="${hi}" aria-label="High end of range">${L.type === "s" ? "s" : ""}</span>
+        <span class="mv"><button class="btn" data-act="pmove" data-i="${i}" data-d="-1" aria-label="Move up">↑</button><button class="btn" data-act="pmove" data-i="${i}" data-d="1" aria-label="Move down">↓</button><button class="btn" data-act="pdel" data-i="${i}" aria-label="Remove">✕</button></span></div></div>`;
+  });
+  if (!plan.ex.length) h += `<div class="win empty">No exercises on this day. Add some below${day === "WK" ? ", or keep it as a cardio-only recovery day" : ""}.</div>`;
+  const inPlan = new Set(plan.ex.map(e => e[0]));
+  h += `</div><div class="add"><select id="pAdd" aria-label="Add an exercise to this day"><option value="">+ Add exercise to ${esc(PROGRAM[day].short)}</option><option value="__new">Create a new exercise…</option>${catalogueOptions(x => x.type !== "min" && !inPlan.has(x.id), "")}</select></div>`;
+  if (S.creating) h += `<section class="win card" id="createCard"><h2>New exercise</h2><p>It's added to the shared list, so everyone on the board can use it too.</p>
+      <div class="pgrid"><label class="wide">Name<input id="cx-name" maxlength="32" placeholder="e.g. Cable woodchop"></label>
+        <label>Logged as<select id="cx-type"><option value="wr">Weight × reps</option><option value="r">Reps only</option><option value="s">Seconds (holds)</option></select></label>
+        <label>Stat<select id="cx-stat"><option value="STR">STR (upper body)</option><option value="AGI">AGI (legs)</option><option value="END">END (core)</option><option value="VIT">VIT (conditioning)</option></select></label></div>
+      <p id="cx-msg" class="floor bad" hidden></p>
+      <div class="ex-actions"><button class="btn primary" data-act="cxsave">Create and add</button><button class="btn" data-act="cxcancel">Cancel</button></div></section>`;
+  h += `<div class="ex-actions">${custom ? `<button class="btn${S.armed === "preset" ? " armed" : ""}" data-act="preset">${S.armed === "preset" ? "Tap again to reset" : `Reset ${PROGRAM[day].short} to the default script`}</button>` : `<span class="sub">This day is using the default script.</span>`}</div></div>`;
+  $("#view").innerHTML = h;
+}
+function editPlan(fn) {
+  const p = myProgramEdit(S.pday);
+  fn(p);
+  programChanged(S.pday);
+  renderProgram();
+}
+
 /* ================= BOARD ================= */
 function todayChip(R) {
   const t = todayStr();
@@ -1103,7 +1333,7 @@ function todayChip(R) {
 }
 function weekClears(R) { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 5; i++) if (R.clr[addDays(ws, i)]) n++; return n; }
 const EV_TXT = {
-  clear: (e) => ["⚔️", `cleared ${esc(e.txt)}`], pzs: () => ["💀", "survived the Penalty Zone"], pz: () => ["🩸", "was sent to the Penalty Zone"],
+  clear: e => ["⚔️", `cleared ${esc(e.txt)}`], pzs: () => ["💀", "survived the Penalty Zone"], pz: () => ["🩸", "was sent to the Penalty Zone"],
   pr: e => ["🏆", `set a record: ${esc(e.txt)}`], boss: e => ["👹", `defeated the weekly boss: ${esc(e.txt)}`], lvl: e => ["⭐", `reached Level ${e.L}`],
   ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week"],
   pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"]
@@ -1120,9 +1350,8 @@ function renderBoard() {
   });
   h += `</div>`;
   if (!ONLINE) h += `<p class="note alert"><b>Board not connected.</b> Each phone only sees its own hunters until the shared database is set up (see the README).</p>`;
-  const cutoff = addDays(todayStr(), -14);
-  const evs = [];
-  for (const { id, R } of all) for (const e of R.events) if (e.d >= cutoff && e.d <= todayStr() && !(e.type === "ach" && e.a.rar === 0 && e.a.metric.startsWith("m:"))) evs.push({ id, e });
+  const cutoff = addDays(todayStr(), -14), evs = [];
+  for (const { id, R } of all) for (const e of R.events) if (e.d >= cutoff && e.d <= todayStr() && !(e.type === "ach" && e.a.mastery && e.a.rar === 0)) evs.push({ id, e });
   const order = { ach: 0, lvl: 1, boss: 2, pr: 3, pzs: 4, pw: 5, pm: 5, comeback: 6, clear: 7, pz: 8 };
   evs.sort((a, b) => (b.e.d.localeCompare(a.e.d)) || (order[a.e.type] - order[b.e.type]));
   h += `<div class="sect">Activity<small>Last 2 weeks</small></div>`;
@@ -1135,8 +1364,7 @@ function renderBoard() {
 function renderProfile(id) {
   if (!S.hunters[id]) id = S.me;
   const R = replay(id), M = R.M, st = R.stats, mine = id === S.me, t = titleOf(id, R);
-  const unlocked = Object.keys(R.ach).length;
-  const maxStat = Math.max(...Object.values(st), 20);
+  const unlocked = Object.keys(R.ach).length, maxStat = Math.max(...Object.values(st), 20);
   let h = `<div class="list">${mine ? "" : `<button class="linkbtn" data-view="board" style="align-self:flex-start">Back to board</button>`}
     <section class="win phead">${t ? badge(t, "lg") : `<span class="badge lg" style="--rc:${RAR[0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`}
       <h1>${esc(nameOf(id))}</h1>
@@ -1144,35 +1372,39 @@ function renderProfile(id) {
       <span class="sub">Level <b style="color:var(--fg)">${R.lv.L}</b> · Rank <b style="color:var(--gold)">${R.lv.rank}</b> · ${fmtN(Math.max(R.xp, 0))} XP${R.inPz ? ` · <span class="st pz">Penalty Zone</span>` : ""}</span>
     </section>
     <section class="win card"><h2>Stats</h2><div class="statgrid">${["STR", "AGI", "VIT", "END"].map(k => `<div class="stat2"><span>${k}</span><div class="meter"><i style="width:${Math.min(100, st[k] / maxStat * 100).toFixed(0)}%"></i></div><b>${st[k]}</b></div>`).join("")}</div>
-      <p>STR from upper body, AGI from legs, VIT from cardio and active time, END from core work and cleared quests.</p></section>
+      <p>Everyone starts at 10. STR grows with upper-body sets, AGI with leg sets, VIT with cardio and active time, END with core work and cleared quests.</p></section>
     <div class="nums">
-      <div class="num"><b>${M.quests}</b><small>quests cleared</small></div>
-      <div class="num"><b>${M.days}</b><small>days trained</small></div>
-      <div class="num"><b>${M.bestStreak}</b><small>best streak</small></div>
-      <div class="num"><b>${M.prs}</b><small>records set</small></div>
-      <div class="num"><b>${fmtN(Math.round(M.volume / 1000 * 10) / 10)} t</b><small>total lifted</small></div>
-      <div class="num"><b>${+M.km.toFixed(1)}</b><small>km covered</small></div>
+      <div class="num"><b>${M.quests}</b><small>quests cleared</small></div><div class="num"><b>${M.days}</b><small>days trained</small></div>
+      <div class="num"><b>${M.bestStreak}</b><small>best streak</small></div><div class="num"><b>${M.prs}</b><small>records set</small></div>
+      <div class="num"><b>${fmtN(Math.round(M.volume / 100) / 10)} t</b><small>total lifted</small></div><div class="num"><b>${+M.km.toFixed(1)}</b><small>km covered</small></div>
     </div>`;
   if (mine) {
     const opts = Object.keys(R.ach).map(k => ACHX[k]).filter(Boolean).sort((a, b) => b.rar - a.rar || a.name.localeCompare(b.name));
-    h += `<section class="win card titlepick"><h2>Title</h2><p>Show one of your achievements next to your name on the board.</p>
+    h += `<section class="win card"><div class="toggle"><h2>My program</h2><button class="btn primary" data-view="program">Edit</button></div>
+      <div class="psum">${DAYS.map(d => { const p = progDay(id, d); return `<div><b>${PROGRAM[d].short}</b><span>${esc(p.name)}</span><small>${p.ex.length ? `${p.ex.length} exercises · ${planSets(p)} sets` : "Cardio only"} · ${p.cardio} min</small></div>`; }).join("")}</div></section>
+      <section class="win card titlepick"><h2>Title</h2><p>Show one of your achievements next to your name on the board.</p>
       <select id="titleSel" aria-label="Choose your title"><option value="">No title</option>${opts.map(a => `<option value="${a.id}" ${S.hunters[id].title === a.id ? "selected" : ""}>${a.icon} ${esc(a.name)} (${RAR[a.rar][0]})</option>`).join("")}</select></section>`;
+  } else {
+    h += `<section class="win card"><h2>${esc(nameOf(id))}'s program</h2><div class="psum">${DAYS.map(d => { const p = progDay(id, d); return `<div><b>${PROGRAM[d].short}</b><span>${esc(p.name)}</span><small>${p.ex.map(e => esc(shortName(e[0]))).join(", ") || "Cardio only"}</small></div>`; }).join("")}</div></section>`;
   }
   h += `<div class="sect">Achievements<small>${unlocked} / ${ACH.length}</small></div>`;
   const stv = statsOf(M);
-  for (const c of ACH_CATS) {
-    const items = ACH.filter(a => a.cat === c.name);
-    const got = items.filter(a => R.ach[a.id]);
-    const next = items.find(a => !R.ach[a.id]);
-    const val = metricVal(M, c.metric, stv);
-    const prev = got.length ? got[got.length - 1].n : 0;
+  const catBlock = c => {
+    const items = ACH.filter(a => a.cat === c.name && a.metric === c.metric);
+    const got = items.filter(a => R.ach[a.id]), next = items.find(a => !R.ach[a.id]);
+    const val = metricVal(M, c.metric, stv), prev = got.length ? got[got.length - 1].n : 0;
     const pct = next ? Math.max(0, Math.min(100, (val - prev) / (next.n - prev) * 100)) : 100;
-    h += `<details class="cat"><summary>${badge(got.length ? got[got.length - 1] : items[0], "sm").replace('class="badge sm"', `class="badge sm${got.length ? "" : " locked"}"`)}<span class="cn">${esc(c.name)}</span><span class="cc">${got.length}/${items.length}</span>
+    return `<details class="cat"><summary>${lockBadge(got.length ? got[got.length - 1] : items[0], "sm", !got.length)}<span class="cn">${esc(c.name)}</span><span class="cc">${got.length}/${items.length}</span>
       <span class="nx">${next ? `Next: ${esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${fmtN(next.n)}` : "Complete"}</span></summary>
-      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${badge(a).replace('class="badge "', `class="badge ${R.ach[a.id] ? "" : "locked"}"`)}<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>
+      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${lockBadge(a, "", !R.ach[a.id])}<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>
         <span class="when"><span class="rar" style="color:${RAR[a.rar][2]}">${RAR[a.rar][0]}</span><br>${R.ach[a.id] ? fmtShort(R.ach[a.id]) : a.xp ? `+${a.xp} XP` : ""}</span></div>`).join("")}</div></details>`;
-  }
-  h += `<div class="sect">Machine log</div>${machineLog(id)}</div>`;
+  };
+  for (const c of ACH_CATS.filter(c => !c.mastery)) h += catBlock(c);
+  const mast = ACH_CATS.filter(c => c.mastery).map(c => ({ c, v: metricVal(M, c.metric) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+  const mastGot = ACH.filter(a => a.mastery && R.ach[a.id]).length;
+  h += `<details class="cat"><summary><span class="badge sm" style="--rc:${RAR[2][2]}">⚙️</span><span class="cn">Exercise mastery</span><span class="cc">${mastGot}</span><span class="nx">Initiate, Adept, Master and Grandmaster for every exercise you log</span></summary>
+    <div class="achs">${mast.length ? mast.map(({ c, v }) => { const items = ACH.filter(a => a.metric === c.metric); return `<div class="ach"><span class="mrow">${items.map(a => lockBadge(a, "sm", !R.ach[a.id])).join("")}</span><span><b>${esc(c.name)}</b><small>${v} session${v === 1 ? "" : "s"} · next at ${(items.find(a => !R.ach[a.id]) || { n: "max" }).n}</small></span><span class="when"></span></div>`; }).join("") : `<div class="ach"><span></span><span><small>Log any exercise to start its mastery track.</small></span><span></span></div>`}</div></details>`;
+  h += `<div class="sect">Exercise log</div>${machineLog(id)}</div>`;
   $("#view").innerHTML = h;
 }
 function machineLog(id) {
@@ -1185,29 +1417,30 @@ function machineLog(id) {
       <div class="scroll"><table><tr><th>Date</th><th>Walk</th><th>Run</th><th>Km</th><th>Pace</th><th>Kcal</th></tr>${rows.slice(-10).reverse().map(({ b, c }) =>
         `<tr><td>${fmtDate(b.date)}</td><td>${c.walk ?? ""}</td><td>${c.run ?? (c.walk == null ? Math.round(c.total) : "")}</td><td>${c.dist ?? ""}</td><td>${paceTxt(pace(c))}</td><td>${c.kcal ?? ""}</td></tr>`).join("")}</table></div></details>`;
   }
-  for (const eid of Object.keys(EX)) {
-    const pts = [];
+  const ids = new Set(); for (const b of mine) for (const k of Object.keys(b.ex || {})) ids.add(k);
+  for (const eid of [...ids].sort((a, b) => (CX(a) ? CX(a).name : a).localeCompare(CX(b) ? CX(b).name : b))) {
+    const type = typeOf(eid), key = type === "wr" ? "w" : type, pts = [];
     for (const b of mine) {
-      const arr = ((b.ex || {})[eid] || []).filter(filled); if (!arr.length) continue;
-      const top = Math.max(...arr.map(s => +s.w || 0));
-      pts.push({ date: b.date, top, reps: arr.find(s => (+s.w || 0) === top).r, sets: arr });
+      const arr = ((b.ex || {})[eid] || []).filter(s => setOk(type, s)); if (!arr.length) continue;
+      const top = Math.max(...arr.map(s => +s[key] || 0));
+      pts.push({ date: b.date, top, reps: type === "wr" ? arr.find(s => (+s.w || 0) === top).r : null, sets: arr });
     }
     if (!pts.length) continue;
-    const a = pts[0], z = pts[pts.length - 1], diff = z.top - a.top;
-    const trend = pts.length > 1 ? (diff > 0 ? `<span class="pos">+${+diff.toFixed(1)} kg</span> since ${fmtShort(a.date)}` : diff < 0 ? `${+diff.toFixed(1)} kg since ${fmtShort(a.date)}` : `Same top weight since ${fmtShort(a.date)}`) : `First logged ${fmtShort(a.date)}`;
-    h += `<details class="hist"><summary><span class="hn">${esc(EX[eid].name)}</span>${spark(pts.map(p => p.top))}<span class="hs">Top ${wTxt(z.top)}${z.top ? " kg" : ""} × ${z.reps ?? "?"} · ${trend}</span></summary>
-      <div class="scroll"><table>${pts.slice(-8).reverse().map(p => `<tr><td>${fmtDate(p.date)}</td><td>${p.sets.map(setTxt).join(" · ")}</td></tr>`).join("")}</table></div></details>`;
+    const a = pts[0], z = pts[pts.length - 1], diff = z.top - a.top, u = type === "wr" ? " kg" : type === "s" ? " s" : " reps";
+    const trend = pts.length > 1 ? (diff > 0 ? `<span class="pos">+${+diff.toFixed(1)}${u}</span> since ${fmtShort(a.date)}` : diff < 0 ? `${+diff.toFixed(1)}${u} since ${fmtShort(a.date)}` : `Same top since ${fmtShort(a.date)}`) : `First logged ${fmtShort(a.date)}`;
+    h += `<details class="hist"><summary><span class="hn">${esc(CX(eid) ? CX(eid).name : eid)}</span>${spark(pts.map(p => p.top))}<span class="hs">Top ${type === "wr" ? `${wTxt(z.top)}${z.top ? " kg" : ""} × ${z.reps ?? "?"}` : z.top + u} · ${trend}</span></summary>
+      <div class="scroll"><table>${pts.slice(-8).reverse().map(p => `<tr><td>${fmtDate(p.date)}</td><td>${p.sets.map(s => setTxt(s, type)).join(" · ")}</td></tr>`).join("")}</table></div></details>`;
   }
-  return h || `<div class="win empty">No machine sessions logged yet.</div>`;
+  return h || `<div class="win empty">No sessions logged yet.</div>`;
 }
 
 /* ================= RECORDS ================= */
 function renderRecords() {
-  const n = Object.values(S.sessions).filter(b => b.profile === S.me).length;
-  const pending = Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length;
+  const n = Object.values(S.sessions).filter(b => b.profile === S.me).length, p = pending();
   $("#view").innerHTML = `<div class="list">
-    <p class="note${ONLINE ? "" : " alert"}">${ONLINE ? `<b>Connected to the shared board.</b> ${pending ? `${pending} change${pending === 1 ? "" : "s"} waiting to sync.` : "Everything is synced."} Your log is also kept on this phone, so it works offline at the gym.`
-      : "<b>Saved on this phone only.</b> The shared board isn't connected yet. Export a backup every few weeks."}</p>
+    <p class="note${ONLINE && !S.schemaOld ? "" : " alert"}">${!ONLINE ? "<b>Saved on this phone only.</b> The shared board isn't connected yet. Export a backup every few weeks."
+      : S.schemaOld ? "<b>Database needs the v4 update.</b> Run supabase-update-v4.sql in Supabase so custom programs and exercises sync. Everything else is syncing."
+      : `<b>Connected to the shared board.</b> ${p ? `${p} change${p === 1 ? "" : "s"} waiting to sync.` : "Everything is synced."} Your log is also kept on this phone, so it works offline at the gym.`}</p>
     <section class="win card"><h2>Hunter</h2><p>Signed in as <b style="color:var(--fg)">${esc(nameOf(S.me))}</b>.</p>
       <div class="ex-actions"><button class="btn${S.armed === "switch" ? " armed" : ""}" data-act="switch">${S.armed === "switch" ? "Tap again to switch" : "Switch hunter"}</button></div></section>
     <section class="win card"><div class="toggle"><h2>Sound</h2><button class="btn${S.sound ? " primary" : ""}" data-act="sound">${S.sound ? "On" : "Off"}</button></div><p>System chimes for cleared quests, records, level ups and achievements.</p></section>
@@ -1222,6 +1455,7 @@ function renderRecords() {
 /* ================= EVENTS ================= */
 let armT = null;
 function arm(key) { S.armed = key; clearTimeout(armT); armT = setTimeout(() => { S.armed = null; softRender(); }, 4000); }
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24) || "exercise";
 document.addEventListener("click", e => {
   const t = e.target.closest("button");
   if (!t) return;
@@ -1234,15 +1468,16 @@ document.addEventListener("click", e => {
     const id = "h" + Date.now().toString(36) + rnd().slice(0, 3);
     S.hunters[id] = { id, name, title: null }; dirtyHunter(id); login(id); return;
   }
-  if (t.dataset.view) { S.view = t.dataset.view; S.viewing = null; render(); scrollTo(0, 0); return; }
+  if (t.dataset.view) { S.view = t.dataset.view; S.viewing = null; S.creating = false; render(); scrollTo(0, 0); return; }
   if (t.dataset.profile) { S.view = "profile"; S.viewing = t.dataset.profile; render(); scrollTo(0, 0); return; }
   if (t.dataset.day) { S.day = t.dataset.day; render(); return; }
-  const act = t.dataset.act, id = t.dataset.ex;
-  if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({ w: null, r: null }); arr.push({ w: null, r: null }); render(); }
+  if (t.dataset.pday) { S.pday = t.dataset.pday; S.creating = false; renderProgram(); return; }
+  const act = t.dataset.act, id = t.dataset.ex, i = +t.dataset.i;
+  if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
   if (act === "uselast") {
-    const last = lastFor(id, S.date); if (!last) return;
+    const last = lastFor(id, S.date, "wr"); if (!last) return;
     const b = session(true), arr = (b.ex[id] ||= []), n = exList().find(x => x.id === id).sets;
-    for (let i = 0; i < n; i++) { const s = last.sets[Math.min(i, last.sets.length - 1)]; arr[i] = arr[i] || { w: null, r: null }; if (arr[i].w == null) arr[i].w = s.w; }
+    for (let k = 0; k < n; k++) { const s = last.sets[Math.min(k, last.sets.length - 1)]; arr[k] = arr[k] || {}; if (arr[k].w == null) arr[k].w = s.w; }
     dirtySession(curKey()); render();
   }
   if (act === "remove") { const b = session(true); b.extra = b.extra.filter(x => x !== id); delete b.ex[id]; dirtySession(curKey()); render(); }
@@ -1253,6 +1488,25 @@ document.addEventListener("click", e => {
   if (act === "unexcuse") { const b = session(false); if (b) { delete b.excused; dirtySession(curKey()); } render(); }
   if (act === "switch") { if (S.armed !== "switch") { arm("switch"); renderRecords(); return; } S.armed = null; S.me = null; persist(); render(); }
   if (act === "sound") { S.sound = !S.sound; persist(); renderRecords(); if (S.sound) chime("clear"); }
+  if (act === "psets") editPlan(p => { p.ex[i][1] = Math.max(1, Math.min(8, p.ex[i][1] + +t.dataset.d)); });
+  if (act === "pmove") editPlan(p => { const j = i + +t.dataset.d; if (j >= 0 && j < p.ex.length) [p.ex[i], p.ex[j]] = [p.ex[j], p.ex[i]]; });
+  if (act === "pdel") editPlan(p => { p.ex.splice(i, 1); });
+  if (act === "preset") {
+    if (S.armed !== "preset") { arm("preset"); renderProgram(); return; }
+    S.armed = null; delete S.hunters[S.me].program[S.pday]; programChanged(S.pday); renderProgram();
+  }
+  if (act === "cxcancel") { S.creating = false; renderProgram(); }
+  if (act === "cxsave") {
+    const name = ($("#cx-name").value || "").trim().replace(/\s+/g, " ").slice(0, 32), msg = $("#cx-msg");
+    if (name.length < 3) { msg.hidden = false; msg.textContent = "Give it a name of at least 3 letters."; return; }
+    const dup = Object.values(catalogue()).find(x => x.name.toLowerCase() === name.toLowerCase());
+    const nid = dup ? dup.id : `c-${slug(name)}-${rnd().slice(0, 4)}`;
+    if (dup && dup.type === "min") { msg.hidden = false; msg.textContent = `"${dup.name}" already exists as a timed activity. Add it from + Add bonus exercise on the Quest tab instead.`; return; }
+    if (!dup) { S.custom[nid] = { id: nid, name, type: $("#cx-type").value, stat: $("#cx-stat").value, cat: "Custom", created_by: S.me }; S.outbox.x[nid] = rnd(); CATALOGUE = null; }
+    S.creating = false;
+    editPlan(p => { if (!p.ex.some(x => x[0] === nid)) { const [lo, hi] = RANGE[typeOf(nid)]; p.ex.push([nid, 3, lo, hi]); } });
+    if (dup) toast({ tag: "Already in the list", title: dup.name, text: "Added the existing exercise instead of making a copy." });
+  }
   if (t.id === "exportBtn") doExport();
   if (t.id === "copyBtn") doCopy(backupJson());
   if (t.id === "csvBtn") doCsv();
@@ -1261,20 +1515,20 @@ document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id
 document.addEventListener("input", e => {
   const t = e.target, d = t.dataset || {};
   if (d.ex && d.f) {
-    const b = session(true), arr = (b.ex[d.ex] ||= []), i = +d.i;
-    while (arr.length <= i) arr.push({ w: null, r: null });
+    const b = session(true), arr = (b.ex[d.ex] ||= []), i = +d.i, type = typeOf(d.ex);
+    while (arr.length <= i) arr.push({});
     arr[i][d.f] = num(t.value);
-    t.closest(".set").classList.toggle("done", arr[i].r != null);
+    t.closest(".set").classList.toggle("done", type === "wr" ? arr[i].r != null : setOk(type, arr[i]));
     const ex = exList().find(x => x.id === d.ex);
-    t.closest(".ex").classList.toggle("complete", exDone(b, ex));
+    if (ex) t.closest(".ex").classList.toggle("complete", exDone(b, ex));
     dirtySession(curKey()); refreshLive();
   } else if (d.bi != null && d.f) {
     const b = session(true), en = b.bonus[+d.bi]; if (!en) return;
     en.sets ||= []; const j = +d.j;
     while (en.sets.length <= j) en.sets.push({});
     en.sets[j][d.f] = num(t.value);
-    const L = LIBX[en.id];
-    t.closest(".set").classList.toggle("done", L.type === "wr" ? en.sets[j].r != null : en.sets[j][d.f] != null);
+    const L = CX(en.id);
+    t.closest(".set").classList.toggle("done", L.type === "wr" ? en.sets[j].r != null : setOk(L.type, en.sets[j]));
     t.closest(".ex").classList.toggle("complete", bonusLogged(en));
     dirtySession(curKey()); refreshLive();
   } else if (d.bi != null && d.bf) {
@@ -1287,21 +1541,30 @@ document.addEventListener("input", e => {
     const c = cardioOf(b), pc = pace(c);
     $("#derived").innerHTML = (c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong>` : "Enter what the treadmill shows when you stop.") + (pc ? ` · Pace <strong>${paceTxt(pc)}</strong>` : "");
     dirtySession(curKey());
-    $("#cardioCard").classList.toggle("complete", cardioMeets(b, reqs(S.day, penHere(replay(S.me))).cardio));
+    $("#cardioCard").classList.toggle("complete", cardioMeets(b, reqs(curPlan(), S.day, penHere(replay(S.me))).cardio));
     refreshLive();
   }
 });
 document.addEventListener("change", e => {
-  const t = e.target;
+  const t = e.target, d = t.dataset || {};
   if (t.id === "date" && t.value) { S.date = t.value; S.day = dayForDate(t.value); render(); }
   if (t.id === "addEx" && t.value) {
-    const b = session(true), [kind, id] = t.value.split(":");
-    if (kind === "P") b.extra = [...b.extra, id];
-    else { const L = LIBX[id]; b.bonus.push(L.type === "min" ? { id } : { id, sets: [{}, {}, {}] }); }
+    const b = session(true), id = t.value.slice(2), L = CX(id);
+    if (L.type === "min") b.bonus.push({ id }); else if (!b.extra.includes(id)) b.extra.push(id);
     dirtySession(curKey()); render();
-    const cards = document.querySelectorAll(kind === "P" ? "[data-card]" : "[data-bcard]");
+    const cards = document.querySelectorAll(L.type === "min" ? "[data-bcard]" : "[data-card]");
     if (cards.length) cards[cards.length - 1].scrollIntoView({ block: "center", behavior: "smooth" });
   }
+  if (t.id === "pAdd" && t.value) {
+    if (t.value === "__new") { S.creating = true; renderProgram(); const n = $("#cx-name"); if (n) { n.focus(); n.scrollIntoView({ block: "center" }); } return; }
+    const id = t.value, [lo, hi] = EX[id] ? [EX[id].lo, EX[id].hi] : RANGE[typeOf(id)];
+    editPlan(p => { p.ex.push([id, EX[id] ? EX[id].sets : 3, lo, hi]); });
+  }
+  if (d.pf) editPlan(p => {
+    if (d.pf === "cardio") p.cardio = Math.max(0, Math.min(120, Math.round(num(t.value) ?? p.cardio)));
+    else { const v = t.value.trim(); if (v || d.pf === "focus") p[d.pf] = v || (d.pf === "focus" ? "" : p[d.pf]); }
+  });
+  if (d.pr) editPlan(p => { const v = num(t.value); if (v != null && v > 0) { p.ex[+d.i][d.pr === "lo" ? 2 : 3] = Math.round(v); if (p.ex[+d.i][2] > p.ex[+d.i][3]) p.ex[+d.i][3] = p.ex[+d.i][2]; } });
   if (t.id === "titleSel") { S.hunters[S.me].title = t.value || null; dirtyHunter(S.me); render(); }
   if (t.id === "importFile" && t.files[0]) doImport(t.files[0]);
 });
@@ -1318,7 +1581,6 @@ setInterval(() => { if (!document.hidden) syncNow(); }, 45000);
 const Cracks = (() => {
   const cv = $("#cracks"), ctx = cv.getContext("2d");
   let segs = [], raf = 0, t0 = 0, on = false, w = 0, h = 0, lastDraw = 0;
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function grow(x, y, ang, len, width, depth, delay) {
     const pts = [[x, y]]; let l = 0;
     while (l < len) {
@@ -1345,13 +1607,13 @@ const Cracks = (() => {
   }
   function draw(t) {
     ctx.clearRect(0, 0, w, h);
-    const flicker = still ? 1 : (.72 + .28 * Math.sin(t * 2.3)) * (Math.random() < .03 ? .35 : 1);
-    const glitch = !still && (t % 4.5) < .12;
+    const flicker = reduced ? 1 : (.72 + .28 * Math.sin(t * 2.3)) * (Math.random() < .03 ? .35 : 1);
+    const glitch = !reduced && (t % 4.5) < .12;
     ctx.save();
     if (glitch) ctx.translate((Math.random() - .5) * 8, (Math.random() - .5) * 3);
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     for (const s of segs) {
-      const prog = still ? 1 : Math.max(0, Math.min(1, (t - s.delay) / 1.6));
+      const prog = reduced ? 1 : Math.max(0, Math.min(1, (t - s.delay) / 1.6));
       if (!prog) continue;
       const k = Math.max(2, Math.ceil(s.pts.length * prog));
       ctx.beginPath(); ctx.moveTo(s.pts[0][0], s.pts[0][1]);
@@ -1369,9 +1631,9 @@ const Cracks = (() => {
     if (document.hidden || now - lastDraw < 33) return;
     lastDraw = now; draw((now - t0) / 1000);
   }
-  addEventListener("resize", () => { if (on) { build(); if (still) draw(0); } });
+  addEventListener("resize", () => { if (on) { build(); if (reduced) draw(0); } });
   return {
-    start() { if (on) return; on = true; build(); t0 = performance.now(); if (still) draw(0); else raf = requestAnimationFrame(loop); },
+    start() { if (on) return; on = true; build(); t0 = performance.now(); if (reduced) draw(0); else raf = requestAnimationFrame(loop); },
     stop() { on = false; cancelAnimationFrame(raf); ctx.clearRect(0, 0, cv.width, cv.height); }
   };
 })();
@@ -1398,23 +1660,27 @@ $("#timerAdd").onclick = () => { if (tDone) { tEnd = Date.now(); tDone = false; 
 $("#timerStop").onclick = () => { clearInterval(tInt); $("#timer").hidden = true; };
 
 /* ================= EXPORT / BACKUP ================= */
-const backupJson = () => JSON.stringify({ app: "lift-log", version: 4, exported: new Date().toISOString(), hunters: S.hunters, sessions: S.sessions }, null, 1);
+const backupJson = () => JSON.stringify({ app: "lift-log", version: 5, exported: new Date().toISOString(), hunters: S.hunters, custom: S.custom, sessions: S.sessions }, null, 1);
 function csvText() {
   const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"];
+  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"];
   const rows = [head];
   const R = replay(S.me), who = nameOf(S.me);
   const mine = Object.values(S.sessions).filter(b => b.profile === S.me).sort((a, b) => a.date < b.date ? -1 : 1);
   const row = o => rows.push(head.map(k => o[k] ?? ""));
   for (const b of mine) {
-    const base = { person: who, date: b.date, day: PROGRAM[b.day] ? PROGRAM[b.day].name : b.day, penalty_day: R.pen[b.date] ? "yes" : "no", quest_cleared: questDone(b, !!R.pen[b.date]) ? "yes" : "no", excused: b.excused ? "yes" : "no" };
+    const plan = planFor(S.me, b.day, b), planIds = new Set(plan.ex.map(e => e[0]));
+    const base = { person: who, date: b.date, day: plan.name, penalty_day: R.pen[b.date] ? "yes" : "no", quest_cleared: questDone(b, !!R.pen[b.date]) ? "yes" : "no", excused: b.excused ? "yes" : "no" };
     const c = cardioOf(b);
-    if (c.total || c.dist || c.kcal) row({ ...base, type: "cardio", item: "walk/run", category: "Program cardio", walk_min: c.walk, run_min: c.run, total_min: c.total, distance_km: c.dist, pace_min_per_km: pace(c) ? pace(c).toFixed(2) : "", kcal: c.kcal });
-    for (const [id, arr] of Object.entries(b.ex || {})) arr.forEach((s, i) => { if (filled(s)) row({ ...base, type: "lift", item: EX[id] ? EX[id].name : id, category: "Program", set: i + 1, weight_kg: s.w, reps: s.r }); });
+    if (c.total || c.dist || c.kcal) row({ ...base, type: "cardio", item: "walk/run", category: "Program cardio", stat: "VIT", in_plan: "yes", walk_min: c.walk, run_min: c.run, total_min: c.total, distance_km: c.dist, pace_min_per_km: pace(c) ? pace(c).toFixed(2) : "", kcal: c.kcal });
+    for (const [id, arr] of Object.entries(b.ex || {})) {
+      const L = CX(id) || { name: id, cat: "", stat: "", type: "wr" };
+      arr.forEach((s, i) => { if (setOk(L.type, s)) row({ ...base, type: "lift", item: L.name, category: L.cat, stat: L.stat, in_plan: planIds.has(id) ? "yes" : "no", set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s }); });
+    }
     for (const e of b.bonus || []) {
-      const L = LIBX[e.id]; if (!L || !bonusLogged(e)) continue;
-      if (L.type === "min") row({ ...base, type: "bonus", item: L.name, category: L.cat, total_min: e.min, distance_km: e.km });
-      else (e.sets || []).forEach((s, i) => { if (s.w != null || s.r != null || s.s != null) row({ ...base, type: "bonus", item: L.name, category: L.cat, set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s }); });
+      const L = CX(e.id); if (!L || !bonusLogged(e)) continue;
+      if (L.type === "min") row({ ...base, type: "bonus", item: L.name, category: L.cat, stat: L.stat, in_plan: "no", total_min: e.min, distance_km: e.km });
+      else (e.sets || []).forEach((s, i) => { if (setOk(L.type, s)) row({ ...base, type: "bonus", item: L.name, category: L.cat, stat: L.stat, in_plan: "no", set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s }); });
     }
     if (b.excused && !hasTraining({ ...b, excused: false })) row({ ...base, type: "excused" });
   }
@@ -1441,13 +1707,14 @@ async function doImport(file) {
     const o = JSON.parse(await file.text());
     if (!o || o.app !== "lift-log" || typeof o.sessions !== "object") throw new Error("bad");
     let n = 0;
+    for (const [id, x] of Object.entries(o.custom || {})) if (!S.custom[id]) { S.custom[id] = x; S.outbox.x[id] = rnd(); CATALOGUE = null; }
     for (const [k, b] of Object.entries(o.sessions)) {
       if (!/^[a-z0-9]+_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK)$/.test(k) || !b) continue;
       const cur = S.sessions[k];
       if (!cur || (b.ts || 0) > (cur.ts || 0)) { S.sessions[k] = b; S.outbox.s[k] = rnd(); n++; }
     }
     const hs = o.hunters || Object.fromEntries(Object.entries(o.names || {}).map(([id, name]) => [id, { id, name, title: null }]));
-    for (const [id, h] of Object.entries(hs)) if (!S.hunters[id]) { S.hunters[id] = { id, name: h.name || "Hunter", title: h.title || null }; S.outbox.h[id] = rnd(); }
+    for (const [id, h] of Object.entries(hs)) if (!S.hunters[id]) { S.hunters[id] = { id, name: h.name || "Hunter", title: h.title || null, program: h.program || null }; S.outbox.h[id] = rnd(); }
     for (const b of Object.values(S.sessions)) if (!S.hunters[b.profile]) { S.hunters[b.profile] = { id: b.profile, name: "Hunter", title: null }; S.outbox.h[b.profile] = rnd(); }
     S.ver++; persist(); pushSoon(); render();
     const m2 = $("#importMsg"); if (m2) { m2.hidden = false; m2.textContent = `Restored ${n} session${n === 1 ? "" : "s"}.`; }
