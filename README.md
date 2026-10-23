@@ -1,36 +1,49 @@
 # Solo Lifting
 
-Daily quest gym tracker for the 4-day upper/lower machine split. A static web app that installs to a phone home screen, works offline, and keeps all data on the phone.
+Daily quest gym tracker with a shared leaderboard. A static web app on GitHub Pages that installs to a phone home screen and works offline at the gym. The shared board runs on a free Supabase database.
+
+Live at: https://jaidynkay314-cyber.github.io/solo-lifting/
 
 ## Quick guide
 
-### 1. Put it on GitHub Pages (one time, about 5 minutes)
+### Connect the shared board (one time, about 10 minutes)
 
-1. Sign in at github.com and click **New repository**.
-2. Name it `solo-lifting`, set it to **Public** (free Pages needs a public repo; no workout data is ever stored in it), and click **Create repository**.
-3. Click **uploading an existing file**, drag in every file from this folder, and click **Commit changes**.
-4. Go to **Settings**, then **Pages**. Under **Build and deployment**, set Source to **Deploy from a branch**, Branch to **main** and folder to **/ (root)**, then **Save**.
-5. Wait a minute or two. The page shows your address: `https://<your-username>.github.io/solo-lifting/`
+1. Go to supabase.com, sign up (GitHub login works) and click **New project**. Any name, any database password, region **Sydney**. Wait a minute for it to start.
+2. Open **SQL Editor**, then **New query**. Paste in all of `supabase-setup.sql` and click **Run**. It should say "Success".
+3. Open **Project Settings**, then **API**. Copy the **Project URL** and the **anon public** key.
+4. In the GitHub repo, open `config.js`, click the pencil, paste them between the quotes, and commit:
+   ```js
+   window.SL_CONFIG = {
+     url: "https://xxxx.supabase.co",
+     key: "eyJ..."
+   };
+   ```
+5. Open the app. The top corner should say **Synced**.
 
-### 2. Install on a phone
+Until this is done, the app still works, but each phone only sees its own hunters ("This phone only").
 
-- **Android (Chrome):** open the address, tap **⋮**, then **Install app** (or **Add to home screen**, then **Install**). It opens full screen as its own app.
-- **iPhone (Safari):** open the address, tap **Share**, then **Add to Home Screen**.
-- Tap your name on the toggle once. The app remembers it.
+### Joining
 
-Each phone keeps its own log. Jaidyn's phone holds Jaidyn's data and Paris's phone holds Paris's. Both profiles exist on every phone, so one phone can log for both if needed.
+Open the link, then sign in by tapping your name or typing a new one and tapping **Arise**. You stay signed in on that phone. There are no passwords. To switch, use **Records**, then **Switch hunter**.
 
-### 3. Backups
+Install to the home screen:
+- **Android:** Chrome, then **⋮**, then **Install app**.
+- **iPhone:** Safari, then **Share**, then **Add to Home Screen**.
 
-Records tab, then **Export backup** saves a `.json` file. Keep it in Google Drive. **Restore from file** merges a backup back in (the newer copy of each session wins, so nothing is lost). Export every few weeks, and always before changing phones.
+### Tabs
 
-### 4. Trend analysis
+- **Quest:** today's quest, countdown, weekly boss, cardio, machine sets, and bonus exercises (**+ Add bonus exercise**).
+- **Board:** everyone ranked by XP, with today's status (Cleared, Pending, Excused or Penalty Zone), streak, week progress, and an activity feed.
+- **Profile:** your title, stats, achievements and machine log. Tap anyone on the Board to see theirs.
+- **Records:** switch hunter, sound on or off, CSV export for analysis, backup and restore.
 
-Records tab, then **Export CSV** gives one row per set and one per cardio session for the selected person. Send it to Claude for analysis.
+### Updating the app
 
-### 5. Updating the app
+Upload changed files to the repo, but **never replace `config.js`** (it holds your board keys). In `sw.js`, bump `VERSION` (for example `solo-lifting-v4`). Phones show an **Update available** banner; tap it to switch.
 
-Upload the changed files to the repo (replacing the old ones) and, in `sw.js`, bump `VERSION` (for example `solo-lifting-v2`). Phones pick up the new version the next time the app is opened, then show it on the open after that. Workout data is not affected by updates.
+### Free tier note
+
+Supabase pauses free projects after a week with no activity. Daily gym use keeps it awake. If it ever pauses, click **Restore** in the Supabase dashboard; nothing is lost, and phones keep logging offline in the meantime.
 
 ## Technical details
 
@@ -38,38 +51,51 @@ Upload the changed files to the repo (replacing the old ones) and, in `sw.js`, b
 
 | File | Purpose |
 |---|---|
-| `index.html` | The whole app: markup, styles and script in one file |
-| `manifest.webmanifest` | Install metadata (name, icons, standalone display) |
-| `sw.js` | Service worker: caches the app shell, serves from cache, refreshes in the background |
-| `icon-192.png`, `icon-512.png`, `icon-512-maskable.png` | Home-screen icons |
+| `index.html` | The whole app: markup, styles and script |
+| `config.js` | Supabase URL and anon key (blank = phone-only mode) |
+| `supabase-setup.sql` | Creates the `hunters` and `sessions` tables, update triggers and open access rules |
+| `sw.js` | Service worker: caches the app shell, leaves database calls to the network, drives the update banner |
+| `manifest.webmanifest`, `icon-*.png` | Install metadata and icons |
 
-**Storage:** `localStorage` key `liftlog.v1`, holding `{ sessions, names, profile }`. The app calls `navigator.storage.persist()` to ask the browser not to evict it. Nothing leaves the phone.
+**Sync:** each phone keeps a full copy in `localStorage` (key `solo.v2`): `me`, `hunters`, `sessions`, `outbox`, `since`, `sound`. Edits go into an outbox and are upserted to Supabase (`POST /rest/v1/<table>` with `Prefer: resolution=merge-duplicates`) about a second later, retried while offline. Every 45 seconds, and whenever the app is reopened, the phone pulls rows with `updated_at` newer than its last sync. A cleared session is stored as `body = null` so the deletion syncs. Data from the old single-phone version (`liftlog.v1`) is carried over on first sign-in.
 
-**Session key:** `<profile>_<YYYY-MM-DD>_<day>`, where profile is `j` or `p` and day is `UA`, `LA`, `UB`, `LB`, `FR` or `WK`.
+**Access:** anyone with the app link can read and write the board. It holds only first names and gym numbers. The anon key is designed to be public; access is controlled by the rules in `supabase-setup.sql`.
+
+**Tables**
+
+- `hunters(id, name, title, updated_at)`: `title` is the equipped achievement id.
+- `sessions(key, hunter, date, body jsonb, updated_at)`: `key` is `<hunter>_<YYYY-MM-DD>_<day>`, day being `UA`, `LA`, `UB`, `LB`, `FR` or `WK`.
 
 **Session body**
 
 ```json
 {
   "profile": "j", "date": "2026-10-26", "day": "UA", "ts": 1793000000000,
-  "ex": { "chest-press": [ { "w": 40, "r": 12 }, { "w": 40, "r": 11 } ] },
+  "ex": { "chest-press": [ { "w": 40, "r": 12 } ] },
   "extra": ["cable-curl"],
-  "cardio": { "walk": 5, "run": 10, "dist": 2.1, "kcal": 160 }
+  "bonus": [ { "id": "pushups", "sets": [ { "r": 20 } ] }, { "id": "run", "min": 20, "km": 3.1 } ],
+  "cardio": { "walk": 5, "run": 10, "dist": 2.1, "kcal": 160 },
+  "excused": true
 }
 ```
 
-`w` is kg (null or 0 shows as bodyweight), `r` is reps. `extra` lists side-quest exercises added from another day. Empty sessions are deleted automatically.
+**Program and library:** `PROGRAM` defines the split (`[id, name, sets, repLow, repHigh]`). `LIB` defines bonus exercises (`[id, name, category, type, stat, outdoor]`, where type is `wr` weight x reps, `r` reps, `s` seconds, or `min` minutes with optional km). Keep ids stable so history carries over.
 
-**Program:** defined in the `PROGRAM` object at the top of the script. Each exercise is `[id, name, sets, repLow, repHigh]`. Keep ids stable so history carries over; rename the display name freely.
+**Everything is derived by replaying history** (`replay(hunterId)`): penalties, XP, levels, streaks, stats, records, boss wins, achievements with unlock dates, and the activity feed. Nothing derived is stored, so rule changes apply retroactively.
 
 **Rules**
 
-- Up a plate: shown when last session hit `repHigh` on every target set.
-- Quest cleared: every program exercise has its target number of sets logged, and cardio total time meets the day's minimum (10 min Mon to Thu, 15 min Fri and weekend).
-- XP: 10 per logged set, 2 per cardio minute, 50 per cleared quest.
-- Level: reaching level L+1 needs 50 x L x (L+1) total XP. Rank: E (1+), D (5+), C (10+), B (20+), A (35+), S (50+).
-- Countdown runs to local midnight. The Penalty Zone line rotates by date.
+- Quest cleared: every program exercise has its target sets, and cardio meets the day's minimum (10 min Mon to Thu, 15 min Fri and weekend).
+- Missed weekday (Mon to Fri, after the hunter's first session, not cleared or excused): -25 XP, and the Penalty Zone begins.
+- Penalty Zone: every set +1 and 25 min cardio until a quest is cleared. Penalties never stack. Clearing one gives +25 bonus XP.
+- Excuse (two taps): no drain, no penalty, streak unbroken.
+- XP: 10 per set (program and bonus), 2 per program cardio minute, 50 per cleared quest, 100 per weekly boss win, plus achievement rewards. Bonus training XP (sets 10 each, cardio minutes 2, active and recovery minutes 1) is capped at 200 a day.
+- Level: level L+1 needs 50 x L x (L+1) XP. XP can drain, but you never drop below your highest level. Rank: E (1+), D (5+), C (10+), B (20+), A (35+), S (50+).
+- Stats start at 10. STR +1 per 6 upper-body sets, AGI +1 per 6 lower-body sets, VIT +1 per 20 cardio or active minutes, END +1 per 6 core sets and per 4 cleared quests. Bonus exercises feed the stat listed against them.
+- Weekly boss: one program machine chosen per week (seeded by the Monday date). Beat your previous best top weight on it that week for +100 XP.
+- Personal record: a session's top weight on a machine beats every earlier session.
+- Streak: consecutive cleared weekday quests. Weekends and excused days are skipped; weekend clears add to it.
 
-**CSV columns:** `type, person, date, day, item, set, weight_kg, reps, walk_min, run_min, total_min, distance_km, pace_min_per_km, kcal`
+**Achievements:** 322 across 55 categories, generated by `cat()` from thresholds. Rarity comes from the estimated days to reach each threshold: Common (up to a week), Uncommon (45 days), Rare (150), Epic (a year), Legendary (two years), Mythic (beyond). XP rewards are 10, 25, 50, 100, 250 and 500 (Level achievements give none). Current split: 14 Common, 68 Uncommon, 46 Rare, 83 Epic, 57 Legendary, 54 Mythic.
 
-**Backup format:** `{ app: "lift-log", version: 2, exported, names, sessions }`. Restore only accepts keys matching the session key pattern above.
+**CSV columns:** `type, person, date, day, penalty_day, quest_cleared, excused, item, category, set, weight_kg, reps, seconds, walk_min, run_min, total_min, distance_km, pace_min_per_km, kcal`. Types: `lift`, `cardio`, `bonus`, `excused`.

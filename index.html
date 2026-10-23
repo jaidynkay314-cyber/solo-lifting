@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#04060c">
 <meta name="description" content="Daily quest gym tracker">
+<title>Solo Lifting</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -12,115 +13,115 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Solo Lifting">
-<style>
-:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-body { margin: 0; }
-img { max-width: 100%; }
-[hidden] { display: none !important; }
-</style>
-<title>Solo Lifting</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500;600&display=swap">
 <style>
-/* Layout: one-column "system window" HUD. Status window, then today's quest with countdown, then one panel per machine. Deliberately dark-only. */
+/* Layout: one-column "system window" HUD. Dark-only by design; a missed quest flips the palette to the red Penalty Zone. */
 :root {
-  --bg: #04060c;
-  --bg-2: #0a1530;
-  --panel: rgba(9, 18, 38, .88);
-  --panel-hi: rgba(22, 46, 92, .55);
-  --sunk: #08111f;
-  --fg: #dbe8ff;
-  --muted: #7f96bd;
-  --edge: #2a6fc4;
-  --edge-dim: #183a66;
-  --glow: #4cc3ff;
-  --glow-ink: #021022;
-  --gold: #ffc861;
-  --red: #ff5d6c;
+  --bg: #04060c; --bg-2: #0a1530;
+  --panel: rgba(9, 18, 38, .88); --panel-hi: rgba(22, 46, 92, .55);
+  --sunk: #08111f; --fg: #dbe8ff; --muted: #7f96bd;
+  --edge: #2a6fc4; --edge-dim: #183a66;
+  --glow: #4cc3ff; --glow-rgb: 76 195 255; --glow-ink: #021022;
+  --gold: #ffc861; --red: #ff5d6c;
   --font-display: "Rajdhani", "Arial Narrow", "Roboto Condensed", sans-serif;
   --font-body: "Exo 2", "Segoe UI", Roboto, system-ui, sans-serif;
   color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+:root.pz {
+  --bg: #070103; --bg-2: #3a050c;
+  --panel: rgba(26, 4, 9, .9); --panel-hi: rgba(110, 10, 24, .5);
+  --sunk: #120307; --fg: #ffe1e4; --muted: #c98a93;
+  --edge: #b3192e; --edge-dim: #571019;
+  --glow: #ff3048; --glow-rgb: 255 48 72; --glow-ink: #1a0005; --red: #ff8a95;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
 body {
+  margin: 0;
   background: radial-gradient(120% 60% at 50% -10%, var(--bg-2), var(--bg) 60%) fixed, var(--bg);
   color: var(--fg); font-family: var(--font-body); font-size: 15.5px; line-height: 1.4;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 12px 120px; font-variant-numeric: tabular-nums;
 }
-.app { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.app { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
 
-/* system window */
 .win {
   position: relative; background: linear-gradient(180deg, var(--panel-hi), var(--panel) 40%);
   border: 1px solid var(--edge); padding: 14px;
-  box-shadow: 0 0 22px rgb(46 140 255 / .18), inset 0 0 18px rgb(76 195 255 / .06);
+  box-shadow: 0 0 22px rgb(var(--glow-rgb) / .16), inset 0 0 18px rgb(var(--glow-rgb) / .06);
 }
 .win::before, .win::after { content: ""; position: absolute; width: 14px; height: 14px; border: 2px solid var(--glow); pointer-events: none; }
 .win::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
 .win::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
-.tag { font-family: var(--font-display); font-weight: 700; letter-spacing: .18em; text-transform: uppercase; font-size: 13px; color: var(--glow); }
-.title {
-  font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 0;
-  text-shadow: 0 0 12px rgb(76 195 255 / .45); text-wrap: balance;
-}
+.tag { margin: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: .18em; text-transform: uppercase; font-size: 13px; color: var(--glow); }
+.title { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 0; text-shadow: 0 0 12px rgb(var(--glow-rgb) / .45); text-wrap: balance; }
 
 .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.brand { font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .14em; text-transform: uppercase; line-height: 1; text-shadow: 0 0 14px rgb(76 195 255 / .55); }
+.brand { position: relative; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .14em; text-transform: uppercase; line-height: 1; text-shadow: 0 0 14px rgb(var(--glow-rgb) / .55); }
 .brand span { color: var(--glow); }
-.seg { display: inline-flex; border: 1px solid var(--edge-dim); padding: 3px; gap: 3px; background: var(--sunk); }
-.seg button { border: 0; background: transparent; padding: 6px 14px; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
-.seg button[aria-pressed="true"] { background: var(--glow); color: var(--glow-ink); }
+.net { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.net::before { content: ""; width: 7px; height: 7px; background: var(--muted); }
+.net[data-s="ok"]::before { background: var(--glow); box-shadow: 0 0 6px var(--glow); }
+.net[data-s="busy"]::before { background: var(--gold); }
+.net[data-s="off"]::before { background: var(--red); }
 
 .status-win { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; align-items: center; }
 .lvl { grid-row: span 3; text-align: center; border-right: 1px solid var(--edge-dim); padding-right: 16px; }
-.lvl b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: .9; color: var(--glow); text-shadow: 0 0 16px rgb(76 195 255 / .6); }
+.lvl b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: .9; color: var(--glow); text-shadow: 0 0 16px rgb(var(--glow-rgb) / .6); }
 .lvl small { font-family: var(--font-display); letter-spacing: .2em; font-size: 12px; color: var(--muted); }
-.srow { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; min-width: 0; }
-.srow span { color: var(--muted); }
-.srow strong { font-family: var(--font-display); font-size: 17px; letter-spacing: .04em; }
-.rank { color: var(--gold); }
+.srow { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; min-width: 0; }
+.srow > span { color: var(--muted); min-width: 0; }
+.srow strong { font-family: var(--font-display); font-size: 17px; letter-spacing: .04em; color: var(--fg); }
+.srow .rank { color: var(--gold); }
+.nm { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .xp { height: 6px; background: var(--sunk); border: 1px solid var(--edge-dim); }
 .xp i { display: block; height: 100%; background: linear-gradient(90deg, var(--edge), var(--glow)); box-shadow: 0 0 10px var(--glow); }
 
-.tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--edge-dim); }
-.tabs button { border: 0; background: none; padding: 10px 0 9px; font-family: var(--font-display); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.tabs button[aria-selected="true"] { color: var(--glow); border-bottom-color: var(--glow); text-shadow: 0 0 10px rgb(76 195 255 / .5); }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--edge-dim); }
+.tabs button { border: 0; background: none; padding: 10px 0 9px; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .05em; min-width: 0; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button[aria-selected="true"] { color: var(--glow); border-bottom-color: var(--glow); text-shadow: 0 0 10px rgb(var(--glow-rgb) / .5); }
 
 .days { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
 .days button { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 6px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
 .days b { font-family: var(--font-display); font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
 .days small { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.days button[aria-pressed="true"] { border-color: var(--glow); background: rgb(76 195 255 / .14); box-shadow: 0 0 12px rgb(76 195 255 / .25); }
+.days button[aria-pressed="true"] { border-color: var(--glow); background: rgb(var(--glow-rgb) / .14); box-shadow: 0 0 12px rgb(var(--glow-rgb) / .25); }
 .days button.clear b::after { content: " ✓"; color: var(--glow); font-size: 12px; }
-
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .bar input[type=date] { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 6px 10px; }
-.status { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
-.status::before { content: ""; width: 7px; height: 7px; background: var(--muted); }
-.status[data-s="ok"]::before { background: var(--glow); box-shadow: 0 0 6px var(--glow); }
-.status[data-s="busy"]::before { background: var(--gold); }
 
-/* quest */
 .quest { display: flex; flex-direction: column; gap: 10px; }
 .quest .title { font-size: 30px; line-height: 1; }
-.quest .sub { margin: 0; color: var(--muted); font-size: 14px; }
+.sub { margin: 0; color: var(--muted); font-size: 14px; }
 .goals { display: flex; flex-direction: column; gap: 4px; margin: 2px 0; padding: 0; list-style: none; }
 .goals li { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; }
 .goals li span:last-child { font-family: var(--font-display); font-weight: 600; letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
 .goals li.ok span:last-child { color: var(--glow); }
 .goals li.ok span:first-child { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--edge); }
 .clock { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-top: 1px solid var(--edge-dim); padding-top: 10px; flex-wrap: wrap; }
-.clock b { font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1; letter-spacing: .06em; color: var(--fg); }
+.clock b { font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1; letter-spacing: .06em; }
 .clock span { font-family: var(--font-display); letter-spacing: .16em; font-size: 12px; color: var(--muted); text-transform: uppercase; }
 .warn { margin: 0; font-size: 13.5px; color: var(--red); }
 .warn b { font-family: var(--font-display); letter-spacing: .12em; }
 .cleared { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .1em; color: var(--gold); text-transform: uppercase; text-shadow: 0 0 12px rgb(255 200 97 / .45); }
 .cleared small { display: block; font-family: var(--font-body); font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 13px; color: var(--muted); text-shadow: none; }
+.qfoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.linkbtn { border: 0; background: none; padding: 4px 0; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.linkbtn.armed { color: var(--gold); }
+.pz-badge { display: inline-block; font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; font-size: 12px; padding: 2px 8px; border: 1px solid var(--glow); color: var(--glow); text-transform: uppercase; }
+.boss { display: flex; gap: 12px; align-items: center; border-color: #8a4dff; box-shadow: 0 0 22px rgb(138 77 255 / .25); }
+.boss::before, .boss::after { border-color: #b98aff; }
+.boss .ico { font-size: 34px; line-height: 1; filter: drop-shadow(0 0 8px rgb(185 138 255 / .7)); }
+.boss .tag { color: #b98aff; }
+.boss p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
+.boss b { color: var(--fg); }
 
 .list { display: flex; flex-direction: column; gap: 12px; }
 .ex { display: flex; flex-direction: column; gap: 10px; border-color: var(--edge-dim); }
@@ -130,39 +131,102 @@ button { cursor: pointer; }
 .ex-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .ex-h h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .03em; line-height: 1.15; min-width: 0; }
 .target { font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--muted); white-space: nowrap; letter-spacing: .04em; }
+.target em { font-style: normal; color: var(--glow); }
 .last { margin: 0; font-size: 13.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .last strong { color: var(--fg); font-weight: 600; }
 .chip { font-family: var(--font-display); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 12px; padding: 2px 8px; border: 1px solid var(--gold); color: var(--gold); box-shadow: 0 0 8px rgb(255 200 97 / .3); }
 .sets { display: flex; flex-direction: column; gap: 6px; }
 .set { display: grid; grid-template-columns: 24px 1fr 12px 1fr 20px; align-items: center; gap: 8px; }
+.set.one { grid-template-columns: 24px 1fr 20px; }
 .set .n { font-family: var(--font-display); font-weight: 700; color: var(--muted); font-size: 17px; text-align: center; }
+.set.extra .n { color: var(--glow); }
 .field { position: relative; min-width: 0; }
-.field input { width: 100%; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 40px 9px 11px; font-size: 19px; font-weight: 600; min-width: 0; }
+.field input { width: 100%; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 44px 9px 11px; font-size: 19px; font-weight: 600; min-width: 0; }
 .field input::placeholder { color: var(--muted); opacity: .55; font-weight: 500; }
-.field input:focus { border-color: var(--glow); box-shadow: 0 0 10px rgb(76 195 255 / .3); outline: none; }
+.field input:focus { border-color: var(--glow); box-shadow: 0 0 10px rgb(var(--glow-rgb) / .3); outline: none; }
 .field span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--muted); pointer-events: none; }
 .x { text-align: center; color: var(--muted); }
 .tick { width: 18px; height: 18px; border: 1.5px solid var(--edge-dim); transform: rotate(45deg) scale(.8); }
 .set.done .tick { background: var(--glow); border-color: var(--glow); box-shadow: 0 0 8px var(--glow); }
-.ex-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ex-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .btn { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 7px 12px; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .06em; }
 .btn:hover { border-color: var(--edge); }
 .btn.primary { background: var(--glow); border-color: var(--glow); color: var(--glow-ink); }
-
+.btn.armed { border-color: var(--gold); color: var(--gold); }
 .cgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .derived { margin: 0; font-size: 13.5px; color: var(--muted); }
 .derived strong { color: var(--fg); }
-.add select { width: 100%; border: 1px dashed var(--edge-dim); background: transparent; padding: 10px 12px; color: var(--muted); }
+.add select { width: 100%; border: 1px dashed var(--edge); background: var(--sunk); padding: 11px 12px; color: var(--fg); }
+.sect { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .16em; font-size: 14px; color: var(--glow); margin: 6px 0 -4px; display: flex; justify-content: space-between; gap: 10px; }
+.sect small { color: var(--muted); letter-spacing: .06em; font-weight: 600; }
 .note { border-left: 2px solid var(--glow); padding: 4px 0 4px 12px; font-size: 13.5px; color: var(--muted); margin: 0; }
 .note b { color: var(--fg); }
 .note.alert { border-left-color: var(--gold); }
-.empty { text-align: center; color: var(--muted); padding: 30px 12px; }
+.empty { text-align: center; color: var(--muted); padding: 24px 12px; }
 
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stat { border: 1px solid var(--edge-dim); background: var(--panel); padding: 10px 12px; }
-.stat b { display: block; font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--glow); }
-.stat small { color: var(--muted); font-size: 12px; }
-.grp { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .16em; font-size: 14px; color: var(--glow); margin: 6px 0 -4px; }
+/* badges and rarity */
+.badge { --rc: #9fb3cc; display: inline-grid; place-items: center; width: 34px; height: 34px; flex: none; font-size: 18px; line-height: 1;
+  border: 1.5px solid var(--rc); background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 28%, transparent), var(--sunk) 70%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--rc) 45%, transparent); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.badge.sm { width: 24px; height: 24px; font-size: 13px; }
+.badge.lg { width: 64px; height: 64px; font-size: 32px; }
+.badge.locked { filter: grayscale(1) brightness(.45); box-shadow: none; }
+.rar { font-family: var(--font-display); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 11.5px; }
+
+/* board */
+.rows { display: flex; flex-direction: column; gap: 8px; }
+.row { display: grid; grid-template-columns: 30px auto 1fr auto; gap: 4px 10px; align-items: center; border: 1px solid var(--edge-dim); background: var(--panel); padding: 10px 12px; text-align: left; width: 100%; }
+.row.me { border-color: var(--glow); box-shadow: 0 0 14px rgb(var(--glow-rgb) / .2); }
+.row .pos { font-family: var(--font-display); font-weight: 700; font-size: 24px; color: var(--muted); text-align: center; grid-row: span 2; }
+.row:first-child .pos { color: var(--gold); text-shadow: 0 0 10px rgb(255 200 97 / .5); }
+.row .badge { grid-row: span 2; }
+.row .who { min-width: 0; }
+.row .who b { display: block; font-family: var(--font-display); font-size: 19px; letter-spacing: .04em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .who small { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .lv { text-align: right; font-family: var(--font-display); font-weight: 700; font-size: 18px; white-space: nowrap; }
+.row .lv small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--muted); }
+.row .meta { grid-column: 3 / span 2; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.st { font-family: var(--font-display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 11.5px; padding: 1px 7px; border: 1px solid var(--edge-dim); }
+.st.ok { border-color: var(--glow); color: var(--glow); }
+.st.pz { border-color: #ff3048; color: #ff3048; box-shadow: 0 0 8px rgb(255 48 72 / .4); }
+.st.ex { border-color: var(--muted); }
+.feed { display: flex; flex-direction: column; border: 1px solid var(--edge-dim); background: var(--panel); }
+.feed div { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--edge-dim); font-size: 14px; }
+.feed div:first-child { border-top: 0; }
+.feed time { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.feed .ic { width: 24px; text-align: center; }
+
+/* profile */
+.phead { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; }
+.phead .badge { grid-row: span 3; }
+.phead h1 { margin: 0; font-family: var(--font-display); font-size: 30px; letter-spacing: .06em; line-height: 1; text-transform: uppercase; min-width: 0; overflow-wrap: anywhere; }
+.phead .ttl { font-size: 13.5px; }
+.statgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; }
+.stat2 { display: grid; grid-template-columns: 40px 1fr auto; gap: 8px; align-items: center; font-family: var(--font-display); font-weight: 700; }
+.stat2 span { letter-spacing: .1em; color: var(--muted); }
+.stat2 b { font-size: 20px; }
+.stat2 .meter { height: 5px; background: var(--sunk); border: 1px solid var(--edge-dim); }
+.stat2 .meter i { display: block; height: 100%; background: var(--glow); box-shadow: 0 0 8px var(--glow); }
+.nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.num { border: 1px solid var(--edge-dim); background: var(--panel); padding: 9px 10px; min-width: 0; }
+.num b { display: block; font-family: var(--font-display); font-size: 22px; line-height: 1; color: var(--glow); }
+.num small { color: var(--muted); font-size: 11.5px; }
+.titlepick select { width: 100%; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 12px; }
+details.cat { border: 1px solid var(--edge-dim); background: var(--panel); }
+details.cat > summary { list-style: none; cursor: pointer; padding: 11px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; }
+details.cat > summary::-webkit-details-marker { display: none; }
+.cat .cn { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; }
+.cat .cc { font-family: var(--font-display); font-weight: 600; color: var(--muted); }
+.cat .nx { grid-column: 2 / span 2; font-size: 12.5px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.cat .nx .meter { flex: 1; height: 4px; background: var(--sunk); border: 1px solid var(--edge-dim); min-width: 40px; }
+.cat .nx .meter i { display: block; height: 100%; background: var(--glow); }
+.achs { display: flex; flex-direction: column; border-top: 1px solid var(--edge-dim); }
+.ach { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--edge-dim); }
+.ach:first-child { border-top: 0; }
+.ach b { font-size: 14.5px; }
+.ach small { display: block; color: var(--muted); font-size: 12px; }
+.ach .when { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.ach.lock b { color: var(--muted); }
 details.hist { border: 1px solid var(--edge-dim); background: var(--panel); }
 details.hist summary { list-style: none; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; cursor: pointer; }
 details.hist summary::-webkit-details-marker { display: none; }
@@ -171,7 +235,7 @@ details.hist summary::-webkit-details-marker { display: none; }
 .hs .pos { color: var(--glow); font-weight: 600; }
 .spark { grid-row: 1 / span 2; grid-column: 2; }
 .spark path.l { fill: none; stroke: var(--glow); stroke-width: 2; }
-.spark path.a { fill: rgb(76 195 255 / .14); }
+.spark path.a { fill: rgb(var(--glow-rgb) / .14); }
 .spark circle { fill: var(--glow); }
 .hist .scroll { overflow-x: auto; }
 .hist table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -182,51 +246,66 @@ details.hist summary::-webkit-details-marker { display: none; }
 .card { display: flex; flex-direction: column; gap: 10px; }
 .card h2 { margin: 0; font-family: var(--font-display); font-size: 19px; letter-spacing: .08em; text-transform: uppercase; }
 .card p { margin: 0; font-size: 14px; color: var(--muted); }
-.names { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.names input, .card textarea { width: 100%; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 12px; min-width: 0; }
-.card textarea { min-height: 120px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+.card textarea { width: 100%; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 12px; min-height: 120px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
 .file { position: relative; overflow: hidden; display: inline-flex; }
 .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* login */
+.login { max-width: 460px; margin: 6vh auto 0; display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 1; }
+.login .brand { font-size: 34px; text-align: center; }
+.login .who { display: flex; flex-direction: column; gap: 8px; }
+.login .who button { display: flex; align-items: center; gap: 12px; text-align: left; border: 1px solid var(--edge); background: var(--sunk); padding: 12px; font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .06em; }
+.login .who button small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 12.5px; color: var(--muted); letter-spacing: 0; }
+.login .new { display: flex; gap: 8px; }
+.login .new input { flex: 1; min-width: 0; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 11px 12px; font-size: 17px; }
 
 .timer {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
   padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
-  background: rgba(4, 8, 18, .96); border-top: 1px solid var(--glow); box-shadow: 0 -6px 24px rgb(46 140 255 / .25);
+  background: rgba(4, 8, 18, .96); border-top: 1px solid var(--glow); box-shadow: 0 -6px 24px rgb(var(--glow-rgb) / .25);
 }
 .timer-in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
 .timer-t { font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1; min-width: 70px; color: var(--glow); }
 .timer-l { flex: 1; font-size: 13px; color: var(--muted); min-width: 0; }
 .timer.over { border-top-color: var(--gold); }
 .timer.over .timer-t { color: var(--gold); }
-
-.toast {
+.toast, .update {
   position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 30;
-  width: min(92vw, 420px); text-align: center;
+  width: min(calc(100vw - 32px), 420px); text-align: center;
 }
-.toast .title { font-size: 26px; color: var(--gold); text-shadow: 0 0 14px rgb(255 200 97 / .6); }
+.toast .badge { margin: 4px auto 0; display: grid; }
+.toast .title { font-size: 24px; color: var(--gold); text-shadow: 0 0 14px rgb(255 200 97 / .6); }
 .toast p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.update { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: .1em; text-transform: uppercase; color: var(--glow); cursor: pointer; z-index: 29; }
+.update small { display: block; font-family: var(--font-body); font-weight: 500; letter-spacing: 0; text-transform: none; font-size: 13px; color: var(--muted); }
+
+#cracks { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; display: none; }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 4; display: none; box-shadow: inset 0 0 90px 24px rgb(255 20 40 / .32); }
+:root.pz #cracks, :root.pz .vignette { display: block; }
+:root.pz .brand::before, :root.pz .brand::after { content: attr(data-text); position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: none; }
+:root.pz .brand::before { color: #ff2a3d; clip-path: inset(0 0 100% 0); }
+:root.pz .brand::after { color: #6fe0ff; opacity: .7; clip-path: inset(0 0 100% 0); }
 @media (prefers-reduced-motion: no-preference) {
   .ex, .set .tick { transition: border-color .2s, background .2s, box-shadow .2s; }
-  .win.pop { animation: pop .35s ease-out; }
+  .pop { animation: pop .35s ease-out; }
   @keyframes pop { from { transform: translateX(-50%) scale(.94); opacity: .4; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  :root.pz .vignette { animation: throb 3.2s ease-in-out infinite; }
+  @keyframes throb { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+  :root.pz .brand::before { animation: g1 2.6s infinite steps(1); }
+  :root.pz .brand::after { animation: g2 3.3s infinite steps(1); }
+  @keyframes g1 { 0%, 86%, 100% { transform: none; clip-path: inset(0 0 100% 0); } 87% { transform: translate(3px, -1px); clip-path: inset(10% 0 55% 0); } 90% { transform: translate(-4px, 1px); clip-path: inset(60% 0 8% 0); } 93% { transform: translate(2px, 0); clip-path: inset(30% 0 40% 0); } }
+  @keyframes g2 { 0%, 80%, 100% { transform: none; clip-path: inset(0 0 100% 0); } 81% { transform: translate(-3px, 1px); clip-path: inset(50% 0 20% 0); } 84% { transform: translate(3px, 0); clip-path: inset(5% 0 70% 0); } }
+  :root.pz .quest .title { animation: shake 6s infinite; }
+  @keyframes shake { 0%, 94%, 100% { transform: none; } 95% { transform: translate(-2px, 1px) skewX(-4deg); } 96% { transform: translate(3px, -1px) skewX(3deg); } 97% { transform: translate(-1px, 0); } }
 }
 </style>
+<script src="config.js"></script>
 </head>
 <body>
-
-<div class="app">
-  <header class="top">
-    <div class="brand">Solo <span>Lifting</span></div>
-    <div class="seg" id="profiles" role="group" aria-label="Who is training"></div>
-  </header>
-  <section class="win status-win" id="statusWin" aria-label="Status"></section>
-  <nav class="tabs" role="tablist">
-    <button id="tab-log" role="tab" data-view="log" aria-selected="true">Quest</button>
-    <button id="tab-history" role="tab" data-view="history" aria-selected="false">Progress</button>
-    <button id="tab-backup" role="tab" data-view="backup" aria-selected="false">Records</button>
-  </nav>
-  <main id="view"></main>
-</div>
+<div class="vignette" aria-hidden="true"></div>
+<canvas id="cracks" aria-hidden="true"></canvas>
+<div id="root"></div>
 <div class="timer" id="timer" hidden>
   <div class="timer-in">
     <div class="timer-t" id="timerT">1:30</div>
@@ -235,146 +314,330 @@ details.hist summary::-webkit-details-marker { display: none; }
     <button class="btn" id="timerStop">Done</button>
   </div>
 </div>
-<div class="win toast" id="toast" hidden role="status"><p class="tag">Notification</p><p class="title" id="toastT">Level up</p><p id="toastP"></p></div>
+<div class="win toast" id="toast" hidden role="status"></div>
+<button class="win update" id="updateBar" hidden>Update available<small>Tap to refresh</small></button>
 
 <script>
+/* ================= PROGRAM ================= */
 const PROGRAM = {
   UA: { short: "Mon", name: "Upper A", label: "Upper A", focus: "Push focus", cardio: { goal: "Treadmill: walk 5, then run", min: 10 }, ex: [
-    ["chest-press", "Machine chest press", 3, 8, 12],
-    ["lat-pulldown", "Lat pulldown (wide grip)", 3, 8, 12],
-    ["shoulder-press", "Machine shoulder press", 3, 8, 12],
-    ["cable-row", "Seated cable row", 3, 10, 12],
-    ["pushdown", "Triceps pushdown (rope)", 3, 10, 12],
-    ["lateral-raise", "Cable lateral raise", 2, 12, 15]]},
+    ["chest-press", "Machine chest press", 3, 8, 12], ["lat-pulldown", "Lat pulldown (wide grip)", 3, 8, 12],
+    ["shoulder-press", "Machine shoulder press", 3, 8, 12], ["cable-row", "Seated cable row", 3, 10, 12],
+    ["pushdown", "Triceps pushdown (rope)", 3, 10, 12], ["lateral-raise", "Cable lateral raise", 2, 12, 15]]},
   LA: { short: "Tue", name: "Lower A", label: "Lower A", focus: "Quad focus", cardio: { goal: "Treadmill: walk 5, then run", min: 10 }, ex: [
-    ["leg-press", "Seated leg press", 3, 8, 12],
-    ["leg-ext", "Leg extension", 3, 10, 12],
-    ["seated-curl", "Seated leg curl", 3, 10, 12],
-    ["abductor", "Hip abductor (outer thigh)", 2, 12, 15],
-    ["calf", "Calf raise", 3, 12, 15],
-    ["crunch", "Cable crunch or ab machine", 3, 12, 15]]},
+    ["leg-press", "Seated leg press", 3, 8, 12], ["leg-ext", "Leg extension", 3, 10, 12],
+    ["seated-curl", "Seated leg curl", 3, 10, 12], ["abductor", "Hip abductor (outer thigh)", 2, 12, 15],
+    ["calf", "Calf raise", 3, 12, 15], ["crunch", "Cable crunch or ab machine", 3, 12, 15]]},
   UB: { short: "Wed", name: "Upper B", label: "Upper B", focus: "Pull focus", cardio: { goal: "Treadmill: walk 5, then run", min: 10 }, ex: [
-    ["pullup", "Assisted pull-up or close-grip pulldown", 3, 8, 12],
-    ["incline-press", "Incline chest press or pec deck", 3, 8, 12],
-    ["cs-row", "Chest-supported row", 3, 8, 12],
-    ["rear-delt", "Reverse pec deck (rear delts)", 3, 12, 15],
-    ["cable-curl", "Cable bicep curl", 3, 10, 12],
-    ["oh-ext", "Overhead triceps extension", 2, 10, 12]]},
+    ["pullup", "Assisted pull-up or close-grip pulldown", 3, 8, 12], ["incline-press", "Incline chest press or pec deck", 3, 8, 12],
+    ["cs-row", "Chest-supported row", 3, 8, 12], ["rear-delt", "Reverse pec deck (rear delts)", 3, 12, 15],
+    ["cable-curl", "Cable bicep curl", 3, 10, 12], ["oh-ext", "Overhead triceps extension", 2, 10, 12]]},
   LB: { short: "Thu", name: "Lower B", label: "Lower B", focus: "Glutes and hamstrings", cardio: { goal: "Treadmill: walk 5, then run", min: 10 }, ex: [
-    ["hip-thrust", "Hip thrust or glute drive", 3, 8, 12],
-    ["lying-curl", "Lying or seated leg curl", 3, 10, 12],
-    ["leg-press-wide", "Leg press (feet high and wide)", 3, 10, 12],
-    ["kickback", "Cable glute kickback (each leg)", 2, 12, 15],
-    ["adductor", "Hip adductor (inner thigh)", 2, 12, 15],
-    ["back-ext", "Back extension", 3, 12, 15]]},
+    ["hip-thrust", "Hip thrust or glute drive", 3, 8, 12], ["lying-curl", "Lying or seated leg curl", 3, 10, 12],
+    ["leg-press-wide", "Leg press (feet high and wide)", 3, 10, 12], ["kickback", "Cable glute kickback (each leg)", 2, 12, 15],
+    ["adductor", "Hip adductor (inner thigh)", 2, 12, 15], ["back-ext", "Back extension", 3, 12, 15]]},
   FR: { short: "Fri", name: "Cardio + Catch-up", label: "Catch-up", focus: "Keep it lighter", cardio: { goal: "Cardio: walk 5, then run", min: 15 }, ex: [
-    ["pushdown", "Triceps pushdown (rope)", 2, 10, 12],
-    ["cable-curl", "Cable bicep curl", 2, 10, 12],
-    ["lateral-raise", "Cable lateral raise", 2, 12, 15],
-    ["crunch", "Cable crunch or ab machine", 2, 12, 15]]},
+    ["pushdown", "Triceps pushdown (rope)", 2, 10, 12], ["cable-curl", "Cable bicep curl", 2, 10, 12],
+    ["lateral-raise", "Cable lateral raise", 2, 12, 15], ["crunch", "Cable crunch or ab machine", 2, 12, 15]]},
   WK: { short: "Wknd", name: "Recovery Run", label: "Recovery", focus: "Easy pace, go into Monday fresh", cardio: { goal: "Easy jog", min: 15 }, ex: [] }
 };
 const DAYS = Object.keys(PROGRAM);
 const EX = {};
 for (const d of DAYS) for (const [id, name, sets, lo, hi] of PROGRAM[d].ex) if (!EX[id]) EX[id] = { id, name, sets, lo, hi, day: d };
-const LS_KEY = "liftlog.v1";
+const EXSTAT = {};
+for (const id of Object.keys(EX)) EXSTAT[id] = ["LA", "LB"].includes(EX[id].day) ? "AGI" : "STR";
+EXSTAT.crunch = "END"; EXSTAT["back-ext"] = "END";
+const BOSS_POOL = Object.keys(EX).filter(id => !["back-ext", "crunch"].includes(id));
+
+/* ================= BONUS LIBRARY =================
+   [id, name, category, type, stat, outdoor]
+   type: wr = weight x reps, r = reps, s = seconds per set, min = minutes (+ optional km) */
+const LIB = [
+  ["pushups", "Push-ups", "Bodyweight", "r", "STR"], ["diamond-pushups", "Diamond push-ups", "Bodyweight", "r", "STR"],
+  ["pullups-bw", "Pull-ups or chin-ups", "Bodyweight", "r", "STR"], ["dips", "Dips", "Bodyweight", "r", "STR"],
+  ["situps", "Sit-ups", "Bodyweight", "r", "END"], ["crunches", "Crunches", "Bodyweight", "r", "END"],
+  ["leg-raises", "Leg raises", "Bodyweight", "r", "END"], ["superman", "Supermans", "Bodyweight", "r", "END"],
+  ["burpees", "Burpees", "Bodyweight", "r", "END"], ["mountain-climbers", "Mountain climbers", "Bodyweight", "r", "END"],
+  ["plank", "Plank", "Bodyweight", "s", "END"], ["side-plank", "Side plank", "Bodyweight", "s", "END"],
+  ["bw-squat", "Bodyweight squats", "Bodyweight", "r", "AGI"], ["jump-squats", "Jump squats", "Bodyweight", "r", "AGI"],
+  ["lunges", "Lunges", "Bodyweight", "r", "AGI"], ["step-ups", "Step-ups", "Bodyweight", "r", "AGI"],
+  ["glute-bridge", "Glute bridges", "Bodyweight", "r", "AGI"], ["wall-sit", "Wall sit", "Bodyweight", "s", "AGI"],
+  ["box-jumps", "Box jumps", "Bodyweight", "r", "AGI"], ["jumping-jacks", "Jumping jacks", "Bodyweight", "r", "VIT"],
+  ["bench-press", "Barbell bench press", "Free weights", "wr", "STR"], ["db-bench", "Dumbbell bench press", "Free weights", "wr", "STR"],
+  ["ohp", "Overhead press", "Free weights", "wr", "STR"], ["db-shoulder", "Dumbbell shoulder press", "Free weights", "wr", "STR"],
+  ["bb-row", "Barbell row", "Free weights", "wr", "STR"], ["db-row", "Dumbbell row", "Free weights", "wr", "STR"],
+  ["db-curl", "Dumbbell curl", "Free weights", "wr", "STR"], ["hammer-curl", "Hammer curl", "Free weights", "wr", "STR"],
+  ["skullcrusher", "Skull crushers", "Free weights", "wr", "STR"], ["db-fly", "Dumbbell fly", "Free weights", "wr", "STR"],
+  ["db-lat-raise", "Dumbbell lateral raise", "Free weights", "wr", "STR"], ["shrugs", "Shrugs", "Free weights", "wr", "STR"],
+  ["squat", "Barbell squat", "Free weights", "wr", "AGI"], ["goblet-squat", "Goblet squat", "Free weights", "wr", "AGI"],
+  ["deadlift", "Deadlift", "Free weights", "wr", "AGI"], ["rdl", "Romanian deadlift", "Free weights", "wr", "AGI"],
+  ["db-lunge", "Dumbbell lunges", "Free weights", "wr", "AGI"], ["bb-hip-thrust", "Barbell hip thrust", "Free weights", "wr", "AGI"],
+  ["kb-swing", "Kettlebell swing", "Free weights", "wr", "END"],
+  ["pec-deck", "Pec deck", "Machines and cables", "wr", "STR"], ["cable-fly", "Cable fly", "Machines and cables", "wr", "STR"],
+  ["face-pull", "Face pull", "Machines and cables", "wr", "STR"], ["preacher-curl", "Preacher curl machine", "Machines and cables", "wr", "STR"],
+  ["dip-machine", "Dip machine", "Machines and cables", "wr", "STR"], ["smith-bench", "Smith machine bench", "Machines and cables", "wr", "STR"],
+  ["hack-squat", "Hack squat", "Machines and cables", "wr", "AGI"], ["smith-squat", "Smith machine squat", "Machines and cables", "wr", "AGI"],
+  ["seated-calf", "Seated calf raise", "Machines and cables", "wr", "AGI"], ["ab-machine", "Ab crunch machine", "Machines and cables", "wr", "END"],
+  ["torso-rotation", "Torso rotation machine", "Machines and cables", "wr", "END"],
+  ["run", "Run", "Cardio", "min", "VIT", 1], ["jog", "Jog", "Cardio", "min", "VIT", 1], ["walk", "Walk", "Cardio", "min", "VIT", 1],
+  ["incline-walk", "Incline treadmill walk", "Cardio", "min", "VIT"], ["cycle", "Cycling", "Cardio", "min", "VIT", 1],
+  ["spin", "Spin bike", "Cardio", "min", "VIT"], ["row", "Rowing machine", "Cardio", "min", "VIT"],
+  ["elliptical", "Cross trainer", "Cardio", "min", "VIT"], ["stairs", "Stair climber", "Cardio", "min", "VIT"],
+  ["skipping", "Skipping rope", "Cardio", "min", "VIT"], ["swim", "Swimming", "Cardio", "min", "VIT", 1], ["hike", "Hike", "Cardio", "min", "VIT", 1],
+  ["yard", "Yard work or gardening", "Active and recovery", "min", "VIT", 1], ["dog-walk", "Dog walk", "Active and recovery", "min", "VIT", 1],
+  ["sport", "Sport or social game", "Active and recovery", "min", "VIT", 1], ["manual", "Manual labour", "Active and recovery", "min", "STR", 1],
+  ["climbing", "Climbing or bouldering", "Active and recovery", "min", "STR"], ["martial", "Martial arts or boxing", "Active and recovery", "min", "END"],
+  ["dance", "Dancing", "Active and recovery", "min", "VIT"], ["yoga", "Yoga", "Active and recovery", "min", "END"],
+  ["stretch", "Stretching or mobility", "Active and recovery", "min", "END"]
+];
+const LIBX = {};
+for (const [id, name, cat, type, stat, outdoor] of LIB) LIBX[id] = { id, name, cat, type, stat, outdoor: !!outdoor };
+const LIB_CATS = ["Bodyweight", "Free weights", "Machines and cables", "Cardio", "Active and recovery"];
+const CORE = new Set(["crunch", "situps", "crunches", "leg-raises"]);
+const BONUS_CAP = 200;
+
+/* ================= ACHIEVEMENTS ================= */
+const RAR = [ // name, max est. days, colour, XP reward
+  ["Common", 7, "#9fb3cc", 10], ["Uncommon", 45, "#5ee39a", 25], ["Rare", 150, "#4c9bff", 50],
+  ["Epic", 365, "#b46bff", 100], ["Legendary", 730, "#ffc861", 250], ["Mythic", 1e9, "#ff4fa3", 500]];
+const rarityFor = days => RAR.findIndex(r => days <= r[1]);
+const ACH = [], ACH_CATS = [], ACHX = {};
+function cat(name, icon, metric, est, list, desc, opts = {}) {
+  ACH_CATS.push({ name, icon, metric });
+  for (const [n, title] of list) {
+    const rar = rarityFor(typeof est === "function" ? est(n) : n / est);
+    const a = { id: `${metric}:${n}`, cat: name, name: title, desc: desc(n), icon, metric, n, rar, xp: opts.noXp ? 0 : RAR[rar][3] };
+    ACH.push(a); ACHX[a.id] = a;
+  }
+}
+const fmtN = n => n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${Math.round(n / 1e3)}k` : n.toLocaleString("en-AU");
+const plural = (n, w) => `${fmtN(n)} ${w}${n === 1 ? "" : "s"}`;
+cat("Quests", "⚔️", "quests", .7, [[1, "First Quest"], [5, "Warming Up"], [10, "Double Digits"], [25, "Quarter Century"], [50, "Half Century"], [100, "Centurion"], [150, "Relentless"], [200, "Bicentennial"], [300, "Spartan"], [400, "Unbroken"], [500, "Quest Machine"], [750, "Living Legend"], [1000, "Monarch of Iron"]], n => `Clear ${plural(n, "daily quest")}`);
+cat("Dedication", "📅", "days", .75, [[1, "Day One"], [7, "One Week In"], [14, "Fortnight"], [30, "Month of Iron"], [60, "Habit Formed"], [100, "Triple Digits"], [180, "Half a Year of Sweat"], [250, "Gym Rat"], [365, "Three Hundred and Sixty Five"], [500, "Five Hundred Club"], [730, "Two Year Titan"], [1000, "The Thousand Days"]], n => `Train on ${plural(n, "different day")}`);
+cat("Streaks", "🔥", "bestStreak", .35, [[3, "Spark"], [5, "Kindling"], [10, "On Fire"], [15, "Blaze"], [20, "Wildfire"], [30, "Inferno"], [40, "Firestorm"], [50, "Supernova"], [75, "Eternal Flame"], [100, "Phoenix"], [150, "Sun Forged"], [200, "Undying"], [260, "A Year Without Mercy"]], n => `Reach a ${n}-quest streak`);
+cat("Penalty Zone", "💀", "penSurvived", .03, [[1, "Escape Artist"], [3, "Repeat Offender"], [5, "Hardened"], [10, "Penalty Veteran"], [25, "Zone Dweller"], [50, "King of the Wasteland"]], n => `Survive the Penalty Zone ${n === 1 ? "once" : n + " times"}`);
+cat("Sets", "🏋️", "sets", 12, [[10, "Ten Sets"], [100, "Century of Sets"], [250, "Set Collector"], [500, "Set Hoarder"], [1000, "Thousand Sets"], [2500, "Iron Regular"], [5000, "Iron Veteran"], [10000, "Ten Thousand Sets"], [25000, "Iron Avalanche"], [40000, "Set Sovereign"]], n => `Log ${plural(n, "set")}`);
+cat("Reps", "🔁", "reps", 130, [[100, "Rep Rookie"], [1000, "Thousand Reps"], [5000, "Rep Grinder"], [10000, "Ten Thousand Reps"], [25000, "Rep Machine"], [50000, "Rep Factory"], [100000, "Hundred Thousand"], [250000, "Rep Overlord"], [500000, "Half a Million"], [1000000, "The Millionaire"]], n => `Complete ${plural(n, "rep")}`);
+cat("Tonnage", "🪨", "volume", 3000, [[1000, "One Tonne"], [5000, "Five Tonnes"], [10000, "Ten Tonnes"], [25000, "Truckload"], [50000, "Fifty Tonnes"], [100000, "Hundred Tonnes"], [250000, "Freight Train"], [500000, "Cargo Ship"], [1000000, "Thousand Tonnes"], [2500000, "Mountain Mover"]], n => `Lift ${fmtN(n / 1000)} tonne${n === 1000 ? "" : "s"} in total (weight x reps)`);
+cat("Cardio", "🫀", "cardioMin", 12, [[60, "First Hour"], [300, "Five Hours"], [600, "Ten Hours"], [1500, "A Day of Running"], [3000, "Fifty Hours"], [6000, "Hundred Hours"], [10000, "Ten Thousand Minutes"], [20000, "Iron Lungs"], [40000, "Perpetual Motion"]], n => `Log ${fmtN(n)} minutes of cardio`);
+cat("Distance", "🏃", "km", 1.3, [[5, "First 5K"], [10, "Ten K"], [21.1, "Half Marathon"], [42.2, "Full Marathon"], [100, "Hundred K"], [250, "Long Hauler"], [500, "Five Hundred K"], [1000, "Thousand Kilometres"], [2000, "Ultra Machine"], [4000, "Across the Continent"]], n => `Cover ${n} km`);
+cat("Level", "⭐", "level", L => 50 * L * (L + 1) / 170, [[5, "D-Rank Hunter"], [10, "C-Rank Hunter"], [15, "Steady Climber"], [20, "B-Rank Hunter"], [25, "Seasoned"], [30, "Elite"], [35, "A-Rank Hunter"], [40, "Rare Talent"], [45, "Near the Peak"], [50, "S-Rank Hunter"], [60, "Beyond S"], [75, "Transcendent"], [100, "Monarch"]], n => `Reach Level ${n}`, { noXp: true });
+cat("Upper body", "💪", "upperQ", .25, [[1, "First Push"], [10, "Pressing On"], [25, "Upper Hand"], [50, "Armoured"], [100, "Titan Torso"], [200, "Atlas"], [300, "Colossus"]], n => `Clear ${plural(n, "Upper A or B quest")}`);
+cat("Leg day", "🦵", "lowerQ", .25, [[1, "Didn't Skip"], [10, "Leg Day Regular"], [25, "Leg Day Survivor"], [50, "Tree Trunks"], [100, "Quad Squad Captain"], [200, "Pillars of Iron"], [300, "Earthshaker"]], n => `Clear ${plural(n, "Lower A or B quest")}`);
+cat("Fridays", "🎯", "friQ", .12, [[1, "Finisher"], [10, "Friday Regular"], [25, "Thank Gym It's Friday"], [50, "Weekend Earned"], [100, "Friday Legend"]], n => `Clear ${plural(n, "Friday quest")}`);
+cat("Recovery runs", "🌅", "wkQ", .1, [[1, "Weekend Warrior"], [10, "Sunday Strider"], [25, "Rest Day Rebel"], [50, "No Days Off"], [100, "Weekend Myth"]], n => `Clear ${plural(n, "weekend recovery quest")}`);
+cat("Records", "🏆", "prs", .3, [[1, "New Record"], [10, "Record Breaker"], [25, "PR Hunter"], [50, "Record Collector"], [100, "Hall of Records"], [250, "Unbeaten"], [500, "History Maker"]], n => `Set ${plural(n, "personal record")}`);
+cat("Weekly boss", "👹", "bossWins", .085, [[1, "First Blood"], [5, "Boss Hunter"], [10, "Raid Leader"], [25, "Dungeon Breaker"], [52, "A Year of Bosses"], [104, "Boss of Bosses"]], n => `Defeat ${plural(n, "weekly boss")}`);
+cat("Perfect weeks", "📆", "perfectWeeks", .1, [[1, "Perfect Week"], [4, "Four Flawless Weeks"], [12, "Quarter of Perfection"], [26, "Half Year Flawless"], [52, "Flawless Year"], [104, "Two Flawless Years"]], n => `Clear every weekday quest in ${plural(n, "week")}`);
+cat("Perfect months", "🗓️", "perfectMonths", .02, [[1, "Perfect Month"], [3, "Perfect Quarter"], [6, "Perfect Half"], [12, "Perfect Year"], [24, "Perfect Era"]], n => `Clear every weekday quest in ${plural(n, "calendar month")}`);
+cat("Bonus training", "✨", "bonusLogs", .4, [[1, "Extra Credit"], [10, "Overachiever"], [50, "Side Quester"], [100, "Bonus Hunter"], [250, "Insatiable"], [500, "Always More"], [1000, "Infinite Drive"]], n => `Log ${plural(n, "bonus exercise")}`);
+cat("Push-ups", "🤜", "pushups", 10, [[100, "Hundred Push-ups"], [500, "Five Hundred"], [1000, "Thousand Push-ups"], [5000, "Ground Pounder"], [10000, "Ten Thousand Push-ups"], [25000, "Earth Pusher"], [50000, "Planet Mover"]], n => `Do ${fmtN(n)} push-ups`);
+cat("Core", "🧱", "core", 30, [[500, "Core Initiate"], [2500, "Core Tempered"], [10000, "Iron Core"], [25000, "Abs of Steel"], [50000, "Core Overlord"], [100000, "Unbreakable Core"]], n => `Do ${fmtN(n)} core reps (crunches, sit-ups, leg raises)`);
+cat("Planks", "⏱️", "plankSec", 30, [[300, "Five Minutes Braced"], [1800, "Half Hour Hold"], [3600, "Hour of Plank"], [18000, "Five Hours Braced"], [36000, "Ten Hour Wall"]], n => `Hold planks for ${n / 60 >= 60 ? n / 3600 + " hours" : n / 60 + " minutes"} in total`);
+cat("Outdoors", "🌿", "outdoorMin", 15, [[60, "Green Thumb"], [300, "Backyard Athlete"], [1000, "Yard Warrior"], [3000, "Land Tamer"], [6000, "Property Titan"], [12000, "One with the Land"]], n => `Log ${fmtN(n)} minutes of outdoor activity`);
+cat("Dawn", "🌄", "dawn", .1, [[1, "Dawn Hunter"], [10, "Early Riser"], [50, "Sunrise Regular"], [100, "Before the Birds"]], n => `Log ${plural(n, "session")} before 7am`);
+cat("Night", "🌙", "night", .1, [[1, "Night Owl"], [10, "After Dark"], [50, "Midnight Regular"], [100, "Creature of the Night"]], n => `Log ${plural(n, "session")} after 8pm`);
+cat("Strength", "💥", "STR", .5, [[15, "Stronger"], [25, "Mighty"], [50, "Powerhouse"], [100, "Juggernaut"], [200, "Titan Strength"], [400, "Godlike Might"]], n => `Reach ${n} STR`);
+cat("Agility", "⚡", "AGI", .5, [[15, "Nimble"], [25, "Swift"], [50, "Fleet"], [100, "Lightning Legs"], [200, "Windrunner"], [400, "Untouchable"]], n => `Reach ${n} AGI`);
+cat("Vitality", "❤️", "VIT", .4, [[15, "Hardy"], [25, "Vital"], [50, "Lionheart"], [100, "Iron Heart"], [200, "Endless Engine"], [400, "Immortal Heart"]], n => `Reach ${n} VIT`);
+cat("Endurance", "🛡️", "END", .3, [[15, "Steady"], [25, "Tough"], [50, "Resolute"], [100, "Unyielding"], [200, "Indomitable"], [400, "Eternal Will"]], n => `Reach ${n} END`);
+cat("Milestones", "🎂", "anniv", 1, [[30, "First Month"], [100, "Hundred Days"], [365, "One Year Anniversary"], [730, "Two Years Strong"], [1095, "Three Years Strong"], [1825, "Five Years Strong"]], n => `Keep training ${n} days after your first session`);
+cat("Comebacks", "🔄", "comebacks", .02, [[1, "The Comeback"], [5, "Never Down for Long"], [10, "Unkillable"]], n => `Clear a quest after a week or more away, ${n === 1 ? "once" : n + " times"}`);
+const MACHINE_TIERS = [[5, "Initiate"], [25, "Adept"], [50, "Master"], [100, "Grandmaster"]];
+const SHORT = { "chest-press": "Chest press", "lat-pulldown": "Lat pulldown", "shoulder-press": "Shoulder press", "cable-row": "Cable row",
+  pushdown: "Pushdown", "lateral-raise": "Lateral raise", "leg-press": "Leg press", "leg-ext": "Leg extension", "seated-curl": "Seated leg curl",
+  abductor: "Abductor", calf: "Calf raise", crunch: "Cable crunch", pullup: "Pull-up", "incline-press": "Incline press", "cs-row": "Chest-supported row",
+  "rear-delt": "Rear delt", "cable-curl": "Cable curl", "oh-ext": "Overhead extension", "hip-thrust": "Hip thrust", "lying-curl": "Leg curl",
+  "leg-press-wide": "Wide leg press", kickback: "Glute kickback", adductor: "Adductor", "back-ext": "Back extension" };
+for (const id of Object.keys(EX)) {
+  const short = SHORT[id] || EX[id].name;
+  cat(short, "⚙️", "m:" + id, .14, MACHINE_TIERS.map(([n, t]) => [n, `${short} ${t}`]), n => `Log ${short.toLowerCase()} in ${n} sessions`);
+}
+
+/* ================= FLAVOUR ================= */
 const RANKS = [[50, "S"], [35, "A"], [20, "B"], [10, "C"], [5, "D"], [1, "E"]];
 const PENALTY = [
   "Leave this quest unfinished and the System sends you to the Penalty Zone. Four hours. Sand. Things with too many legs.",
   "Unfinished quests are reported to the Penalty Zone. It has no machines. Only regret.",
   "The Penalty Zone has no rest timer. Finish your sets.",
   "The System has noticed you looking at the couch. The Penalty Zone is warming up.",
-  "Incomplete quests carry a penalty. Rumour says it involves burpees and no water breaks."
+  "Incomplete quests carry a penalty. Rumour says it involves burpees and no water breaks.",
+  "The System has detected a snack being considered. Finish the quest first.",
+  "Your future self has filed a complaint. Clear the quest to dismiss it.",
+  "The System can see your gym bag by the door. It is not impressed."
+];
+const PZ_LINES = [
+  "You did not complete your last quest. The System does not forget.",
+  "The couch filed a missing person report. Too late now.",
+  "Every set +1. Cardio 25 minutes. Complaints will be ignored.",
+  "Clear this quest to return to normal training. There is no other exit.",
+  "The System has revoked your rest day privileges. Temporarily. Probably."
 ];
 
+/* ================= STATE ================= */
+const CFG = window.SL_CONFIG || {};
+const ONLINE = !!(CFG.url && CFG.key);
+const LS = "solo.v2", OLD_LS = "liftlog.v1";
 const S = {
-  view: "log", profile: "j", day: null, date: null,
-  names: { j: "Jaidyn", p: "Paris" },
-  sessions: {}, mode: "local", col: null, downloads: null, firstSnap: true, lastLevel: null
+  me: null, hunters: {}, sessions: {}, outbox: { s: {}, h: {} }, since: null, sound: true,
+  view: "log", viewing: null, day: null, date: null, ver: 0, cache: {}, seen: null, armed: null, net: ONLINE ? "busy" : "local", wasPz: null
 };
-
-/* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2, "0");
 const dStr = t => `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
 const todayStr = () => dStr(new Date());
 const parseDate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const t = parseDate(s); t.setDate(t.getDate() + n); return dStr(t); };
+const daysBetween = (a, b) => Math.round((parseDate(b) - parseDate(a)) / 864e5);
+const mondayOf = s => { const t = parseDate(s); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return dStr(t); };
+const isTraining = s => { const w = parseDate(s).getDay(); return w >= 1 && w <= 5; };
 const fmtDate = s => parseDate(s).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
 const fmtShort = s => parseDate(s).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+const relDay = s => { const n = daysBetween(s, todayStr()); return n === 0 ? "Today" : n === 1 ? "Yesterday" : n < 7 ? parseDate(s).toLocaleDateString("en-AU", { weekday: "short" }) : fmtShort(s); };
 const dayForDate = s => ({ 0: "WK", 1: "UA", 2: "LA", 3: "UB", 4: "LB", 5: "FR", 6: "WK" })[parseDate(s).getDay()];
-const keyOf = (p, date, day) => `${p}_${date}_${day}`;
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const keyOf = (h, date, day) => `${h}_${date}_${day}`;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const wTxt = w => (w == null || w === 0) ? "BW" : `${+w}`;
 const setTxt = s => `${wTxt(s.w)}×${s.r ?? "?"}`;
 const filled = s => s && (s.w != null || s.r != null);
 const num = v => { v = String(v).trim().replace(",", "."); return v === "" || isNaN(+v) ? null : +v; };
+const rnd = () => Math.random().toString(36).slice(2);
+const nameOf = id => (S.hunters[id] && S.hunters[id].name) || "Hunter";
+const sumBy = (arr, f) => arr.reduce((a, x) => a + (f(x) || 0), 0);
 
-function loadLocal() {
+function load() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) { const o = JSON.parse(raw); S.sessions = o.sessions || {}; if (o.names) S.names = { ...S.names, ...o.names }; if (o.profile) S.profile = o.profile; }
+    const raw = localStorage.getItem(LS);
+    if (raw) { Object.assign(S, JSON.parse(raw)); return; }
+    const old = localStorage.getItem(OLD_LS);
+    if (old) {
+      const o = JSON.parse(old);
+      S.sessions = o.sessions || {};
+      const names = o.names || {};
+      for (const [id, n] of Object.entries(names)) S.hunters[id] = { id, name: n === "Partner" ? "Paris" : n, title: null, local: true };
+      for (const k of Object.keys(S.sessions)) S.outbox.s[k] = rnd();
+    }
   } catch (e) {}
-  if (S.names.p === "Partner") S.names.p = "Paris";
 }
-function saveLocal() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ sessions: S.sessions, names: S.names, profile: S.profile })); } catch (e) {}
+let persistT = null;
+function persistNow() {
+  clearTimeout(persistT);
+  try { localStorage.setItem(LS, JSON.stringify({ me: S.me, hunters: S.hunters, sessions: S.sessions, outbox: S.outbox, since: S.since, sound: S.sound })); } catch (e) {}
 }
+function persist() { clearTimeout(persistT); persistT = setTimeout(persistNow, 250); }
+addEventListener("pagehide", persistNow);
+document.addEventListener("visibilitychange", () => { if (document.hidden) persistNow(); });
 
-/* ---------- cardio ---------- */
+/* ================= SYNC (Supabase REST) ================= */
+const api = (path, opts = {}) => fetch(`${CFG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
+  ...opts, headers: { apikey: CFG.key, Authorization: `Bearer ${CFG.key}`, "Content-Type": "application/json", ...(opts.headers || {}) }
+});
+function setNet(s) { S.net = s; const el = $("#net"); if (el) { el.dataset.s = s; el.textContent = netText(); } }
+const netText = () => !ONLINE ? "This phone only" : S.net === "ok" ? (Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length ? "Saving" : "Synced") : S.net === "busy" ? "Syncing" : "Offline, will sync";
+async function pull() {
+  if (!ONLINE) return false;
+  try {
+    const q = S.since ? `&updated_at=gt.${encodeURIComponent(S.since)}` : "";
+    let maxT = S.since, changed = false;
+    const hr = await api(`hunters?select=id,name,title,updated_at${q}`);
+    if (!hr.ok) throw hr.status;
+    for (const h of await hr.json()) {
+      if (!S.outbox.h[h.id]) { S.hunters[h.id] = { id: h.id, name: h.name, title: h.title || null }; changed = true; }
+      if (!maxT || h.updated_at > maxT) maxT = h.updated_at;
+    }
+    for (let from = 0; ; from += 1000) {
+      const r = await api(`sessions?select=key,hunter,body,updated_at${q}&order=updated_at.asc`, { headers: { Range: `${from}-${from + 999}` } });
+      if (!r.ok) throw r.status;
+      const rows = await r.json();
+      for (const row of rows) {
+        if (!S.outbox.s[row.key]) { if (row.body) S.sessions[row.key] = row.body; else delete S.sessions[row.key]; changed = true; }
+        if (!maxT || row.updated_at > maxT) maxT = row.updated_at;
+      }
+      if (rows.length < 1000) break;
+    }
+    if (maxT) S.since = new Date(new Date(maxT).getTime() - 2000).toISOString();
+    if (changed) S.ver++;
+    persist(); setNet("ok");
+    return changed;
+  } catch (e) { setNet("off"); return false; }
+}
+let pushing = false, pushT = null;
+const pushSoon = () => { clearTimeout(pushT); pushT = setTimeout(push, 1200); };
+async function push() {
+  if (!ONLINE || pushing) return;
+  const hk = Object.keys(S.outbox.h), sk = Object.keys(S.outbox.s);
+  if (!hk.length && !sk.length) { setNet("ok"); return; }
+  pushing = true;
+  try {
+    if (hk.length) {
+      const tok = { ...S.outbox.h };
+      const rows = hk.filter(id => S.hunters[id]).map(id => ({ id, name: S.hunters[id].name, title: S.hunters[id].title || null }));
+      if (rows.length) { const r = await api("hunters", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) }); if (!r.ok) throw r.status; }
+      for (const id of hk) if (S.outbox.h[id] === tok[id]) delete S.outbox.h[id];
+    }
+    if (sk.length) {
+      const tok = { ...S.outbox.s };
+      const rows = sk.map(k => { const [hunter, date] = k.split("_"); return { key: k, hunter, date, body: S.sessions[k] || null }; });
+      for (let i = 0; i < rows.length; i += 200) {
+        const r = await api("sessions", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows.slice(i, i + 200)) });
+        if (!r.ok) throw r.status;
+      }
+      for (const k of sk) if (S.outbox.s[k] === tok[k]) delete S.outbox.s[k];
+    }
+    persist(); setNet("ok");
+  } catch (e) { setNet("off"); }
+  pushing = false;
+  if (Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length && S.net === "ok") pushSoon();
+}
+async function syncNow() {
+  if (!ONLINE) return;
+  await push();
+  const changed = await pull();
+  if (changed) softRender();
+}
+function dirtySession(k) {
+  const b = S.sessions[k];
+  if (b && isEmpty(b)) delete S.sessions[k]; else if (b) b.ts = Date.now();
+  S.outbox.s[k] = rnd(); S.ver++; persist(); setNet(S.net === "off" ? "off" : "ok"); pushSoon();
+}
+function dirtyHunter(id) { S.outbox.h[id] = rnd(); S.ver++; persist(); pushSoon(); }
+
+/* ================= RULES ================= */
 function cardioOf(b) {
   const c = (b && b.cardio) || {};
   const walk = c.walk ?? null, run = c.run ?? null;
   const total = (walk || run) ? (walk || 0) + (run || 0) : (c.mins ?? null);
   return { walk, run, total, dist: c.dist ?? null, kcal: c.kcal ?? null };
 }
-const cardioDone = b => { const c = cardioOf(b); const need = b && PROGRAM[b.day] ? PROGRAM[b.day].cardio.min : 0; return !!c.total && c.total >= need; };
+const cardioMeets = (b, min) => { const c = cardioOf(b); return !!c.total && c.total >= min; };
 const pace = c => c.total && c.dist ? c.total / c.dist : null;
 const paceTxt = p => p ? `${Math.floor(p)}:${pad(Math.round((p % 1) * 60) % 60)} /km` : "";
-
-/* ---------- session data ---------- */
-const curKey = () => keyOf(S.profile, S.date, S.day);
-function session(create) {
-  const k = curKey();
-  if (!S.sessions[k] && create) S.sessions[k] = { profile: S.profile, date: S.date, day: S.day, ex: {}, extra: [], ts: Date.now() };
-  return S.sessions[k];
+function reqs(day, pen) {
+  const p = PROGRAM[day];
+  return { ex: p.ex.map(([id, name, sets, lo, hi]) => ({ id, name, sets: sets + (pen ? 1 : 0), lo, hi })), cardio: pen ? Math.max(25, p.cardio.min) : p.cardio.min };
+}
+const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(filled).length >= e.sets;
+function questDone(b, pen) {
+  if (!b || !PROGRAM[b.day] || b.excused) return false;
+  const r = reqs(b.day, pen);
+  return r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
+}
+function bonusLogged(e) {
+  const L = LIBX[e.id]; if (!L) return false;
+  if (L.type === "min") return (+e.min || 0) > 0 || (+e.km || 0) > 0;
+  return (e.sets || []).some(s => L.type === "wr" ? filled(s) : L.type === "r" ? s.r != null : s.s != null);
+}
+function hasTraining(b) {
+  if (!b || b.excused) return false;
+  const c = cardioOf(b);
+  return !!(c.total || c.dist) || Object.values(b.ex || {}).some(a => a.some(filled)) || (b.bonus || []).some(bonusLogged);
 }
 function isEmpty(b) {
   if (!b) return true;
-  { const c = cardioOf(b); if (c.total || c.dist || c.kcal) return false; }
-  if ((b.extra || []).length) return false;
+  if (b.excused) return false;
+  const c = cardioOf(b); if (c.total || c.dist || c.kcal) return false;
+  if ((b.extra || []).length || (b.bonus || []).length) return false;
   return !Object.values(b.ex || {}).some(arr => arr.some(filled));
-}
-function exList(day = S.day, b = session(false)) {
-  const base = PROGRAM[day].ex.map(([id, name, sets, lo, hi]) => ({ id, name, sets, lo, hi }));
-  for (const id of (b && b.extra) || []) if (EX[id] && !base.some(e => e.id === id)) base.push({ ...EX[id], extra: true });
-  return base;
-}
-const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(filled).length >= e.sets;
-function questDone(b) {
-  if (!b || !PROGRAM[b.day]) return false;
-  return PROGRAM[b.day].ex.every(([id, , sets]) => exDone(b, { id, sets })) && cardioDone(b);
-}
-function lastFor(id, beforeDate) {
-  let best = null;
-  for (const b of Object.values(S.sessions)) {
-    if (b.profile !== S.profile || b.date >= beforeDate) continue;
-    const arr = (b.ex || {})[id];
-    if (!arr || !arr.some(filled)) continue;
-    if (!best || b.date > best.date) best = { date: b.date, sets: arr.filter(filled) };
-  }
-  return best;
-}
-
-/* ---------- XP / level ---------- */
-function xpOf(p) {
-  let xp = 0;
-  for (const b of Object.values(S.sessions)) {
-    if (b.profile !== p) continue;
-    for (const arr of Object.values(b.ex || {})) xp += arr.filter(filled).length * 10;
-    xp += Math.round((cardioOf(b).total || 0) * 2);
-    if (questDone(b)) xp += 50;
-  }
-  return xp;
 }
 function levelOf(xp) {
   let L = 1;
@@ -382,130 +645,235 @@ function levelOf(xp) {
   const base = 50 * (L - 1) * L, next = 50 * L * (L + 1);
   return { L, into: xp - base, need: next - base, rank: RANKS.find(r => L >= r[0])[1] };
 }
-
-/* ---------- saving ---------- */
-const saves = {};
-let statusText = "", statusState = "";
-function setStatus(t, s) { statusText = t; statusState = s; const el = $("#status"); if (el) { el.textContent = t; el.dataset.s = s; } }
-function queueSave(k) {
-  const s = saves[k] || (saves[k] = {});
-  clearTimeout(s.timer);
-  setStatus("Saving", "busy");
-  s.timer = setTimeout(() => flush(k), 700);
+const floorXp = L => 50 * (L - 1) * L;
+const bossFor = ws => { let h = 0; for (const c of ws) h = (h * 31 + c.charCodeAt(0)) >>> 0; return BOSS_POOL[h % BOSS_POOL.length]; };
+function statsOf(M) {
+  const st = {};
+  for (const k of ["STR", "AGI", "VIT", "END"]) st[k] = 10 + Math.floor(M.statSets[k] / 6) + Math.floor(M.statMin[k] / 20);
+  st.END += Math.floor(M.quests / 4);
+  return st;
 }
-async function flush(k) {
-  const s = saves[k];
-  if (s.inflight) { s.again = true; return; }
-  s.inflight = true;
-  const b = S.sessions[k];
-  const empty = isEmpty(b);
-  if (empty) delete S.sessions[k]; else b.ts = Date.now();
-  saveLocal();
-  try {
-    if (S.mode === "cloud") {
-      if (empty) await S.col.doc(k).delete();
-      else await S.col.doc(k).set(JSON.parse(JSON.stringify(b)));
-      setStatus("Synced", "ok");
-    } else setStatus("Saved on this phone", "ok");
-  } catch (e) {
-    setStatus(e && e.code === "quota_exceeded" ? "Storage full, export a backup" : "Saved on this phone, sync failed", "busy");
-  }
-  s.inflight = false;
-  if (s.again) { s.again = false; flush(k); }
-}
-async function saveSettings() {
-  saveLocal();
-  if (S.mode === "cloud") { try { await S.col.doc("settings").set({ names: S.names }); } catch (e) {} }
+const newM = () => ({ days: 0, quests: 0, bestStreak: 0, penSurvived: 0, sets: 0, reps: 0, volume: 0, cardioMin: 0, km: 0, level: 1,
+  upperQ: 0, lowerQ: 0, friQ: 0, wkQ: 0, prs: 0, bossWins: 0, perfectWeeks: 0, perfectMonths: 0, bonusLogs: 0, pushups: 0, core: 0,
+  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {},
+  statSets: { STR: 0, AGI: 0, VIT: 0, END: 0 }, statMin: { STR: 0, AGI: 0, VIT: 0, END: 0 } });
+function metricVal(M, metric, st) {
+  if (metric.startsWith("m:")) return M.machine[metric.slice(2)] || 0;
+  if (st && st[metric] != null) return st[metric];
+  return M[metric] || 0;
 }
 
-/* ---------- status window + quest panel ---------- */
-function renderStatus() {
-  const xp = xpOf(S.profile), lv = levelOf(xp);
-  if (S.lastLevel && S.lastLevel.p === S.profile && lv.L > S.lastLevel.L) toast("Level up", `${S.names[S.profile]} reached Level ${lv.L}. Rank ${lv.rank}.`);
-  S.lastLevel = { p: S.profile, L: lv.L };
-  const mine = Object.values(S.sessions).filter(b => b.profile === S.profile);
-  const now = new Date(), mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
-  const week = mine.filter(b => b.date >= dStr(mon) && questDone(b)).length;
-  $("#statusWin").innerHTML = `<div class="lvl"><b>${lv.L}</b><small>LEVEL</small></div>
-    <div class="srow"><span>Name</span><strong>${esc(S.names[S.profile])}</strong></div>
-    <div class="srow"><span>Rank <strong class="rank">${lv.rank}</strong> · Week <strong>${week}/5</strong></span><span>${lv.into}/${lv.need} XP</span></div>
-    <div class="xp" aria-label="XP to next level"><i style="width:${Math.min(100, lv.into / lv.need * 100).toFixed(1)}%"></i></div>`;
-}
-function questHTML() {
-  const p = PROGRAM[S.day], b = session(false);
-  const goals = p.ex.map(([id, name, sets]) => { const n = (((b && b.ex) || {})[id] || []).filter(filled).length; return `<li class="${n >= sets ? "ok" : ""}"><span>${esc(name)}</span><span>[${Math.min(n, sets)}/${sets}]</span></li>`; });
-  const c = cardioOf(b);
-  goals.unshift(`<li class="${cardioDone(b) ? "ok" : ""}"><span>${esc(p.cardio.goal)}</span><span>[${c.total ? Math.round(c.total) : 0}/${p.cardio.min} min]</span></li>`);
-  const done = questDone(b), isToday = S.date === todayStr();
-  let foot;
-  if (done) foot = `<p class="cleared">Quest cleared<small>Reward: +50 XP. The Penalty Zone will have to wait.</small></p>`;
-  else if (isToday) foot = `<div class="clock"><span>Time remaining</span><b id="clock">--:--:--</b></div><p class="warn"><b>WARNING</b> ${esc(PENALTY[parseDate(S.date).getDate() % PENALTY.length])}</p>`;
-  else foot = `<p class="note">Editing the log for ${fmtDate(S.date)}.</p>`;
-  return `<p class="tag">Daily quest</p><h1 class="title">${esc(p.name)}</h1><p class="sub">${esc(p.focus)}</p><ul class="goals">${goals.join("")}</ul>${foot}`;
-}
-function refreshLive() {
-  renderStatus();
-  const q = $("#quest"); if (q) { q.innerHTML = questHTML(); tickClock(); }
-  const d = document.querySelector(`.days button[data-day="${S.day}"]`); if (d) d.classList.toggle("clear", questDone(session(false)));
-}
-function tickClock() {
-  const el = $("#clock"); if (!el) return;
-  const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  const s = Math.max(0, Math.floor((mid - now) / 1000));
-  el.textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
-}
-setInterval(tickClock, 1000);
-
-/* ---------- render: quest (log) ---------- */
-function renderLog() {
-  const p = PROGRAM[S.day], b = session(false), list = exList();
-  let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
-    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.profile, S.date, d)]) ? "clear" : ""}"><b>${PROGRAM[d].short}</b><small>${esc(PROGRAM[d].label)}</small></button>`).join("")}</div>
-  <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"><span class="status" id="status" data-s="${statusState}">${esc(statusText || (S.mode === "cloud" ? "Synced" : "Saved on this phone"))}</span></div>
-  <section class="win quest" id="quest">${questHTML()}</section>`;
-
-  const c = cardioOf(b), pc = pace(c);
-  h += `<article class="win ex${cardioDone(b) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(p.cardio.goal)}</h2><span class="target">${p.cardio.min}+ min</span></div>
-    <div class="cgrid">
-      <div class="field"><input id="c-walk" data-c="walk" inputmode="decimal" placeholder="5" value="${c.walk ?? ""}" aria-label="Walk minutes"><span>walk min</span></div>
-      <div class="field"><input id="c-run" data-c="run" inputmode="decimal" placeholder="10" value="${c.run ?? ""}" aria-label="Run minutes"><span>run min</span></div>
-      <div class="field"><input id="c-dist" data-c="dist" inputmode="decimal" placeholder="0.0" value="${c.dist ?? ""}" aria-label="Distance in kilometres"><span>km</span></div>
-      <div class="field"><input id="c-kcal" data-c="kcal" inputmode="numeric" placeholder="150" value="${c.kcal ?? ""}" aria-label="Calories from the machine"><span>kcal</span></div>
-    </div><p class="derived" id="derived">${c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong>` : "Enter what the treadmill shows when you stop."}${pc ? ` · Pace <strong>${paceTxt(pc)}</strong>` : ""}</p></article>`;
-
-  for (const e of list) {
-    const arr = (b && b.ex[e.id]) || [];
-    const n = Math.max(e.sets, arr.length);
-    const last = lastFor(e.id, S.date);
-    const up = last && last.sets.length >= e.sets && last.sets.slice(0, e.sets).every(s => (s.r || 0) >= e.hi);
-    h += `<article class="win ex${exDone(b, e) ? " complete" : ""}" data-ex="${e.id}">
-      <div class="ex-h"><h2>${esc(e.name)}</h2><span class="target">${e.sets} × ${e.lo}–${e.hi}</span></div>
-      <p class="last">${last ? `Last <strong>${last.sets.map(setTxt).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>${up ? `<span class="chip">Up a plate</span>` : ""}` : "New skill unlocked: start light and find your working weight."}</p>
-      <div class="sets">`;
-    for (let i = 0; i < n; i++) {
-      const s = arr[i] || {}, ls = last && last.sets[i];
-      h += `<div class="set${s.r != null ? " done" : ""}"><span class="n">${i + 1}</span>
-        <div class="field"><input id="w-${e.id}-${i}" data-ex="${e.id}" data-i="${i}" data-f="w" inputmode="decimal" placeholder="${ls && ls.w != null ? +ls.w : ""}" value="${s.w ?? ""}" aria-label="Set ${i + 1} weight"><span>kg</span></div>
-        <span class="x">×</span>
-        <div class="field"><input id="r-${e.id}-${i}" data-ex="${e.id}" data-i="${i}" data-f="r" inputmode="numeric" placeholder="${ls && ls.r != null ? ls.r : e.hi}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
-        <span class="tick" aria-hidden="true"></span></div>`;
+/* Replay a hunter's whole history day by day: penalties, XP, levels, stats, records, achievements and feed events. */
+function replay(hid) {
+  const c = S.cache[hid]; if (c && c.ver === S.ver) return c.r;
+  const byDate = {};
+  for (const b of Object.values(S.sessions)) if (b.profile === hid && !isEmpty(b)) (byDate[b.date] ||= []).push(b);
+  const dates = Object.keys(byDate).sort(), today = todayStr();
+  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, peak: 1, ach: {}, events: [], best: {}, streak: 0, boss: null };
+  const M = R.M;
+  const checkAch = d => {
+    const st = statsOf(M);
+    for (const a of ACH) if (!R.ach[a.id] && metricVal(M, a.metric, st) >= a.n) { R.ach[a.id] = d; R.xp += a.xp; R.events.push({ d, type: "ach", a }); }
+  };
+  const levelUp = d => {
+    const lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
+    if (lv.L > R.peak) { R.events.push({ d, type: "lvl", L: lv.L }); R.peak = lv.L; M.level = lv.L; }
+  };
+  if (R.first) {
+    const last = dates[dates.length - 1] > today ? dates[dates.length - 1] : today;
+    let owed = false, cur = 0, lastActive = null, ws = null, bossId = null, bossBest = null, bossWon = false;
+    for (let d = R.first; d <= last; d = addDays(d, 1)) {
+      const bs = byDate[d] || [];
+      const w = mondayOf(d);
+      if (w !== ws) { ws = w; bossId = bossFor(w); bossBest = R.best[bossId] ?? null; bossWon = false; }
+      R.pen[d] = owed;
+      R.exc[d] = bs.some(b => b.excused);
+      const done = bs.find(b => questDone(b, owed));
+      R.clr[d] = !!done;
+      const active = bs.some(hasTraining);
+      let xp = 0, bonusXp = 0, dawn = false, night = false;
+      if (active) {
+        if (done && lastActive && daysBetween(lastActive, d) >= 7) { M.comebacks++; R.events.push({ d, type: "comeback" }); }
+        M.days++; lastActive = d;
+      }
+      const prTrack = (id, top, label) => {
+        if (!(top > 0)) return;
+        if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg` }); }
+        if (R.best[id] == null || top > R.best[id]) R.best[id] = top;
+      };
+      for (const b of bs) {
+        if (b.excused) continue;
+        if (hasTraining(b) && b.ts) { const hr = new Date(b.ts).getHours(); if (hr < 7) dawn = true; if (hr >= 20) night = true; }
+        for (const [id, arr] of Object.entries(b.ex || {})) {
+          const f = arr.filter(filled); if (!f.length) continue;
+          M.sets += f.length; xp += f.length * 10;
+          M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0));
+          M.machine[id] = (M.machine[id] || 0) + 1;
+          M.statSets[EXSTAT[id] || "STR"] += f.length;
+          if (CORE.has(id)) M.core += sumBy(f, s => s.r);
+          const top = Math.max(...f.map(s => +s.w || 0));
+          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: EX[id] ? EX[id].name : id }); }
+          prTrack(id, top, EX[id] ? EX[id].name : id);
+        }
+        const c = cardioOf(b);
+        if (c.total) { M.cardioMin += c.total; xp += Math.round(c.total * 2); M.statMin.VIT += c.total; }
+        if (c.dist) M.km += c.dist;
+        for (const e of b.bonus || []) {
+          const L = LIBX[e.id]; if (!L || !bonusLogged(e)) continue;
+          M.bonusLogs++;
+          if (L.type === "min") {
+            const m = +e.min || 0;
+            bonusXp += Math.round(m * (L.cat === "Cardio" ? 2 : 1));
+            M.statMin[L.stat] += m;
+            if (L.cat === "Cardio") M.cardioMin += m;
+            if (L.outdoor) M.outdoorMin += m;
+            if (+e.km) M.km += +e.km;
+          } else {
+            const f = (e.sets || []).filter(s => L.type === "wr" ? filled(s) : L.type === "r" ? s.r != null : s.s != null);
+            bonusXp += f.length * 10; M.sets += f.length; M.statSets[L.stat] += f.length;
+            if (L.type !== "s") { M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0)); }
+            if (e.id === "pushups" || e.id === "diamond-pushups") M.pushups += sumBy(f, s => s.r);
+            if (CORE.has(e.id)) M.core += sumBy(f, s => s.r);
+            if (e.id === "plank" || e.id === "side-plank") M.plankSec += sumBy(f, s => s.s);
+            if (L.type === "wr") prTrack("b:" + e.id, Math.max(...f.map(s => +s.w || 0)), L.name);
+          }
+        }
+      }
+      if (dawn) M.dawn++;
+      if (night) M.night++;
+      xp += Math.min(BONUS_CAP, bonusXp);
+      if (done) {
+        M.quests++; xp += 50;
+        if (done.day === "UA" || done.day === "UB") M.upperQ++;
+        if (done.day === "LA" || done.day === "LB") M.lowerQ++;
+        if (done.day === "FR") M.friQ++;
+        if (done.day === "WK") M.wkQ++;
+        if (owed) { M.penSurvived++; xp += 25; R.events.push({ d, type: "pzs" }); }
+        else R.events.push({ d, type: "clear", txt: PROGRAM[done.day].name });
+        owed = false; cur++;
+      } else if (R.exc[d]) { /* excused: nothing changes */ }
+      else if (isTraining(d) && d < today) {
+        if (!owed) R.events.push({ d: addDays(d, 1), type: "pz" });
+        owed = true; R.missed.push(d); xp -= 25; cur = 0;
+      }
+      M.bestStreak = Math.max(M.bestStreak, cur);
+      if (parseDate(d).getDay() === 5) {
+        const mon = addDays(d, -4);
+        if (mon >= R.first && [0, 1, 2, 3, 4].every(i => R.clr[addDays(mon, i)])) { M.perfectWeeks++; R.events.push({ d, type: "pw" }); }
+      }
+      if (addDays(d, 1).slice(0, 7) !== d.slice(0, 7)) {
+        const ms = d.slice(0, 8) + "01";
+        if (ms >= R.first) {
+          let ok = true, any = false;
+          for (let x = ms; x <= d; x = addDays(x, 1)) if (isTraining(x)) { any = true; if (!R.clr[x]) { ok = false; break; } }
+          if (ok && any) { M.perfectMonths++; R.events.push({ d, type: "pm" }); }
+        }
+      }
+      M.anniv = daysBetween(R.first, d);
+      R.xp += xp;
+      levelUp(d); checkAch(d); levelUp(d);
     }
-    const rest = e.lo >= 12 ? 60 : 90;
-    h += `</div><div class="ex-actions">
-      ${last ? `<button class="btn" data-act="uselast" data-ex="${e.id}">Use last weights</button>` : ""}
-      <button class="btn" data-act="addset" data-ex="${e.id}">+ Set</button>
-      <button class="btn" data-act="rest" data-ex="${e.id}" data-sec="${rest}">Rest ${rest} s</button>
-      ${e.extra ? `<button class="btn" data-act="remove" data-ex="${e.id}">Remove</button>` : ""}</div></article>`;
+    R.streak = cur;
+    R.boss = { id: bossId, best: bossBest, won: bossWon, week: ws };
   }
-  const inDay = new Set(list.map(e => e.id));
-  h += `<div class="add"><select id="addEx" aria-label="Add an exercise"><option value="">+ Add a side quest (exercise from another day)</option>${DAYS.filter(d => PROGRAM[d].ex.length).map(d =>
-    `<optgroup label="${PROGRAM[d].name}">${PROGRAM[d].ex.filter(x => !inDay.has(x[0]) && EX[x[0]].day === d).map(x => `<option value="${x[0]}">${esc(x[1])}</option>`).join("")}</optgroup>`).join("")}</select></div>
-  <p class="note">Hit the top of the rep range on every set and the card shows <b>Up a plate</b> next time. Move the pin one plate and build back up from the bottom of the range. Each set is 10 XP, each cardio minute 2 XP, and a cleared quest adds 50.</p></div>`;
-  $("#view").innerHTML = h;
-  tickClock();
+  if (!R.boss) { const w = mondayOf(today); R.boss = { id: bossFor(w), best: null, won: false, week: w }; }
+  R.lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
+  R.stats = statsOf(M);
+  R.inPz = !!(R.pen[today] && !R.clr[today] && !R.exc[today]);
+  S.cache[hid] = { ver: S.ver, r: R };
+  return R;
 }
 
-/* ---------- render: progress ---------- */
+/* ================= SESSION HELPERS ================= */
+const curKey = () => keyOf(S.me, S.date, S.day);
+function session(create) {
+  const k = curKey();
+  if (!S.sessions[k] && create) S.sessions[k] = { profile: S.me, date: S.date, day: S.day, ex: {}, extra: [], bonus: [], ts: Date.now() };
+  const b = S.sessions[k];
+  if (b) { b.ex ||= {}; b.extra ||= []; b.bonus ||= []; }
+  return b;
+}
+const penHere = R => !!R.pen[S.date];
+function exList(R = replay(S.me)) {
+  const b = session(false), r = reqs(S.day, penHere(R));
+  const base = r.ex.map(e => ({ ...e }));
+  for (const id of (b && b.extra) || []) if (EX[id] && !base.some(e => e.id === id)) base.push({ ...EX[id], extra: true });
+  return base;
+}
+function lastFor(id, beforeDate) {
+  let best = null;
+  for (const b of Object.values(S.sessions)) {
+    if (b.profile !== S.me || b.date >= beforeDate) continue;
+    const arr = (b.ex || {})[id];
+    if (!arr || !arr.some(filled)) continue;
+    if (!best || b.date > best.date) best = { date: b.date, sets: arr.filter(filled) };
+  }
+  return best;
+}
+function lastBonus(id, beforeDate) {
+  let best = null;
+  for (const b of Object.values(S.sessions)) {
+    if (b.profile !== S.me || b.date >= beforeDate) continue;
+    const e = (b.bonus || []).find(x => x.id === id && bonusLogged(x));
+    if (e && (!best || b.date > best.date)) best = { date: b.date, e };
+  }
+  return best;
+}
+
+/* ================= NOTIFICATIONS ================= */
+let AC = null;
+function chime(kind) {
+  if (!S.sound) return;
+  try {
+    AC ||= new (window.AudioContext || window.webkitAudioContext)();
+    const notes = { clear: [660, 880, 1320], lvl: [523, 659, 784, 1046], ach: [880, 1175, 1568], pr: [740, 988, 1480], boss: [392, 523, 659, 784], pz: [220, 165, 110] }[kind] || [880];
+    const t0 = AC.currentTime;
+    notes.forEach((f, i) => {
+      const o = AC.createOscillator(), g = AC.createGain(), t = t0 + i * .09;
+      o.type = kind === "pz" ? "sawtooth" : "triangle"; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.1, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .4);
+      o.connect(g).connect(AC.destination); o.start(t); o.stop(t + .45);
+    });
+  } catch (e) {}
+}
+const toastQ = []; let toastBusy = false;
+function toast(t) { toastQ.push(t); if (!toastBusy) nextToast(); }
+function nextToast() {
+  const t = toastQ.shift(), el = $("#toast");
+  if (!t) { toastBusy = false; el.hidden = true; return; }
+  toastBusy = true;
+  el.innerHTML = `<p class="tag">${esc(t.tag || "Notification")}</p>${t.badge || ""}<p class="title">${esc(t.title)}</p>${t.text ? `<p>${esc(t.text)}</p>` : ""}`;
+  el.hidden = false; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+  chime(t.sound);
+  try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {}
+  setTimeout(nextToast, 3400);
+}
+$("#toast").onclick = () => { toastQ.length = 0; $("#toast").hidden = true; toastBusy = false; };
+const evKey = e => `${e.type}|${e.d}|${e.a ? e.a.id : e.txt || e.L || ""}`;
+function announce(R) {
+  const today = todayStr();
+  const keys = new Set(R.events.map(evKey));
+  if (!S.seen || S.seen.me !== S.me) { S.seen = { me: S.me, keys }; return; }
+  for (const e of R.events) {
+    if (S.seen.keys.has(evKey(e)) || e.d !== today) continue;
+    if (e.type === "ach") toast({ tag: "Achievement unlocked", badge: badge(e.a, "lg"), title: e.a.name, text: `${RAR[e.a.rar][0]} · ${e.a.desc}${e.a.xp ? ` · +${e.a.xp} XP` : ""}`, sound: "ach" });
+    if (e.type === "lvl") toast({ tag: "Level up", title: `Level ${e.L}`, text: `${nameOf(S.me)} grows stronger. Rank ${levelOf(floorXp(e.L)).rank}.`, sound: "lvl" });
+    if (e.type === "pr") toast({ tag: "New personal record", title: e.txt, text: "The System has updated your limits.", sound: "pr" });
+    if (e.type === "boss") toast({ tag: "Boss defeated", title: e.txt, text: "+100 XP. The weekly boss falls.", sound: "boss" });
+    if (e.type === "pzs") toast({ tag: "Penalty survived", title: "You escaped", text: "+75 XP. The Penalty Zone releases you. For now.", sound: "clear" });
+    if (e.type === "clear") toast({ tag: "Quest cleared", title: e.txt, text: "+50 XP. The Penalty Zone will have to wait.", sound: "clear" });
+  }
+  S.seen.keys = keys;
+}
+
+/* ================= COMPONENTS ================= */
+const badge = (a, size = "") => a ? `<span class="badge ${size}" style="--rc:${RAR[a.rar][2]}" title="${esc(a.name)}">${a.icon}</span>` : "";
+function titleOf(id, R) {
+  const t = S.hunters[id] && S.hunters[id].title;
+  if (t && ACHX[t] && R.ach[t]) return ACHX[t];
+  return null;
+}
+const rankBadge = R => `<span class="badge" style="--rc:${R.lv.L >= 50 ? RAR[5][2] : R.lv.L >= 35 ? RAR[4][2] : R.lv.L >= 20 ? RAR[3][2] : R.lv.L >= 10 ? RAR[2][2] : R.lv.L >= 5 ? RAR[1][2] : RAR[0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`;
 function spark(vals) {
   const W = 110, H = 34, P = 4;
   if (vals.length < 2) return "";
@@ -515,133 +883,499 @@ function spark(vals) {
   const end = xy[xy.length - 1];
   return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path class="a" d="${line} L${end[0].toFixed(1)} ${H} L${P} ${H} Z"/><path class="l" d="${line}"/><circle cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="3"/></svg>`;
 }
-function renderHistory() {
-  const mine = Object.values(S.sessions).filter(b => b.profile === S.profile && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
-  const name = S.names[S.profile];
-  if (!mine.length) {
-    $("#view").innerHTML = `<div class="win empty"><p class="tag">No records</p><p><b>${esc(name)} hasn't cleared a quest yet.</b></p><p>Log a session on the Quest tab and progress for every machine shows up here.</p></div>`;
-    return;
-  }
-  const days = new Set(mine.map(b => b.date)).size;
-  const cleared = mine.filter(questDone).length;
-  let h = `<div class="stats"><div class="stat"><b>${cleared}</b><small>quests cleared</small></div><div class="stat"><b>${days}</b><small>days trained</small></div><div class="stat"><b>${fmtShort(mine[0].date)}</b><small>first session</small></div></div>`;
 
+/* ================= SHELL ================= */
+function shell() {
+  $("#root").innerHTML = `<div class="app">
+    <header class="top"><div class="brand" id="brand" data-text="SOLO LIFTING">Solo <span>Lifting</span></div><span class="net" id="net" data-s="${S.net}">${netText()}</span></header>
+    <section class="win status-win" id="statusWin" aria-label="Status"></section>
+    <nav class="tabs" role="tablist">
+      <button id="tab-log" role="tab" data-view="log">Quest</button>
+      <button id="tab-board" role="tab" data-view="board">Board</button>
+      <button id="tab-profile" role="tab" data-view="profile">Profile</button>
+      <button id="tab-rec" role="tab" data-view="records">Records</button>
+    </nav>
+    <main id="view"></main></div>`;
+}
+function renderStatus(R) {
+  const t = titleOf(S.me, R);
+  $("#statusWin").innerHTML = `<div class="lvl"><b>${R.lv.L}</b><small>LEVEL</small></div>
+    <div class="srow"><span class="nm">${t ? badge(t, "sm") : ""}<strong>${esc(nameOf(S.me))}</strong></span><span>${t ? `<span style="color:${RAR[t.rar][2]}">${esc(t.name)}</span>` : "No title"}</span></div>
+    <div class="srow"><span>Rank <strong class="rank">${R.lv.rank}</strong> · Streak <strong>${R.streak}</strong></span><span>${R.lv.into}/${R.lv.need} XP</span></div>
+    <div class="xp" aria-label="XP to next level"><i style="width:${Math.min(100, R.lv.into / R.lv.need * 100).toFixed(1)}%"></i></div>`;
+  applyTheme(R);
+}
+function applyTheme(R) {
+  const pz = R.inPz;
+  document.documentElement.classList.toggle("pz", pz);
+  const brand = $("#brand");
+  if (brand) { brand.innerHTML = pz ? "Penalty <span>Zone</span>" : "Solo <span>Lifting</span>"; brand.dataset.text = pz ? "PENALTY ZONE" : "SOLO LIFTING"; }
+  if (pz !== S.wasPz) { pz ? Cracks.start() : Cracks.stop(); }
+  S.wasPz = pz;
+}
+function render() {
+  if (!S.me || !S.hunters[S.me]) { document.documentElement.classList.remove("pz"); Cracks.stop(); S.wasPz = null; renderLogin(); return; }
+  if (!$("#statusWin")) shell();
+  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.view === S.view);
+  const R = replay(S.me);
+  renderStatus(R);
+  announce(R);
+  if (S.view === "log") renderLog(R);
+  else if (S.view === "board") renderBoard();
+  else if (S.view === "profile") renderProfile(S.viewing || S.me);
+  else renderRecords();
+}
+function softRender() {
+  const a = document.activeElement;
+  if (a && /INPUT|SELECT|TEXTAREA/.test(a.tagName)) { if (S.me) refreshLive(); return; }
+  render();
+}
+function refreshLive() {
+  if (!S.me || !$("#statusWin")) return;
+  const R = replay(S.me);
+  renderStatus(R); announce(R);
+  const q = $("#quest"); if (q) { q.innerHTML = questHTML(R); tickClock(); }
+  const bo = $("#bossCard"); if (bo) bo.outerHTML = bossHTML(R);
+  for (const btn of document.querySelectorAll(".days button")) btn.classList.toggle("clear", questDone(S.sessions[keyOf(S.me, S.date, btn.dataset.day)], penHere(R)));
+  const nt = $("#net"); if (nt) nt.textContent = netText();
+}
+
+/* ================= LOGIN ================= */
+function renderLogin() {
+  const named = new Set(Object.values(S.hunters).filter(h => !h.local).map(h => h.name.toLowerCase()));
+  const list = Object.values(S.hunters).filter(h => !(h.local && named.has(h.name.toLowerCase()))).sort((a, b) => a.name.localeCompare(b.name));
+  $("#root").innerHTML = `<section class="login">
+    <div class="brand" data-text="SOLO LIFTING">Solo <span>Lifting</span></div>
+    <div class="win card"><p class="tag">The System has chosen you</p><h1 class="title" style="font-size:26px">Who are you, Hunter?</h1>
+      ${list.length ? `<div class="who">${list.map(h => `<button data-login="${esc(h.id)}"><span>${esc(h.name)}<small>${h.local ? "Log already on this phone" : "Continue as " + esc(h.name)}</small></span></button>`).join("")}</div>` : `<p>No hunters yet. You're the first.</p>`}
+      <p class="sub">New here? Enter your name to join the board.</p>
+      <div class="new"><input id="newName" maxlength="20" placeholder="Your first name" autocomplete="given-name" aria-label="Your first name"><button class="btn primary" id="arise">Arise</button></div>
+      <p class="sub">You'll stay signed in on this phone. ${ONLINE ? "" : "The shared board isn't connected yet, so this phone keeps its own records."}</p></div></section>`;
+  if (ONLINE && S.net !== "ok") pull().then(ch => { if (ch && !S.me) renderLogin(); });
+}
+function login(id) {
+  // a log carried over from the old version under the same name merges into the chosen hunter
+  const nm = nameOf(id).toLowerCase();
+  for (const h of Object.values(S.hunters)) {
+    if (h.id === id || !h.local || h.name.toLowerCase() !== nm) continue;
+    for (const [k, b] of Object.entries(S.sessions)) if (b.profile === h.id) {
+      const nk = keyOf(id, b.date, b.day);
+      if (!S.sessions[nk]) { S.sessions[nk] = { ...b, profile: id }; S.outbox.s[nk] = rnd(); }
+      delete S.sessions[k]; delete S.outbox.s[k];
+    }
+    delete S.hunters[h.id];
+  }
+  S.me = id; S.view = "log"; S.viewing = null; S.seen = null; S.ver++;
+  // hunters carried over from the old single-phone version get published once they have a log
+  for (const h of Object.values(S.hunters)) if (h.local && (h.id === id || Object.values(S.sessions).some(b => b.profile === h.id))) { delete h.local; dirtyHunter(h.id); }
+  persist(); shell(); render(); syncNow();
+}
+
+/* ================= QUEST VIEW ================= */
+function questHTML(R) {
+  const p = PROGRAM[S.day], b = session(false), pen = penHere(R), r = reqs(S.day, pen);
+  const goals = r.ex.map(e => { const n = (((b && b.ex) || {})[e.id] || []).filter(filled).length; return `<li class="${n >= e.sets ? "ok" : ""}"><span>${esc(e.name)}</span><span>[${Math.min(n, e.sets)}/${e.sets}]</span></li>`; });
+  const c = cardioOf(b);
+  goals.unshift(`<li class="${cardioMeets(b, r.cardio) ? "ok" : ""}"><span>${esc(p.cardio.goal)}</span><span>[${c.total ? Math.round(c.total) : 0}/${r.cardio} min]</span></li>`);
+  const done = questDone(b, pen), isToday = S.date === todayStr(), excused = b && b.excused;
+  const seed = parseDate(S.date).getDate();
+  const exBtn = label => `<button class="linkbtn${S.armed === "excuse" ? " armed" : ""}" data-act="excuse">${S.armed === "excuse" ? "Tap again to confirm" : label}</button>`;
+  let foot;
+  if (excused) foot = `<div class="qfoot"><p class="note"><b>Excused.</b> Rest up. No penalty and no XP lost for this day.</p><button class="linkbtn" data-act="unexcuse">Undo</button></div>`;
+  else if (done) foot = pen ? `<p class="cleared">Penalty survived<small>+75 XP. The Penalty Zone releases you. For now.</small></p>` : `<p class="cleared">Quest cleared<small>+50 XP. The Penalty Zone will have to wait.</small></p>`;
+  else if (isToday) foot = `<div class="clock"><span>Time remaining</span><b id="clock">--:--:--</b></div>
+      <p class="warn"><b>WARNING</b> ${esc(pen ? "Fail this one and the penalty carries into tomorrow, with another 25 XP drained." : PENALTY[seed % PENALTY.length])}</p>
+      <div class="qfoot"><span></span>${exBtn("Sick or injured? Excuse today")}</div>`;
+  else foot = `<div class="qfoot"><p class="note">Editing the log for ${fmtDate(S.date)}.</p>${S.date < todayStr() ? exBtn("Excuse this day") : ""}</div>`;
+  const head = pen
+    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(p.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">Every set +1 · Cardio ${r.cardio} min</span></p>`
+    : `<p class="tag">Daily quest</p><h1 class="title">${esc(p.name)}</h1><p class="sub">${esc(p.focus)}</p>`;
+  return `${head}<ul class="goals">${goals.join("")}</ul>${foot}`;
+}
+function bossHTML(R) {
+  const B = R.boss, name = EX[B.id].name;
+  const txt = B.won ? `<b>Defeated.</b> +100 XP claimed. A new boss rises on Monday.`
+    : B.best != null ? `Beat your record of <b>${B.best} kg</b> this week for +100 XP.`
+    : `No record yet. Log it this week to set the bar for next time.`;
+  return `<section class="win boss" id="bossCard"><span class="ico" aria-hidden="true">👹</span><div><p class="tag">Weekly boss</p><b>${esc(name)}</b><p>${txt}</p></div></section>`;
+}
+function setRow({ id, i, s, kind, ph, extra }) {
+  const dataA = kind === "b" ? `data-bi="${id}" data-j="${i}"` : `data-ex="${id}" data-i="${i}"`;
+  const pre = kind === "b" ? `b-${id}-${i}` : `${id}-${i}`;
+  if (kind === "r" || kind === "s") {
+    const f = kind;
+    return `<div class="set one${s[f] != null ? " done" : ""}"><span class="n">${i + 1}</span>
+      <div class="field"><input id="${f}-${pre}" ${dataA} data-f="${f}" inputmode="numeric" placeholder="${ph[f] ?? ""}" value="${s[f] ?? ""}" aria-label="Set ${i + 1} ${f === "s" ? "seconds" : "reps"}"><span>${f === "s" ? "sec" : "reps"}</span></div>
+      <span class="tick" aria-hidden="true"></span></div>`;
+  }
+  return `<div class="set${s.r != null ? " done" : ""}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
+    <div class="field"><input id="w-${pre}" ${dataA} data-f="w" inputmode="decimal" placeholder="${ph.w ?? ""}" value="${s.w ?? ""}" aria-label="Set ${i + 1} weight"><span>kg</span></div>
+    <span class="x">×</span>
+    <div class="field"><input id="r-${pre}" ${dataA} data-f="r" inputmode="numeric" placeholder="${ph.r ?? ""}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
+    <span class="tick" aria-hidden="true"></span></div>`;
+}
+function renderLog(R) {
+  const p = PROGRAM[S.day], b = session(false), pen = penHere(R), r = reqs(S.day, pen), list = exList(R);
+  let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
+    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}"><b>${PROGRAM[d].short}</b><small>${esc(PROGRAM[d].label)}</small></button>`).join("")}</div>
+  <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
+  <section class="win quest" id="quest">${questHTML(R)}</section>${bossHTML(R)}`;
+
+  const c = cardioOf(b), pc = pace(c);
+  h += `<article class="win ex${cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(p.cardio.goal)}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
+    <div class="cgrid">
+      <div class="field"><input id="c-walk" data-c="walk" inputmode="decimal" placeholder="5" value="${c.walk ?? ""}" aria-label="Walk minutes"><span>walk min</span></div>
+      <div class="field"><input id="c-run" data-c="run" inputmode="decimal" placeholder="${pen ? 20 : 10}" value="${c.run ?? ""}" aria-label="Run minutes"><span>run min</span></div>
+      <div class="field"><input id="c-dist" data-c="dist" inputmode="decimal" placeholder="0.0" value="${c.dist ?? ""}" aria-label="Distance in kilometres"><span>km</span></div>
+      <div class="field"><input id="c-kcal" data-c="kcal" inputmode="numeric" placeholder="150" value="${c.kcal ?? ""}" aria-label="Calories from the machine"><span>kcal</span></div>
+    </div><p class="derived" id="derived">${c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong>` : "Enter what the treadmill shows when you stop."}${pc ? ` · Pace <strong>${paceTxt(pc)}</strong>` : ""}</p></article>`;
+
+  for (const e of list) {
+    const arr = (b && b.ex[e.id]) || [];
+    const n = Math.max(e.sets, arr.length);
+    const base = e.extra ? e.sets : e.sets - (pen ? 1 : 0);
+    const last = lastFor(e.id, S.date);
+    const up = last && last.sets.length >= base && last.sets.slice(0, base).every(s => (s.r || 0) >= e.hi);
+    const boss = R.boss.id === e.id && !R.boss.won;
+    h += `<article class="win ex${exDone(b, e) ? " complete" : ""}" data-card="${e.id}">
+      <div class="ex-h"><h2>${boss ? "👹 " : ""}${esc(e.name)}</h2><span class="target">${pen && !e.extra ? `<em>${e.sets}</em>` : e.sets} × ${e.lo}–${e.hi}</span></div>
+      <p class="last">${last ? `Last <strong>${last.sets.map(setTxt).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>${up ? `<span class="chip">Up a plate</span>` : ""}` : "New skill unlocked: start light and find your working weight."}${R.best[e.id] ? ` <span>Best ${R.best[e.id]} kg</span>` : ""}</p>
+      <div class="sets">`;
+    for (let i = 0; i < n; i++) {
+      const s = arr[i] || {}, ls = last && last.sets[Math.min(i, last.sets.length - 1)];
+      h += setRow({ id: e.id, i, s, kind: "wr", ph: { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi }, extra: pen && !e.extra && i === e.sets - 1 });
+    }
+    const rest = e.lo >= 12 ? 60 : 90;
+    h += `</div><div class="ex-actions">
+      ${last ? `<button class="btn" data-act="uselast" data-ex="${e.id}">Use last weights</button>` : ""}
+      <button class="btn" data-act="addset" data-ex="${e.id}">+ Set</button>
+      <button class="btn" data-act="rest" data-name="${esc(e.name)}" data-sec="${rest}">Rest ${rest} s</button>
+      ${e.extra ? `<button class="btn" data-act="remove" data-ex="${e.id}">Remove</button>` : ""}</div></article>`;
+  }
+
+  const bonus = (b && b.bonus) || [];
+  if (bonus.length) h += `<div class="sect">Bonus training<small>Up to ${BONUS_CAP} XP a day</small></div>`;
+  bonus.forEach((e, bi) => {
+    const L = LIBX[e.id]; if (!L) return;
+    const lb = lastBonus(e.id, S.date);
+    h += `<article class="win ex${bonusLogged(e) ? " complete" : ""}" data-bcard="${bi}"><div class="ex-h"><h2>${esc(L.name)}</h2><span class="target">${L.stat}</span></div>`;
+    if (L.type === "min") {
+      h += `<div class="cgrid"><div class="field"><input id="bm-${bi}" data-bi="${bi}" data-bf="min" inputmode="decimal" placeholder="${lb ? lb.e.min ?? 30 : 30}" value="${e.min ?? ""}" aria-label="Minutes"><span>min</span></div>
+        ${L.cat === "Cardio" ? `<div class="field"><input id="bk-${bi}" data-bi="${bi}" data-bf="km" inputmode="decimal" placeholder="0.0" value="${e.km ?? ""}" aria-label="Distance in kilometres"><span>km</span></div>` : ""}</div>`;
+    } else {
+      const sets = e.sets || [];
+      const n = Math.max(3, sets.length);
+      h += `<p class="last">${lb ? `Last <strong>${(lb.e.sets || []).filter(s => s.w != null || s.r != null || s.s != null).map(s => L.type === "s" ? `${s.s}s` : L.type === "r" ? `${s.r}` : setTxt(s)).join(" · ")}</strong> <span>${fmtShort(lb.date)}</span>` : `${esc(L.cat)}. Log what you did.`}</p><div class="sets">`;
+      for (let j = 0; j < n; j++) {
+        const s = sets[j] || {}, ls = lb && (lb.e.sets || [])[j];
+        h += setRow({ id: bi, i: j, s, kind: L.type === "wr" ? "b" : L.type, ph: { w: ls && ls.w != null ? ls.w : "", r: ls && ls.r != null ? ls.r : "", s: ls && ls.s != null ? ls.s : "" } }).replace(/data-ex="[^"]*" data-i="[^"]*"/g, `data-bi="${bi}" data-j="${j}"`).replace(/id="(r|s)-[^"]*"/, `id="$1-b-${bi}-${j}"`);
+      }
+      h += `</div>`;
+    }
+    h += `<div class="ex-actions">${L.type !== "min" ? `<button class="btn" data-act="baddset" data-bi="${bi}">+ Set</button>` : ""}<button class="btn" data-act="bremove" data-bi="${bi}">Remove</button></div></article>`;
+  });
+
+  const inDay = new Set(list.map(e => e.id));
+  h += `<div class="add"><select id="addEx" aria-label="Add a bonus exercise"><option value="">+ Add bonus exercise</option>
+    ${LIB_CATS.map(cn => `<optgroup label="${cn}">${LIB.filter(x => x[2] === cn).map(x => `<option value="L:${x[0]}">${esc(x[1])}</option>`).join("")}</optgroup>`).join("")}
+    ${DAYS.filter(d => PROGRAM[d].ex.length).map(d => `<optgroup label="Program: ${PROGRAM[d].name}">${PROGRAM[d].ex.filter(x => !inDay.has(x[0]) && EX[x[0]].day === d).map(x => `<option value="P:${x[0]}">${esc(x[1])}</option>`).join("")}</optgroup>`).join("")}
+  </select></div>
+  <p class="note">Each set is 10 XP, each cardio minute 2 XP, a cleared quest 50. Bonus training earns XP and stat points up to ${BONUS_CAP} XP a day. Hit the top of the rep range on every set and the card shows <b>Up a plate</b>. A missed weekday drains 25 XP and sends you to the <b>Penalty Zone</b>.</p></div>`;
+  $("#view").innerHTML = h;
+  tickClock();
+}
+function tickClock() {
+  const el = $("#clock"); if (!el) return;
+  const now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const s = Math.max(0, Math.floor((mid - now) / 1000));
+  el.textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+}
+setInterval(tickClock, 1000);
+
+/* ================= BOARD ================= */
+function todayChip(R) {
+  const t = todayStr();
+  if (R.inPz) return `<span class="st pz">Penalty Zone</span>`;
+  if (R.clr[t]) return `<span class="st ok">Cleared</span>`;
+  if (R.exc[t]) return `<span class="st ex">Excused</span>`;
+  return `<span class="st">Pending</span>`;
+}
+function weekClears(R) { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 5; i++) if (R.clr[addDays(ws, i)]) n++; return n; }
+const EV_TXT = {
+  clear: (e) => ["⚔️", `cleared ${esc(e.txt)}`], pzs: () => ["💀", "survived the Penalty Zone"], pz: () => ["🩸", "was sent to the Penalty Zone"],
+  pr: e => ["🏆", `set a record: ${esc(e.txt)}`], boss: e => ["👹", `defeated the weekly boss: ${esc(e.txt)}`], lvl: e => ["⭐", `reached Level ${e.L}`],
+  ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week"],
+  pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"]
+};
+function renderBoard() {
+  const all = Object.keys(S.hunters).map(id => ({ id, R: replay(id) })).sort((a, b) => (b.R.xp - a.R.xp) || nameOf(a.id).localeCompare(nameOf(b.id)));
+  let h = `<div class="list"><div class="sect">Hunter rankings<small>${all.length} hunter${all.length === 1 ? "" : "s"}</small></div><div class="rows">`;
+  all.forEach(({ id, R }, i) => {
+    const t = titleOf(id, R);
+    h += `<button class="row${id === S.me ? " me" : ""}" data-profile="${esc(id)}"><span class="pos">${i + 1}</span>${t ? badge(t) : rankBadge(R)}
+      <span class="who"><b>${esc(nameOf(id))}</b><small style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? esc(t.name) : `Rank ${R.lv.rank} hunter`}</small></span>
+      <span class="lv">Lv ${R.lv.L}<small>${fmtN(Math.max(R.xp, 0))} XP</small></span>
+      <span class="meta">${todayChip(R)}<span>Streak ${R.streak}</span><span>Week ${weekClears(R)}/5</span><span>${Object.keys(R.ach).length} achievements</span></span></button>`;
+  });
+  h += `</div>`;
+  if (!ONLINE) h += `<p class="note alert"><b>Board not connected.</b> Each phone only sees its own hunters until the shared database is set up (see the README).</p>`;
+  const cutoff = addDays(todayStr(), -14);
+  const evs = [];
+  for (const { id, R } of all) for (const e of R.events) if (e.d >= cutoff && e.d <= todayStr() && !(e.type === "ach" && e.a.rar === 0 && e.a.metric.startsWith("m:"))) evs.push({ id, e });
+  const order = { ach: 0, lvl: 1, boss: 2, pr: 3, pzs: 4, pw: 5, pm: 5, comeback: 6, clear: 7, pz: 8 };
+  evs.sort((a, b) => (b.e.d.localeCompare(a.e.d)) || (order[a.e.type] - order[b.e.type]));
+  h += `<div class="sect">Activity<small>Last 2 weeks</small></div>`;
+  h += evs.length ? `<div class="feed">${evs.slice(0, 25).map(({ id, e }) => { const [ic, t] = (EV_TXT[e.type] || (() => ["•", e.type]))(e); return `<div><span class="ic">${ic}</span><span><b>${esc(nameOf(id))}</b> ${t}</span><time>${relDay(e.d)}</time></div>`; }).join("")}</div>`
+    : `<div class="win empty">Nothing yet. Clear a quest and it shows up here for everyone.</div>`;
+  $("#view").innerHTML = h + `</div>`;
+}
+
+/* ================= PROFILE ================= */
+function renderProfile(id) {
+  if (!S.hunters[id]) id = S.me;
+  const R = replay(id), M = R.M, st = R.stats, mine = id === S.me, t = titleOf(id, R);
+  const unlocked = Object.keys(R.ach).length;
+  const maxStat = Math.max(...Object.values(st), 20);
+  let h = `<div class="list">${mine ? "" : `<button class="linkbtn" data-view="board" style="align-self:flex-start">Back to board</button>`}
+    <section class="win phead">${t ? badge(t, "lg") : `<span class="badge lg" style="--rc:${RAR[0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`}
+      <h1>${esc(nameOf(id))}</h1>
+      <span class="ttl" style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? `${esc(t.name)} · <span class="rar">${RAR[t.rar][0]}</span>` : "No title equipped"}</span>
+      <span class="sub">Level <b style="color:var(--fg)">${R.lv.L}</b> · Rank <b style="color:var(--gold)">${R.lv.rank}</b> · ${fmtN(Math.max(R.xp, 0))} XP${R.inPz ? ` · <span class="st pz">Penalty Zone</span>` : ""}</span>
+    </section>
+    <section class="win card"><h2>Stats</h2><div class="statgrid">${["STR", "AGI", "VIT", "END"].map(k => `<div class="stat2"><span>${k}</span><div class="meter"><i style="width:${Math.min(100, st[k] / maxStat * 100).toFixed(0)}%"></i></div><b>${st[k]}</b></div>`).join("")}</div>
+      <p>STR from upper body, AGI from legs, VIT from cardio and active time, END from core work and cleared quests.</p></section>
+    <div class="nums">
+      <div class="num"><b>${M.quests}</b><small>quests cleared</small></div>
+      <div class="num"><b>${M.days}</b><small>days trained</small></div>
+      <div class="num"><b>${M.bestStreak}</b><small>best streak</small></div>
+      <div class="num"><b>${M.prs}</b><small>records set</small></div>
+      <div class="num"><b>${fmtN(Math.round(M.volume / 1000 * 10) / 10)} t</b><small>total lifted</small></div>
+      <div class="num"><b>${+M.km.toFixed(1)}</b><small>km covered</small></div>
+    </div>`;
+  if (mine) {
+    const opts = Object.keys(R.ach).map(k => ACHX[k]).filter(Boolean).sort((a, b) => b.rar - a.rar || a.name.localeCompare(b.name));
+    h += `<section class="win card titlepick"><h2>Title</h2><p>Show one of your achievements next to your name on the board.</p>
+      <select id="titleSel" aria-label="Choose your title"><option value="">No title</option>${opts.map(a => `<option value="${a.id}" ${S.hunters[id].title === a.id ? "selected" : ""}>${a.icon} ${esc(a.name)} (${RAR[a.rar][0]})</option>`).join("")}</select></section>`;
+  }
+  h += `<div class="sect">Achievements<small>${unlocked} / ${ACH.length}</small></div>`;
+  const stv = statsOf(M);
+  for (const c of ACH_CATS) {
+    const items = ACH.filter(a => a.cat === c.name);
+    const got = items.filter(a => R.ach[a.id]);
+    const next = items.find(a => !R.ach[a.id]);
+    const val = metricVal(M, c.metric, stv);
+    const prev = got.length ? got[got.length - 1].n : 0;
+    const pct = next ? Math.max(0, Math.min(100, (val - prev) / (next.n - prev) * 100)) : 100;
+    h += `<details class="cat"><summary>${badge(got.length ? got[got.length - 1] : items[0], "sm").replace('class="badge sm"', `class="badge sm${got.length ? "" : " locked"}"`)}<span class="cn">${esc(c.name)}</span><span class="cc">${got.length}/${items.length}</span>
+      <span class="nx">${next ? `Next: ${esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${fmtN(next.n)}` : "Complete"}</span></summary>
+      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${badge(a).replace('class="badge "', `class="badge ${R.ach[a.id] ? "" : "locked"}"`)}<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>
+        <span class="when"><span class="rar" style="color:${RAR[a.rar][2]}">${RAR[a.rar][0]}</span><br>${R.ach[a.id] ? fmtShort(R.ach[a.id]) : a.xp ? `+${a.xp} XP` : ""}</span></div>`).join("")}</div></details>`;
+  }
+  h += `<div class="sect">Machine log</div>${machineLog(id)}</div>`;
+  $("#view").innerHTML = h;
+}
+function machineLog(id) {
+  const mine = Object.values(S.sessions).filter(b => b.profile === id && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
+  let h = "";
   const cardio = mine.filter(b => { const c = cardioOf(b); return c.total || c.dist; });
   if (cardio.length) {
-    const rows = cardio.map(b => ({ b, c: cardioOf(b) }));
-    const withDist = rows.filter(r => r.c.dist);
-    const z = rows[rows.length - 1].c;
-    h += `<div class="grp">Cardio</div><details class="hist"><summary><span class="hn">Walk and run</span>${spark(withDist.map(r => r.c.dist))}<span class="hs">${rows.length} sessions · last ${z.dist ? z.dist + " km" : Math.round(z.total) + " min"}${pace(z) ? " at " + paceTxt(pace(z)) : ""}</span></summary>
+    const rows = cardio.map(b => ({ b, c: cardioOf(b) })), z = rows[rows.length - 1].c;
+    h += `<details class="hist"><summary><span class="hn">Walk and run</span>${spark(rows.filter(r => r.c.dist).map(r => r.c.dist))}<span class="hs">${rows.length} sessions · last ${z.dist ? z.dist + " km" : Math.round(z.total) + " min"}${pace(z) ? " at " + paceTxt(pace(z)) : ""}</span></summary>
       <div class="scroll"><table><tr><th>Date</th><th>Walk</th><th>Run</th><th>Km</th><th>Pace</th><th>Kcal</th></tr>${rows.slice(-10).reverse().map(({ b, c }) =>
         `<tr><td>${fmtDate(b.date)}</td><td>${c.walk ?? ""}</td><td>${c.run ?? (c.walk == null ? Math.round(c.total) : "")}</td><td>${c.dist ?? ""}</td><td>${paceTxt(pace(c))}</td><td>${c.kcal ?? ""}</td></tr>`).join("")}</table></div></details>`;
   }
-  for (const d of DAYS) {
-    let block = "";
-    for (const [id] of PROGRAM[d].ex) {
-      if (EX[id].day !== d) continue;
-      const pts = [];
-      for (const b of mine) {
-        const arr = ((b.ex || {})[id] || []).filter(filled);
-        if (!arr.length) continue;
-        const top = Math.max(...arr.map(s => +s.w || 0));
-        pts.push({ date: b.date, top, reps: arr.find(s => (+s.w || 0) === top).r, sets: arr });
-      }
-      if (!pts.length) continue;
-      const a = pts[0], z = pts[pts.length - 1], diff = z.top - a.top;
-      const trend = pts.length > 1 ? (diff > 0 ? `<span class="pos">+${+diff.toFixed(1)} kg</span> since ${fmtShort(a.date)}` : diff < 0 ? `${+diff.toFixed(1)} kg since ${fmtShort(a.date)}` : `Same top weight since ${fmtShort(a.date)}`) : `First logged ${fmtShort(a.date)}`;
-      block += `<details class="hist"><summary><span class="hn">${esc(EX[id].name)}</span>${spark(pts.map(p => p.top))}<span class="hs">Top ${wTxt(z.top)}${z.top ? " kg" : ""} × ${z.reps ?? "?"} · ${trend}</span></summary>
-        <div class="scroll"><table>${pts.slice(-8).reverse().map(p => `<tr><td>${fmtDate(p.date)}</td><td>${p.sets.map(setTxt).join(" · ")}</td></tr>`).join("")}</table></div></details>`;
+  for (const eid of Object.keys(EX)) {
+    const pts = [];
+    for (const b of mine) {
+      const arr = ((b.ex || {})[eid] || []).filter(filled); if (!arr.length) continue;
+      const top = Math.max(...arr.map(s => +s.w || 0));
+      pts.push({ date: b.date, top, reps: arr.find(s => (+s.w || 0) === top).r, sets: arr });
     }
-    if (block) h += `<div class="grp">${PROGRAM[d].name}</div>${block}`;
+    if (!pts.length) continue;
+    const a = pts[0], z = pts[pts.length - 1], diff = z.top - a.top;
+    const trend = pts.length > 1 ? (diff > 0 ? `<span class="pos">+${+diff.toFixed(1)} kg</span> since ${fmtShort(a.date)}` : diff < 0 ? `${+diff.toFixed(1)} kg since ${fmtShort(a.date)}` : `Same top weight since ${fmtShort(a.date)}`) : `First logged ${fmtShort(a.date)}`;
+    h += `<details class="hist"><summary><span class="hn">${esc(EX[eid].name)}</span>${spark(pts.map(p => p.top))}<span class="hs">Top ${wTxt(z.top)}${z.top ? " kg" : ""} × ${z.reps ?? "?"} · ${trend}</span></summary>
+      <div class="scroll"><table>${pts.slice(-8).reverse().map(p => `<tr><td>${fmtDate(p.date)}</td><td>${p.sets.map(setTxt).join(" · ")}</td></tr>`).join("")}</table></div></details>`;
   }
-  $("#view").innerHTML = `<div class="list">${h}</div>`;
+  return h || `<div class="win empty">No machine sessions logged yet.</div>`;
 }
 
-/* ---------- render: records ---------- */
-function renderBackup() {
-  const n = Object.keys(S.sessions).length;
+/* ================= RECORDS ================= */
+function renderRecords() {
+  const n = Object.values(S.sessions).filter(b => b.profile === S.me).length;
+  const pending = Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length;
   $("#view").innerHTML = `<div class="list">
-    <p class="note${S.mode === "cloud" ? "" : " alert"}">${S.mode === "cloud"
-      ? "<b>Synced to your Claude account.</b> Your log follows you to any device where you open this page signed in."
-      : "<b>Saved on this phone.</b> Nothing is uploaded anywhere. Uninstalling the app or clearing browser data would wipe it, so export a backup every few weeks."}</p>
-    <section class="win card"><h2>Hunters</h2><p>Each person's lifts and level are kept separately. Switch with the toggle at the top.</p>
-      <div class="names"><input id="name-j" value="${esc(S.names.j)}" aria-label="First person's name"><input id="name-p" value="${esc(S.names.p)}" aria-label="Second person's name"></div></section>
-    <section class="win card"><h2>Export for analysis</h2><p>A spreadsheet-friendly CSV of every set and cardio session for ${esc(S.names[S.profile])}. Send this to Claude for trend analysis.</p>
+    <p class="note${ONLINE ? "" : " alert"}">${ONLINE ? `<b>Connected to the shared board.</b> ${pending ? `${pending} change${pending === 1 ? "" : "s"} waiting to sync.` : "Everything is synced."} Your log is also kept on this phone, so it works offline at the gym.`
+      : "<b>Saved on this phone only.</b> The shared board isn't connected yet. Export a backup every few weeks."}</p>
+    <section class="win card"><h2>Hunter</h2><p>Signed in as <b style="color:var(--fg)">${esc(nameOf(S.me))}</b>.</p>
+      <div class="ex-actions"><button class="btn${S.armed === "switch" ? " armed" : ""}" data-act="switch">${S.armed === "switch" ? "Tap again to switch" : "Switch hunter"}</button></div></section>
+    <section class="win card"><div class="toggle"><h2>Sound</h2><button class="btn${S.sound ? " primary" : ""}" data-act="sound">${S.sound ? "On" : "Off"}</button></div><p>System chimes for cleared quests, records, level ups and achievements.</p></section>
+    <section class="win card"><h2>Export for analysis</h2><p>A spreadsheet-friendly CSV of every set, bonus exercise and cardio session you've logged. Send it to Claude for trend analysis.</p>
       <div class="ex-actions"><button class="btn primary" id="csvBtn">Export CSV</button></div></section>
-    <section class="win card"><h2>Backup</h2><p>${n} session${n === 1 ? "" : "s"} stored. Saves everything to a .json file you can keep in Google Drive and restore later.</p>
+    <section class="win card"><h2>Backup</h2><p>${n} session${n === 1 ? "" : "s"} logged by you. A backup saves everything stored on this phone to a .json file.</p>
       <div class="ex-actions"><button class="btn primary" id="exportBtn">Export backup</button><button class="btn" id="copyBtn">Copy as text</button>
       <span class="file btn">Restore from file<input type="file" id="importFile" accept=".json,application/json" aria-label="Choose backup file"></span></div>
       <textarea id="exportText" hidden readonly aria-label="Export text"></textarea><p id="importMsg" hidden></p></section></div>`;
 }
 
-function render() {
-  for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", b.dataset.view === S.view);
-  $("#profiles").innerHTML = ["j", "p"].map(p => `<button data-profile="${p}" aria-pressed="${S.profile === p}">${esc(S.names[p])}</button>`).join("");
-  renderStatus();
-  if (S.view === "log") renderLog(); else if (S.view === "history") renderHistory(); else renderBackup();
-}
-
-/* ---------- toast ---------- */
-let toastT = null;
-function toast(title, text) {
-  const t = $("#toast"); $("#toastT").textContent = title; $("#toastP").textContent = text;
-  t.hidden = false; t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop");
-  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3500);
-}
-$("#toast").onclick = () => { $("#toast").hidden = true; };
-
-/* ---------- events ---------- */
+/* ================= EVENTS ================= */
+let armT = null;
+function arm(key) { S.armed = key; clearTimeout(armT); armT = setTimeout(() => { S.armed = null; softRender(); }, 4000); }
 document.addEventListener("click", e => {
   const t = e.target.closest("button");
   if (!t) return;
-  if (t.dataset.view) { S.view = t.dataset.view; render(); window.scrollTo(0, 0); return; }
-  if (t.dataset.profile) { S.profile = t.dataset.profile; S.lastLevel = null; saveLocal(); render(); return; }
+  if (t.dataset.login) { login(t.dataset.login); return; }
+  if (t.id === "arise") {
+    const name = ($("#newName").value || "").trim().slice(0, 20);
+    if (!name) { $("#newName").focus(); return; }
+    const ex = Object.values(S.hunters).find(h => h.name.toLowerCase() === name.toLowerCase());
+    if (ex) { login(ex.id); return; }
+    const id = "h" + Date.now().toString(36) + rnd().slice(0, 3);
+    S.hunters[id] = { id, name, title: null }; dirtyHunter(id); login(id); return;
+  }
+  if (t.dataset.view) { S.view = t.dataset.view; S.viewing = null; render(); scrollTo(0, 0); return; }
+  if (t.dataset.profile) { S.view = "profile"; S.viewing = t.dataset.profile; render(); scrollTo(0, 0); return; }
   if (t.dataset.day) { S.day = t.dataset.day; render(); return; }
   const act = t.dataset.act, id = t.dataset.ex;
-  if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({ w: null, r: null }); arr.push({ w: null, r: null }); renderLog(); }
+  if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({ w: null, r: null }); arr.push({ w: null, r: null }); render(); }
   if (act === "uselast") {
     const last = lastFor(id, S.date); if (!last) return;
-    const b = session(true), arr = (b.ex[id] ||= []);
-    last.sets.forEach((s, i) => { arr[i] = arr[i] || { w: null, r: null }; if (arr[i].w == null) arr[i].w = s.w; });
-    queueSave(curKey()); renderLog();
+    const b = session(true), arr = (b.ex[id] ||= []), n = exList().find(x => x.id === id).sets;
+    for (let i = 0; i < n; i++) { const s = last.sets[Math.min(i, last.sets.length - 1)]; arr[i] = arr[i] || { w: null, r: null }; if (arr[i].w == null) arr[i].w = s.w; }
+    dirtySession(curKey()); render();
   }
-  if (act === "remove") { const b = session(true); b.extra = (b.extra || []).filter(x => x !== id); delete b.ex[id]; queueSave(curKey()); renderLog(); refreshLive(); }
-  if (act === "rest") startTimer(+t.dataset.sec, EX[id].name);
+  if (act === "remove") { const b = session(true); b.extra = b.extra.filter(x => x !== id); delete b.ex[id]; dirtySession(curKey()); render(); }
+  if (act === "baddset") { const b = session(true), en = b.bonus[+t.dataset.bi]; en.sets ||= []; while (en.sets.length < 3) en.sets.push({}); en.sets.push({}); render(); }
+  if (act === "bremove") { const b = session(true); b.bonus.splice(+t.dataset.bi, 1); dirtySession(curKey()); render(); }
+  if (act === "rest") startTimer(+t.dataset.sec, t.dataset.name);
+  if (act === "excuse") { if (S.armed !== "excuse") { arm("excuse"); refreshLive(); return; } S.armed = null; session(true).excused = true; dirtySession(curKey()); render(); }
+  if (act === "unexcuse") { const b = session(false); if (b) { delete b.excused; dirtySession(curKey()); } render(); }
+  if (act === "switch") { if (S.armed !== "switch") { arm("switch"); renderRecords(); return; } S.armed = null; S.me = null; persist(); render(); }
+  if (act === "sound") { S.sound = !S.sound; persist(); renderRecords(); if (S.sound) chime("clear"); }
   if (t.id === "exportBtn") doExport();
   if (t.id === "copyBtn") doCopy(backupJson());
   if (t.id === "csvBtn") doCsv();
 });
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "newName") $("#arise").click(); });
 document.addEventListener("input", e => {
-  const t = e.target;
-  if (t.dataset && t.dataset.ex && t.dataset.f) {
-    const b = session(true), arr = (b.ex[t.dataset.ex] ||= []), i = +t.dataset.i;
+  const t = e.target, d = t.dataset || {};
+  if (d.ex && d.f) {
+    const b = session(true), arr = (b.ex[d.ex] ||= []), i = +d.i;
     while (arr.length <= i) arr.push({ w: null, r: null });
-    arr[i][t.dataset.f] = num(t.value);
+    arr[i][d.f] = num(t.value);
     t.closest(".set").classList.toggle("done", arr[i].r != null);
-    const ex = exList().find(x => x.id === t.dataset.ex);
+    const ex = exList().find(x => x.id === d.ex);
     t.closest(".ex").classList.toggle("complete", exDone(b, ex));
-    queueSave(curKey()); refreshLive();
-  } else if (t.dataset && t.dataset.c) {
-    const b = session(true); b.cardio = { ...(b.cardio || {}), [t.dataset.c]: num(t.value) }; delete b.cardio.mins; delete b.cardio.kind;
+    dirtySession(curKey()); refreshLive();
+  } else if (d.bi != null && d.f) {
+    const b = session(true), en = b.bonus[+d.bi]; if (!en) return;
+    en.sets ||= []; const j = +d.j;
+    while (en.sets.length <= j) en.sets.push({});
+    en.sets[j][d.f] = num(t.value);
+    const L = LIBX[en.id];
+    t.closest(".set").classList.toggle("done", L.type === "wr" ? en.sets[j].r != null : en.sets[j][d.f] != null);
+    t.closest(".ex").classList.toggle("complete", bonusLogged(en));
+    dirtySession(curKey()); refreshLive();
+  } else if (d.bi != null && d.bf) {
+    const b = session(true), en = b.bonus[+d.bi]; if (!en) return;
+    en[d.bf] = num(t.value);
+    t.closest(".ex").classList.toggle("complete", bonusLogged(en));
+    dirtySession(curKey()); refreshLive();
+  } else if (d.c) {
+    const b = session(true); b.cardio = { ...(b.cardio || {}), [d.c]: num(t.value) }; delete b.cardio.mins; delete b.cardio.kind;
     const c = cardioOf(b), pc = pace(c);
     $("#derived").innerHTML = (c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong>` : "Enter what the treadmill shows when you stop.") + (pc ? ` · Pace <strong>${paceTxt(pc)}</strong>` : "");
-    $("#cardioCard").classList.toggle("complete", cardioDone(b));
-    queueSave(curKey()); refreshLive();
-  } else if (t.id === "name-j" || t.id === "name-p") {
-    S.names[t.id.slice(5)] = t.value.trim() || (t.id === "name-j" ? "Jaidyn" : "Paris");
-    $("#profiles").innerHTML = ["j", "p"].map(p => `<button data-profile="${p}" aria-pressed="${S.profile === p}">${esc(S.names[p])}</button>`).join("");
-    renderStatus();
-    clearTimeout(S.nameT); S.nameT = setTimeout(saveSettings, 800);
+    dirtySession(curKey());
+    $("#cardioCard").classList.toggle("complete", cardioMeets(b, reqs(S.day, penHere(replay(S.me))).cardio));
+    refreshLive();
   }
 });
 document.addEventListener("change", e => {
   const t = e.target;
   if (t.id === "date" && t.value) { S.date = t.value; S.day = dayForDate(t.value); render(); }
-  if (t.id === "addEx" && t.value) { const b = session(true); b.extra = [...(b.extra || []), t.value]; queueSave(curKey()); renderLog(); }
+  if (t.id === "addEx" && t.value) {
+    const b = session(true), [kind, id] = t.value.split(":");
+    if (kind === "P") b.extra = [...b.extra, id];
+    else { const L = LIBX[id]; b.bonus.push(L.type === "min" ? { id } : { id, sets: [{}, {}, {}] }); }
+    dirtySession(curKey()); render();
+    const cards = document.querySelectorAll(kind === "P" ? "[data-card]" : "[data-bcard]");
+    if (cards.length) cards[cards.length - 1].scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+  if (t.id === "titleSel") { S.hunters[S.me].title = t.value || null; dirtyHunter(S.me); render(); }
   if (t.id === "importFile" && t.files[0]) doImport(t.files[0]);
 });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) return;
+  const t = todayStr();
+  if (S.openedOn !== t) { S.openedOn = t; S.date = t; S.day = dayForDate(t); S.ver++; render(); }
+  syncNow();
+});
+addEventListener("online", syncNow);
+setInterval(() => { if (!document.hidden) syncNow(); }, 45000);
 
-/* ---------- rest timer ---------- */
+/* ================= PENALTY ZONE CRACKS ================= */
+const Cracks = (() => {
+  const cv = $("#cracks"), ctx = cv.getContext("2d");
+  let segs = [], raf = 0, t0 = 0, on = false, w = 0, h = 0, lastDraw = 0;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function grow(x, y, ang, len, width, depth, delay) {
+    const pts = [[x, y]]; let l = 0;
+    while (l < len) {
+      const step = 5 + Math.random() * 9;
+      ang += (Math.random() - .5) * .9;
+      x += Math.cos(ang) * step; y += Math.sin(ang) * step; l += step; pts.push([x, y]);
+      if (depth < 2 && Math.random() < .14) grow(x, y, ang + (Math.random() < .5 ? -1 : 1) * (.5 + Math.random() * .7), (len - l) * .6, width * .6, depth + 1, delay + .25 + l / len * 1.2);
+    }
+    if (pts.length > 1) segs.push({ pts, width, delay });
+  }
+  function build() {
+    const dpr = Math.min(2, devicePixelRatio || 1); w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    segs = [];
+    const n = Math.round((w + h) / 80), reach = Math.min(w, h) * .15;
+    for (let i = 0; i < n; i++) {
+      const side = i % 4; let x, y, a;
+      if (side === 0) { x = Math.random() * w; y = 0; a = Math.PI / 2; }
+      else if (side === 1) { x = w; y = Math.random() * h; a = Math.PI; }
+      else if (side === 2) { x = Math.random() * w; y = h; a = -Math.PI / 2; }
+      else { x = 0; y = Math.random() * h; a = 0; }
+      grow(x, y, a + (Math.random() - .5) * .8, 30 + Math.random() * reach, 2.4, 0, Math.random() * 1.6);
+    }
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, w, h);
+    const flicker = still ? 1 : (.72 + .28 * Math.sin(t * 2.3)) * (Math.random() < .03 ? .35 : 1);
+    const glitch = !still && (t % 4.5) < .12;
+    ctx.save();
+    if (glitch) ctx.translate((Math.random() - .5) * 8, (Math.random() - .5) * 3);
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (const s of segs) {
+      const prog = still ? 1 : Math.max(0, Math.min(1, (t - s.delay) / 1.6));
+      if (!prog) continue;
+      const k = Math.max(2, Math.ceil(s.pts.length * prog));
+      ctx.beginPath(); ctx.moveTo(s.pts[0][0], s.pts[0][1]);
+      for (let i = 1; i < k; i++) ctx.lineTo(s.pts[i][0], s.pts[i][1]);
+      ctx.shadowColor = "rgba(255,30,50,.9)"; ctx.shadowBlur = 10;
+      ctx.strokeStyle = `rgba(255,48,72,${.75 * flicker})`; ctx.lineWidth = s.width; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = `rgba(255,220,225,${.55 * flicker})`; ctx.lineWidth = Math.max(.6, s.width * .3); ctx.stroke();
+    }
+    if (glitch) { ctx.fillStyle = "rgba(255,40,60,.12)"; ctx.fillRect(0, Math.random() * h, w, 2 + Math.random() * 8); }
+    ctx.restore();
+  }
+  function loop(now) {
+    if (!on) return;
+    raf = requestAnimationFrame(loop);
+    if (document.hidden || now - lastDraw < 33) return;
+    lastDraw = now; draw((now - t0) / 1000);
+  }
+  addEventListener("resize", () => { if (on) { build(); if (still) draw(0); } });
+  return {
+    start() { if (on) return; on = true; build(); t0 = performance.now(); if (still) draw(0); else raf = requestAnimationFrame(loop); },
+    stop() { on = false; cancelAnimationFrame(raf); ctx.clearRect(0, 0, cv.width, cv.height); }
+  };
+})();
+
+/* ================= REST TIMER ================= */
 let tEnd = 0, tInt = null, tDone = false;
 function startTimer(sec, label) {
   tEnd = Date.now() + sec * 1000; tDone = false;
@@ -654,7 +1388,7 @@ function tick() {
   const left = Math.ceil((tEnd - Date.now()) / 1000);
   if (left <= 0) {
     $("#timerT").textContent = "GO";
-    if (!tDone) { tDone = true; $("#timer").classList.add("over"); $("#timerL").textContent = "Stamina restored. Next set."; try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} }
+    if (!tDone) { tDone = true; $("#timer").classList.add("over"); $("#timerL").textContent = "Stamina restored. Next set."; chime("pr"); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} }
     return;
   }
   $("#timerT").textContent = `${Math.floor(left / 60)}:${pad(left % 60)}`;
@@ -662,34 +1396,41 @@ function tick() {
 $("#timerAdd").onclick = () => { if (tDone) { tEnd = Date.now(); tDone = false; $("#timer").classList.remove("over"); } tEnd += 15000; tick(); };
 $("#timerStop").onclick = () => { clearInterval(tInt); $("#timer").hidden = true; };
 
-/* ---------- export / backup ---------- */
-const backupJson = () => JSON.stringify({ app: "lift-log", version: 2, exported: new Date().toISOString(), names: S.names, sessions: S.sessions }, null, 1);
+/* ================= EXPORT / BACKUP ================= */
+const backupJson = () => JSON.stringify({ app: "lift-log", version: 4, exported: new Date().toISOString(), hunters: S.hunters, sessions: S.sessions }, null, 1);
 function csvText() {
   const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-  const rows = [["type", "person", "date", "day", "item", "set", "weight_kg", "reps", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"]];
-  const mine = Object.values(S.sessions).filter(b => b.profile === S.profile).sort((a, b) => a.date < b.date ? -1 : 1);
+  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"];
+  const rows = [head];
+  const R = replay(S.me), who = nameOf(S.me);
+  const mine = Object.values(S.sessions).filter(b => b.profile === S.me).sort((a, b) => a.date < b.date ? -1 : 1);
+  const row = o => rows.push(head.map(k => o[k] ?? ""));
   for (const b of mine) {
-    const who = S.names[b.profile], day = PROGRAM[b.day] ? PROGRAM[b.day].name : b.day;
+    const base = { person: who, date: b.date, day: PROGRAM[b.day] ? PROGRAM[b.day].name : b.day, penalty_day: R.pen[b.date] ? "yes" : "no", quest_cleared: questDone(b, !!R.pen[b.date]) ? "yes" : "no", excused: b.excused ? "yes" : "no" };
     const c = cardioOf(b);
-    if (c.total || c.dist || c.kcal) rows.push(["cardio", who, b.date, day, "walk/run", "", "", "", c.walk, c.run, c.total, c.dist, pace(c) ? pace(c).toFixed(2) : "", c.kcal]);
-    for (const [id, arr] of Object.entries(b.ex || {})) arr.forEach((s, i) => { if (filled(s)) rows.push(["lift", who, b.date, day, EX[id] ? EX[id].name : id, i + 1, s.w, s.r, "", "", "", "", "", ""]); });
+    if (c.total || c.dist || c.kcal) row({ ...base, type: "cardio", item: "walk/run", category: "Program cardio", walk_min: c.walk, run_min: c.run, total_min: c.total, distance_km: c.dist, pace_min_per_km: pace(c) ? pace(c).toFixed(2) : "", kcal: c.kcal });
+    for (const [id, arr] of Object.entries(b.ex || {})) arr.forEach((s, i) => { if (filled(s)) row({ ...base, type: "lift", item: EX[id] ? EX[id].name : id, category: "Program", set: i + 1, weight_kg: s.w, reps: s.r }); });
+    for (const e of b.bonus || []) {
+      const L = LIBX[e.id]; if (!L || !bonusLogged(e)) continue;
+      if (L.type === "min") row({ ...base, type: "bonus", item: L.name, category: L.cat, total_min: e.min, distance_km: e.km });
+      else (e.sets || []).forEach((s, i) => { if (s.w != null || s.r != null || s.s != null) row({ ...base, type: "bonus", item: L.name, category: L.cat, set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s }); });
+    }
+    if (b.excused && !hasTraining({ ...b, excused: false })) row({ ...base, type: "excused" });
   }
   return rows.map(r => r.map(q).join(",")).join("\n");
 }
-async function save(name, text, type) {
+function save(name, text, type) {
   try {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], { type }));
     a.download = name; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    return;
-  } catch (e) {}
-  doCopy(text);
+  } catch (e) { doCopy(text); }
 }
 const doExport = () => save(`solo-lifting-backup-${todayStr()}.json`, backupJson(), "application/json");
-const doCsv = () => save(`solo-lifting-${S.names[S.profile].toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${todayStr()}.csv`, csvText(), "text/csv");
+const doCsv = () => save(`solo-lifting-${nameOf(S.me).toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${todayStr()}.csv`, csvText(), "text/csv");
 async function doCopy(text) {
-  const ta = $("#exportText"); ta.hidden = false; ta.value = text;
+  const ta = $("#exportText"); if (!ta) return; ta.hidden = false; ta.value = text;
   try { await navigator.clipboard.writeText(text); $("#copyBtn").textContent = "Copied"; }
   catch (e) { ta.focus(); ta.select(); $("#copyBtn").textContent = "Select all and copy"; }
 }
@@ -700,29 +1441,37 @@ async function doImport(file) {
     if (!o || o.app !== "lift-log" || typeof o.sessions !== "object") throw new Error("bad");
     let n = 0;
     for (const [k, b] of Object.entries(o.sessions)) {
-      if (!/^[jp]_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK)$/.test(k)) continue;
+      if (!/^[a-z0-9]+_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK)$/.test(k) || !b) continue;
       const cur = S.sessions[k];
-      if (!cur || (b.ts || 0) > (cur.ts || 0)) {
-        S.sessions[k] = b; n++;
-        if (S.mode === "cloud") { try { await S.col.doc(k).set(b); } catch (e) {} }
-      }
+      if (!cur || (b.ts || 0) > (cur.ts || 0)) { S.sessions[k] = b; S.outbox.s[k] = rnd(); n++; }
     }
-    if (o.names) { S.names = { ...S.names, ...o.names }; await saveSettings(); }
-    saveLocal();
-    msg.textContent = `Restored ${n} session${n === 1 ? "" : "s"}.`;
-    render();
+    const hs = o.hunters || Object.fromEntries(Object.entries(o.names || {}).map(([id, name]) => [id, { id, name, title: null }]));
+    for (const [id, h] of Object.entries(hs)) if (!S.hunters[id]) { S.hunters[id] = { id, name: h.name || "Hunter", title: h.title || null }; S.outbox.h[id] = rnd(); }
+    for (const b of Object.values(S.sessions)) if (!S.hunters[b.profile]) { S.hunters[b.profile] = { id: b.profile, name: "Hunter", title: null }; S.outbox.h[b.profile] = rnd(); }
+    S.ver++; persist(); pushSoon(); render();
+    const m2 = $("#importMsg"); if (m2) { m2.hidden = false; m2.textContent = `Restored ${n} session${n === 1 ? "" : "s"}.`; }
   } catch (e) { msg.textContent = "That file couldn't be read. Choose a .json file made with Export backup."; }
 }
 
-/* ---------- start ---------- */
-loadLocal();
-S.date = todayStr(); S.day = dayForDate(S.date);
+/* ================= START ================= */
+load();
+S.date = todayStr(); S.day = dayForDate(S.date); S.openedOn = S.date;
 render();
-
-// keep data from being evicted, and enable offline use
+syncNow();
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
-if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+if ("serviceWorker" in navigator) addEventListener("load", async () => {
+  try {
+    const hadController = !!navigator.serviceWorker.controller;
+    const reg = await navigator.serviceWorker.register("sw.js");
+    const bar = $("#updateBar");
+    const offer = w => { bar.hidden = false; bar.onclick = () => { bar.firstChild.nodeValue = "Updating"; w.postMessage("skip"); }; };
+    if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+    reg.addEventListener("updatefound", () => { const w = reg.installing; if (w) w.addEventListener("statechange", () => { if (w.state === "installed" && navigator.serviceWorker.controller) offer(w); }); });
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded) { reloaded = true; persistNow(); location.reload(); } });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+  } catch (e) {}
+});
 </script>
-
 </body>
 </html>
