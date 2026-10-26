@@ -2618,18 +2618,32 @@ const GENERIC = [
 let FS = { q: "", off: null, busy: false, pick: null }; // food search state
 async function searchProducts(q) {
   // Open Food Facts: free product database. Searches Australian products first, then worldwide if few come back.
-  const fields = "code,product_name,brands,nutriments,serving_quantity";
+  const fields = "code,product_name,product_name_en,brands,nutriments,serving_quantity";
   const pick = d => (d.products || d.hits || []).map(x => {
     const nu = x.nutriments || {}, k = nu["energy-kcal_100g"] ?? (nu.energy_100g != null ? nu.energy_100g / 4.184 : null);
-    return k == null ? null : { id: "o" + x.code, n: [x.product_name, x.brands && String(x.brands).split(",")[0]].filter(Boolean).join(" · ").slice(0, 60), k100: Math.round(k), p100: Math.round((nu.proteins_100g || 0) * 10) / 10, g: Math.round(+x.serving_quantity) || 100, u: x.serving_quantity ? "1 serve" : "" };
+    const nm = typeof x.product_name === "string" ? x.product_name : (x.product_name && (x.product_name.en || Object.values(x.product_name)[0])) || x.product_name_en || "";
+    const br = Array.isArray(x.brands) ? x.brands[0] : x.brands && String(x.brands).split(",")[0];
+    return k == null ? null : { id: "o" + x.code, n: [nm, br].filter(Boolean).join(" · ").slice(0, 60), k100: Math.round(k), p100: Math.round((nu.proteins_100g || 0) * 10) / 10, g: Math.round(+x.serving_quantity) || 100, u: x.serving_quantity ? "1 serve" : "" };
   }).filter(x => x && x.n);
-  const url = au => `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=${fields}${au ? "&tagtype_0=countries&tag_contains_0=contains&tag_0=australia" : ""}`;
-  let out = [];
-  for (const au of [true, false]) {
-    const r = await fetch(url(au)); if (!r.ok) throw r.status;
-    out = out.concat(pick(await r.json()).filter(x => !out.some(y => y.id === x.id)));
-    if (out.length >= 6) break;
+  // try the newer search service first, then the classic one; stop at the first that answers
+  const enc = encodeURIComponent(q), tries = [
+    `https://search.openfoodfacts.org/search?q=${enc}&page_size=24&langs=en&fields=${fields}`,
+    `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${enc}&search_simple=1&action=process&json=1&page_size=24&fields=${fields}`,
+    `https://au.openfoodfacts.org/cgi/search.pl?search_terms=${enc}&search_simple=1&action=process&json=1&page_size=24&fields=${fields}`
+  ];
+  let out = null, why = [];
+  for (const url of tries) {
+    try {
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+      const r = await fetch(url, { signal: ctl.signal, headers: { Accept: "application/json" } }); clearTimeout(tm);
+      if (!r.ok) { why.push(`${new URL(url).host} ${r.status}`); continue; }
+      out = pick(await r.json()); break;
+    } catch (e) { why.push(`${new URL(url).host} ${e.name === "AbortError" ? "timed out" : "blocked"}`); }
   }
+  if (!out) throw new Error(why.join(", "));
+  // Australian products first
+  const au = x => /aus|woolworths|coles|aldi|iga/i.test(x.n) ? 0 : 1;
+  out.sort((a, b) => au(a) - au(b));
   return out.slice(0, 20);
 }
 const foodKey = (hid, date) => `${hid}_${date}_FOOD`;
@@ -2730,7 +2744,7 @@ function foodClick(t, act) {
   if (act === "fsoff") {
     const q = (($("#fs-q") || {}).value || "").trim(); if (q.length < 2 || FS.busy) return true;
     FS.q = q; FS.busy = true; FS.pick = null; fsDraw();
-    searchProducts(q).then(list => { FS.off = { list }; }).catch(() => { FS.off = { list: [], err: "Couldn't reach the product database. Check your connection, or try again in a minute." }; })
+    searchProducts(q).then(list => { FS.off = { list }; }).catch(e => { FS.off = { list: [], err: `Couldn't reach the product database (${e.message || "network"}). Try again in a minute.` }; })
       .finally(() => { FS.busy = false; fsDraw(); });
     return true;
   }
