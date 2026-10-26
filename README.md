@@ -22,6 +22,22 @@ Live at: https://jaidynkay314-cyber.github.io/solo-lifting/
 
 Until this is done, the app still works, but each phone only sees its own hunters ("This phone only").
 
+### Updating to v6 (quest points, quest days, the Vault)
+
+No database changes this time.
+
+1. Upload everything except `config.js`. That's `index.html`, `sw.js`, `README.md` and the whole `cards` folder (`cards/cards.js`, `cards/img`, `cards/thumb`).
+   - GitHub's web upload takes at most 100 files at a time. Do `cards/img` in two goes and `cards/thumb` in two goes, or use GitHub Desktop.
+2. Phones show **Update available**. Tap it.
+
+What changes for everyone:
+- Every set needs its diamond tapped before it counts.
+- Days clear on points.
+- Saturday and Sunday are separate days.
+- Mon to Fri stay quest days until you change them in My program.
+- Past days are re-scored with the new rules. Some days that missed before may now count, such as a sport day.
+- Everyone gets loot boxes for their history so far, plus a Blessed launch box.
+
 ### Updating to v4 (custom programs)
 
 1. In Supabase, open **SQL Editor**, then **New query**. Paste in all of `supabase-update-v4.sql` and click **Run**.
@@ -40,11 +56,22 @@ Install to the home screen:
 
 ### Tabs
 
-- **Quest:** today's quest, countdown, weekly boss, cardio, machine sets, and bonus exercises (**+ Add bonus exercise**).
+- **Quest:** today's quest, points bar, countdown, weekly boss, cardio and sets, plus anything extra (**+ Add exercise, sport or activity**). Pick the cardio machine with the buttons on the cardio card. Tap the diamond next to a set to confirm it; an empty set uses the grey numbers from last time. The strip at the bottom shows the last 7 days: cleared, missed, rest or excused.
+- **Vault:**
+  - **Opening a box:** tap a loot box (the glowing tied cube). It bursts open and a reel spins and stops on your prize: a card pack, a frame or a title.
+  - **Packs:** packs can be opened straight away or saved. Swipe across the top to tear one open, then swipe the cards away. Drag a card a little way to see the glow of the next card.
+  - **Viewing cards:** tap any collected card to see it up close, and tap **Use as picture** to make it your picture on the board.
+- **Profile, Appearance:** choose your title (from achievements or loot), your frame, and your picture.
 - **Board:** everyone ranked by XP, with today's status (Cleared, Pending, Excused or Penalty Zone), streak, week progress, and an activity feed.
 - **Profile:** your title, stats, program summary, achievements and exercise log. Tap anyone on the Board to see theirs, including their program.
-- **My program** (Profile, then **Edit**): change any day. Rename it, set the cardio minutes, add, remove or reorder exercises, and change sets and rep ranges. **Create a new exercise** adds one to the shared list for everyone (name, how it's logged, and which stat it feeds). **Reset** puts a day back to the default script.
-- **Records:** switch hunter, sound on or off, CSV export for analysis, backup and restore.
+- **My program** (Profile, then **Edit**): pick your **quest days** (the ones you commit to) and change any day. Rename it, set the cardio minutes, add, remove or reorder exercises, and change sets and rep ranges. **Create a new exercise** adds one to the shared list for everyone (name, how it's logged, and which stat it feeds). **Reset** puts a day back to the default script.
+- **Records:** **Check my log** finds numbers that look like typos, such as 1000 kg. Tap Fix to jump to that day, correct the number, and everything it unlocked by mistake is recalculated away. Also: switch hunter, sound on or off, CSV export, backup and restore.
+
+### Releasing more cards
+
+1. Send Claude the picked art. It comes back as WebP images (`cards/img` at 600×840 and `cards/thumb` at 220×308) plus new rows for `cards/cards.js`.
+2. Upload the new images and `cards/cards.js`, and bump `VERSION` in `sw.js`.
+3. New cards join the loot pool straight away. Collections are stored by card id, so never rename or reuse an id.
 
 ### Updating the app
 
@@ -64,6 +91,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 | `config.js` | Supabase URL and anon key (blank = phone-only mode) |
 | `supabase-setup.sql` | Full setup for a new database: `hunters`, `sessions` and `exercises` tables, update triggers and open access rules |
 | `supabase-update-v4.sql` | Upgrade for a database made with the earlier setup: adds `hunters.program` and the `exercises` table |
+| `cards/cards.js`, `cards/img`, `cards/thumb` | Card list and card art (WebP). Add to these to release more cards |
 | `sw.js` | Service worker: caches the app shell, leaves database calls to the network, drives the update banner |
 | `manifest.webmanifest`, `icon-*.png` | Install metadata and icons |
 
@@ -99,19 +127,79 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 
 **Rules**
 
-- Quest cleared: every exercise in that day's plan has its target sets, and cardio meets the plan's minutes.
-- Quest minimum (fairness floor): a plan only counts as a quest if it has at least 12 sets and 10 min cardio (Mon to Thu), 6 sets and 15 min (Fri), or 15 min cardio (weekend). The editor and the Quest tab both flag a plan below it.
+- Quest points (`pointsOf`):
+  - Each confirmed set: 10 points.
+  - Cardio card: 4 points a minute (incline walk 3).
+  - Timed activities: 4 points a minute (sport, swim, cycle, row, classes and so on); 3 for incline walk, hike, yard work, dancing and manual work; 2 for walks, dog walks, yoga and stretching.
+- Quest cleared:
+  - Any day reaching 120 points is cleared, or 180 in the Penalty Zone.
+  - Finishing a plan worth at least 120 points also clears it. The Penalty Zone version of the plan route is every set +1 and 25 minutes of cardio.
+  - Sessions from before the Saturday/Sunday split (day `WK`) keep the old 60 point target.
+- Plan worth: sets × 10 + cardio minutes × 4. The editor flags a plan under 120.
+- Quest days:
+  - Stored per hunter in `program._sched` as `[{ from, days }]`. Changes apply from the day they're made, so past weeks keep their schedule.
+  - The default is Mon to Fri.
+  - Only a missed quest day drains XP and starts the Penalty Zone. Other days are optional, and still count as cleared at 120 points.
+- Confirmed sets:
+  - A set has `ok: false` until its diamond is tapped. Sets logged before v6 have no flag and count.
+  - Confirming checks the numbers. It refuses weights over 500 kg, reps over 500 and holds over an hour. It asks first when a weight is more than 1.5× (and 20 kg over) your best, more than 150 kg with no history, more than 50 reps, or more than 5 minutes.
+  - Cardio and activity fields over 4 hours (5 hours for activities), 60 km or 3000 kcal aren't saved until you confirm them.
 - Bonus exercises (anything added on the day that isn't in the plan) earn XP up to 200 a day.
-- Missed weekday (Mon to Fri, after the hunter's first session, not cleared or excused): -25 XP, and the Penalty Zone begins.
-- Penalty Zone: every set +1 and 25 min cardio until a quest is cleared. Penalties never stack. Clearing one gives +25 bonus XP.
+- Missed quest day (after the hunter's first session, not cleared or excused): -25 XP, and the Penalty Zone begins.
+- Penalty Zone: the points target goes up by half (or the plan with every set +1 and 25 min cardio) until a quest is cleared. Penalties never stack. Clearing one gives +25 bonus XP and a Cursed Loot Box.
 - Excuse (two taps): no drain, no penalty, streak unbroken.
 - XP: 10 per set (program and bonus), 2 per program cardio minute, 50 per cleared quest, 100 per weekly boss win, plus achievement rewards. Bonus training XP (sets 10 each, cardio minutes 2, active and recovery minutes 1) is capped at 200 a day.
 - Level: level L+1 needs 50 x L x (L+1) XP. XP can drain, but you never drop below your highest level. Rank: E (1+), D (5+), C (10+), B (20+), A (35+), S (50+).
 - Stats start at 10. STR +1 per 6 upper-body sets, AGI +1 per 6 lower-body sets, VIT +1 per 20 cardio or active minutes, END +1 per 6 core sets and per 4 cleared quests. Bonus exercises feed the stat listed against them.
 - Weekly boss: one weighted exercise from your own plans, chosen per week (seeded by the Monday date). Past weeks use the plans you actually logged, so editing never rewrites them. Beat your previous best top weight on it that week for +100 XP.
 - Personal record: a session's top weight (weighted exercises) or top reps or seconds (bodyweight and holds) beats every earlier session.
-- Warnings rotate every 9 seconds with a glitch transition: 22 general lines, 2 per day, plus live ones about your streak, XP to the next level and the gap to the hunter nearest you on the board. The Penalty Zone has its own set.
-- Streak: consecutive cleared weekday quests. Weekends and excused days are skipped; weekend clears add to it.
+- Warnings rotate every 15 seconds with a glitch transition: 22 general lines, 2 per day, plus live ones about your streak, XP to the next level and the gap to the hunter nearest you on the board. The Penalty Zone has its own set.
+- Streak: consecutive cleared quests. A missed quest day resets it; rest days and excused days are skipped, and rest-day clears add to it.
+- Perfect week and month: every quest day in it cleared.
+
+**Cards and loot boxes**
+
+- `cards/cards.js` sets `window.SL_CARDS = { sets, cards }`. A card is `{ id, set, no, n, r, st, f, img, alt? }`, with rarity `r` as one of C U R H F S G.
+  - Images are `cards/img/<img>.webp` and `cards/thumb/<img>.webp`. The service worker caches them as they're viewed.
+  - Glitched cards reuse another card's image.
+- Boxes are derived in `replay()`, so every phone agrees:
+  - Random: every cleared quest (`q:<date>`) and every level up (`lvl:<L>`, every 5th level is Blessed).
+  - Blessed: weekly boss win (`boss:<monday>`), perfect week (`pw:<date>`), plus a one-off `gift:v6`.
+  - Cursed: escaping the Penalty Zone (`pz:<date>`).
+- Opening a box (`rollLoot`) first rolls a prize tier.
+
+  | Box | Common | Uncommon | Rare | Epic | Legendary |
+  |---|---|---|---|---|---|
+  | Random | 62% | 25% | 9% | 3% | 1% |
+  | Blessed | 0% | 30% | 40% | 22% | 8% |
+  | Cursed | 34% | 20% | 18% | 16% | 12% |
+
+  - An Epic or better is guaranteed within 25 boxes.
+  - Within the tier, a frame or title you don't own yet comes up about 35% of the time (45% for Cursed). Otherwise the prize is that tier's pack.
+- Packs (`PACK`):
+
+  | Tier | Pack | Cards | Last card |
+  |---|---|---|---|
+  | Common | Hunter (N) | 3 | standard odds |
+  | Uncommon | Elite (E) | 5 | standard odds |
+  | Rare | Blessed (H) | 5 | Rare or better |
+  | Epic | Radiant (D) | 5 | Holo or better |
+  | Legendary | Sovereign (M) | 5 | Full Art or better |
+  | Common or Uncommon, from Cursed boxes only | Cursed (X) | 3 | cursed odds |
+
+  - Standard card odds: C 60, U 25, R 10, H 3.5, F 1.2, S 0.25, G 0.05.
+  - Cursed odds: C 40, U 24, R 18, H 10, F 4, S 3, G 1.
+  - Card pity: the last card is at least Holo after 19 packs without one, and at least Secret after 59.
+- Cosmetics: `FRAMES` (20, three of them Cursed-only) and `TITLES` (24, four Cursed-only).
+  - Equipped loot titles are stored in `hunters.title` as `t:<id>`.
+  - The frame and picture are stored in `hunters.program._look = { frame, avatar }`. The picture must be a card the hunter owns.
+- Storage: everything lives in a session row keyed `<hunter>_0000-00-00_VAULT`, with body `{ vault: { opened: { <boxId>: { d, at, k, item, packs: [{ t, cards, torn, td }] } }, pity: { h, s, b } } }`.
+  - That row syncs like any other session, so no database change is needed.
+  - The prize and the pack's cards are rolled and saved the moment the box opens, so closing the app never loses or rerolls them.
+  - Cards join the collection when their pack is torn.
+- The board feed shows Holo or better pulls and Epic or better frames and titles.
+- Bonuses: the first copy of each card adds its rarity's stat bonus (+1, +2, +3, +5, +8, +12, +20). These are shown in gold on the profile and don't count towards stat achievements. Glitched cards add +2% XP each.
+- Holo or better pulls appear in the board's activity feed.
 
 **Achievements:** 226 fixed achievements across 31 categories, plus 4 mastery tiers (Initiate, Adept, Master, Grandmaster at 5, 25, 50 and 100 sessions) for every set-based exercise anyone has planned or logged, custom ones included. The default script's 24 machines give 322 to start, and every new exercise logged adds 4 more. They're generated by `cat()` from thresholds. Rarity comes from the estimated days to reach each threshold: Common (up to a week), Uncommon (45 days), Rare (150), Epic (a year), Legendary (two years), Mythic (beyond). XP rewards are 10, 25, 50, 100, 250 and 500 (Level achievements give none). 
 

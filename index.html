@@ -84,11 +84,11 @@ button { cursor: pointer; }
 .xp { height: 6px; background: var(--sunk); border: 1px solid var(--edge-dim); }
 .xp i { display: block; height: 100%; background: linear-gradient(90deg, var(--edge), var(--glow)); box-shadow: 0 0 10px var(--glow); }
 
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--edge-dim); }
-.tabs button { border: 0; background: none; padding: 10px 0 9px; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .05em; min-width: 0; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid var(--edge-dim); }
+.tabs button { position: relative; border: 0; background: none; padding: 10px 0 9px; font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: .05em; min-width: 0; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tabs button[aria-selected="true"] { color: var(--glow); border-bottom-color: var(--glow); text-shadow: 0 0 10px rgb(var(--glow-rgb) / .5); }
 
-.days { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .days button { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 6px 2px 5px; display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
 .days b { font-family: var(--font-display); font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
 .days small { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
@@ -332,8 +332,368 @@ details.hist summary::-webkit-details-marker { display: none; }
 .psum span { font-weight: 600; min-width: 0; }
 .psum small { color: var(--muted); font-size: 12px; min-width: 0; }
 .mrow { display: inline-flex; gap: 3px; }
+
+/* ---------- v6: quest points, confirm diamonds, cardio machines, week strip ---------- */
+.qpts { display: flex; flex-direction: column; gap: 5px; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 11px; }
+.qpts .qrow { display: flex; justify-content: space-between; align-items: baseline; }
+.qpts .qrow span { font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+.qpts b { font-family: var(--font-display); font-size: 26px; line-height: 1; }
+.qpts b small { font-size: 15px; color: var(--muted); }
+.qpts > small { color: var(--muted); font-size: 12.5px; }
+.qpts.ok { border-color: var(--gold); }
+.qpts.ok b { color: var(--gold); }
+.plan-h { margin: 2px 0 -4px; font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: var(--muted); }
+.wstrip { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--edge-dim); padding-top: 9px; }
+.wstrip small { flex-basis: 100%; color: var(--muted); font-size: 11.5px; }
+.wd { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; min-width: 0; }
+.wd b { font-family: var(--font-display); font-size: 12px; color: var(--muted); }
+.wd i { width: 14px; height: 14px; border: 1.5px solid var(--edge-dim); transform: rotate(45deg) scale(.8); }
+.wd.ok i { background: var(--glow); border-color: var(--glow); box-shadow: 0 0 6px var(--glow); }
+.wd.miss i { border-color: var(--red); transform: none; border: 0; }
+.wd.miss i::before { content: "✕"; display: block; color: var(--red); font-size: 13px; line-height: 14px; text-align: center; font-style: normal; font-weight: 700; }
+.wd.rest i, .wd.ex i, .wd.pre i { border-radius: 50%; transform: none; border-color: var(--muted); opacity: .6; }
+.wd.now i { border-color: var(--gold); }
+.days button.rest { opacity: .62; border-style: dashed; }
+.days.sched button[aria-pressed="false"] { opacity: .55; border-style: dashed; }
+.days.sched button[aria-pressed="true"] small { color: var(--glow); }
+.psum .restday { opacity: .6; }
+.kinds { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -2px 0; }
+.kinds::-webkit-scrollbar { display: none; }
+.kinds button { flex: none; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 5px 10px; font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: .04em; color: var(--muted); }
+.kinds button[aria-pressed="true"] { border-color: var(--glow); color: var(--fg); background: rgb(var(--glow-rgb) / .14); }
+.set { grid-template-columns: 24px 1fr 12px 1fr 36px; }
+.set.one { grid-template-columns: 24px 1fr 36px; }
+.tick { width: 36px; height: 36px; border: 0; background: none; padding: 0; display: grid; place-items: center; transform: none; }
+.tick::before { content: ""; width: 19px; height: 19px; border: 1.5px solid var(--edge-dim); transform: rotate(45deg); transition: background .2s, border-color .2s, box-shadow .2s; }
+.set.pend .tick::before { border-color: var(--gold); box-shadow: 0 0 8px rgb(255 200 97 / .45); animation: throb 1.4s ease-in-out infinite; }
+.set.pend .field input { border-color: rgb(255 200 97 / .45); }
+.set.done .tick { background: none; box-shadow: none; }
+.set.done .tick::before { background: var(--glow); border-color: var(--glow); box-shadow: 0 0 8px var(--glow); }
+.set.done .field input { color: var(--glow); }
+.sus { display: flex; flex-direction: column; gap: 8px; }
+.sus > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 8px 10px; }
+.sus span { display: flex; flex-direction: column; min-width: 0; }
+.sus small { color: var(--muted); font-size: 12.5px; }
+.cbon { color: var(--gold); font-size: 13px; margin-left: 4px; }
+.tabs .dot { position: absolute; top: 6px; right: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); font-size: 0; box-shadow: 0 0 8px rgb(255 200 97 / .9); }
+
+/* ---------- v6: Vault ---------- */
+.boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.boxbtn { border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+.boxbtn .pack { width: 100%; }
+.boxbtn b { position: absolute; top: -6px; right: -4px; z-index: 5; min-width: 24px; height: 24px; border-radius: 12px; background: var(--gold); color: #1b1204; font-family: var(--font-display); font-size: 15px; line-height: 24px; padding: 0 6px; box-shadow: 0 0 10px rgb(255 200 97 / .7); }
+.boxbtn span { font-family: var(--font-display); font-weight: 600; font-size: 12.5px; letter-spacing: .04em; text-align: center; color: var(--muted); line-height: 1.15; }
+.boxbtn:disabled { opacity: .35; cursor: default; }
+.boxbtn:disabled b { background: var(--sunk); color: var(--muted); box-shadow: none; }
+.vchips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 2px; }
+.vchips::-webkit-scrollbar { display: none; }
+.vchip { flex: none; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 6px 11px; font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: .04em; color: var(--muted); }
+.vchip small { margin-left: 5px; opacity: .8; }
+.vchip[aria-pressed="true"] { border-color: var(--glow); color: var(--fg); background: rgb(var(--glow-rgb) / .14); }
+.vgrid, .showcase { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 8px; }
+@media (min-width: 520px) { .vgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.vcell { position: relative; border: 0; background: none; padding: 0; text-align: left; min-width: 0; content-visibility: auto; contain-intrinsic-size: auto 150px; }
+.vcell .tc, .vcell .tc::before, .vcell .tc::after, .vcell .tc *::before, .vcell .tc *::after { animation: none !important; }
+.lockcard { position: relative; aspect-ratio: 5 / 7; opacity: .5; }
+.lockcard .rune { animation: none; }
+.lockno { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: .08em; color: #cfe0ff; z-index: 2; }
+.lockno small { display: block; font-size: 11px; color: var(--muted); }
+.vb { position: absolute; top: -6px; right: -6px; z-index: 10; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; background: #8dffb0; color: #032010; box-shadow: 0 0 10px #8dffb0aa; }
+.vb.cnt { background: #1b3157; color: #cfe0ff; box-shadow: none; }
+body.noscroll { overflow: hidden; }
+.pov { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; align-items: center; gap: 10px; touch-action: none;
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: radial-gradient(120% 60% at 50% 0%, #0b1838, #04060c 62%); }
+.pov[hidden] { display: none; }
+.vsum h2 { font-family: var(--font-display); letter-spacing: .14em; text-transform: uppercase; margin: 4px 0 0; font-size: 22px; }
+.cdet { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgb(2 4 9 / .94); touch-action: none;
+  padding: max(14px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom)); }
+.cdet[hidden] { display: none; }
+.cdhold { width: min(80vw, calc((100dvh - 250px) * 5 / 7), 440px); margin-top: 30px; }
+.cdhold .tc { animation: vpop .35s cubic-bezier(.2, .9, .3, 1.2); }
+.cdinfo { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.cdinfo b { font-family: var(--font-display); font-size: 17px; letter-spacing: .12em; text-transform: uppercase; display: block; }
+.cdnav { display: flex; gap: 10px; align-items: center; }
+.cdnav .btn { min-width: 44px; min-height: 40px; }
+.cdx { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 16px; min-width: 44px; min-height: 40px; }
+/* ---------- pack ---------- */
+.pack { --ph: 1; position: relative; aspect-ratio: 5 / 8.2; container-type: inline-size; filter: drop-shadow(0 14px 26px rgb(0 0 0 / .6)); }
+.pack .flap, .pack .pbody { position: absolute; left: 0; right: 0; overflow: hidden; }
+.pack .flap { top: 0; height: 15%; z-index: 2; transform-origin: 0% 100%; }
+.pack .pbody { top: 15%; bottom: 0; }
+.pack .skin { position: absolute; left: 0; right: 0; height: calc(100% / .85); }
+.pack .flap .skin { top: 0; height: calc(100% / .15); }
+.pack .pbody .skin { bottom: 0; }
+.skin { background: linear-gradient(115deg, var(--p1), var(--p2) 45%, var(--p1) 70%, var(--p3)); border-radius: 3cqw; overflow: hidden;
+  -webkit-mask: linear-gradient(#000, #000) center / 100% 92% no-repeat, conic-gradient(from -45deg at 50% 0, #000 90deg, transparent 0) top / 5.4cqw 2.6cqw repeat-x, conic-gradient(from 135deg at 50% 100%, #000 90deg, transparent 0) bottom / 5.4cqw 2.6cqw repeat-x;
+          mask: linear-gradient(#000, #000) center / 100% 92% no-repeat, conic-gradient(from -45deg at 50% 0, #000 90deg, transparent 0) top / 5.4cqw 2.6cqw repeat-x, conic-gradient(from 135deg at 50% 100%, #000 90deg, transparent 0) bottom / 5.4cqw 2.6cqw repeat-x; }
+.skin::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, transparent 0 18px, rgb(255 255 255 / .06) 19px 21px), linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .35) 48%, transparent 60%); background-size: auto, 250% 100%; animation: packshine 4.5s ease-in-out infinite; z-index: 2; pointer-events: none; }
+@keyframes packshine { 0%, 50% { background-position: 0 0, 130% 0; } 100% { background-position: 0 0, -130% 0; } }
+.skin .pwin { position: absolute; left: 9%; right: 9%; top: 20%; height: 56%; border-radius: 2.5cqw; overflow: hidden; border: .8cqw solid rgb(255 255 255 / .35); box-shadow: 0 0 6cqw rgb(0 0 0 / .5), inset 0 0 8cqw rgb(0 0 0 / .4); }
+.skin .pwin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin .pbrand { position: absolute; top: 7.5%; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-weight: 700; letter-spacing: .3em; font-size: 4.2cqw; color: rgb(255 255 255 / .8); text-transform: uppercase; }
+.skin .pname { position: absolute; top: 78.5%; left: 6%; right: 6%; text-align: center; font-family: var(--font-display); font-weight: 700; letter-spacing: .08em; font-size: 6.6cqw; line-height: 1.05; color: #fff; text-transform: uppercase; text-shadow: 0 0 3cqw var(--p2), 0 .5cqw 0 rgb(0 0 0 / .5); }
+.skin .pcount { position: absolute; bottom: 6%; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-weight: 600; letter-spacing: .25em; font-size: 3.8cqw; color: rgb(255 255 255 / .7); }
+.tearline { position: absolute; left: 3%; right: 3%; top: 15%; height: 0; border-top: .6cqw dashed rgb(255 255 255 / .45); z-index: 3; pointer-events: none; }
+.tearglow { position: absolute; left: 0; top: calc(15% - 1.2cqw); height: 2.4cqw; width: 0; z-index: 4; border-radius: 2cqw; background: linear-gradient(90deg, transparent, #fff 30%, #bff0ff); box-shadow: 0 0 4cqw 1cqw #9fe7ff; pointer-events: none; }
+.pack.torn .flap { animation: flapoff .7s cubic-bezier(.3, .6, .4, 1) forwards; }
+@keyframes flapoff { to { transform: translate(60cqw, -50cqw) rotate(38deg); opacity: 0; } }
+.pack.drop { animation: packdrop .7s .25s cubic-bezier(.5, 0, .8, .4) forwards; }
+@keyframes packdrop { to { transform: translateY(120%); opacity: 0; } }
+.pack.idle { animation: bob 3s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(-.6deg); } }
+
+/* ---------- open screen ---------- */
+.vtop { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 30; }
+.vtop .vttl { font-family: var(--font-display); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 15px; color: #b9cbe8; text-align: center; flex: 1; }
+.vstage { position: relative; flex: 1; width: 100%; display: grid; place-items: center; min-height: 0; }
+.vstage-in { position: relative; width: min(78vw, calc((100dvh - 190px) * 5 / 7.2), 380px); aspect-ratio: 5 / 7; }
+.vstage-in > .pack { position: absolute; left: 5%; right: 5%; top: 50%; translate: 0 -50%; z-index: 10; touch-action: none; cursor: grab; }
+.vhint { font-family: var(--font-display); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 14px; color: #9fd8ff; margin: 0; min-height: 20px; text-align: center; animation: vpulse 1.8s ease-in-out infinite; }
+@keyframes vpulse { 50% { opacity: .45; } }
+.finger { position: absolute; top: 9%; left: 8%; z-index: 12; width: 34px; height: 34px; border-radius: 50%; background: rgb(255 255 255 / .85); box-shadow: 0 0 18px #9fe7ff; pointer-events: none; animation: swipehint 2s ease-in-out infinite; }
+@keyframes swipehint { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: .9; } 70% { transform: translateX(min(60vw, 280px)); opacity: .9; } 100% { transform: translateX(min(60vw, 280px)); opacity: 0; } }
+.stack { position: absolute; inset: 0; z-index: 5; }
+.stack.rise { animation: rise .7s .35s cubic-bezier(.2, .9, .3, 1.1) both; }
+@keyframes rise { from { transform: translateY(35%) scale(.92); opacity: 0; } }
+.slot { position: absolute; inset: 0; perspective: 1200px; transition: transform .35s cubic-bezier(.2, .8, .3, 1); touch-action: none; }
+.slot.fly { transition: transform .45s cubic-bezier(.3, .4, .6, 1), opacity .45s; }
+.flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3, 1.3, .5, 1); transform: rotateY(180deg); }
+.flip.up { transform: rotateY(0deg); }
+.flip > .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip > .back { transform: rotateY(180deg); }
+.vcount { font-family: var(--font-display); font-weight: 600; letter-spacing: .16em; color: var(--muted); font-size: 13px; min-height: 18px; }
+.burst { position: absolute; left: 50%; top: 50%; width: 260%; aspect-ratio: 1; translate: -50% -50%; z-index: 4; pointer-events: none; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, var(--bc) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(closest-side, #000 15%, transparent 72%); mask: radial-gradient(closest-side, #000 15%, transparent 72%);
+  animation: burst 1.6s ease-out forwards; }
+@keyframes burst { from { transform: scale(.2) rotate(0); opacity: 1; } to { transform: scale(1.1) rotate(50deg); opacity: 0; } }
+.flash { position: fixed; inset: 0; z-index: 50; pointer-events: none; background: var(--bc); animation: flash .7s ease-out forwards; mix-blend-mode: screen; }
+@keyframes flash { from { opacity: .75; } to { opacity: 0; } }
+.vshake { animation: vshake .5s linear; }
+@keyframes vshake { 10%, 50%, 90% { translate: -5px 2px; } 30%, 70% { translate: 5px -2px; } }
+.glitchfx { animation: gfx .9s steps(1) 2; }
+@keyframes gfx { 0% { filter: none; translate: 0; } 10% { filter: hue-rotate(90deg) saturate(3); translate: -8px 0; } 20% { filter: invert(1); translate: 6px 3px; } 30% { filter: none; translate: 0; } 50% { filter: hue-rotate(-120deg) contrast(2); translate: 4px -4px; } 60% { filter: none; translate: 0; } }
+.rlabel { position: absolute; left: 50%; bottom: -36px; translate: -50% 0; white-space: nowrap; font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: .2em; text-transform: uppercase; z-index: 20; pointer-events: none; animation: rl 1.6s ease-out forwards; color: var(--bc); text-shadow: 0 0 14px var(--bc); }
+@keyframes rl { 0% { opacity: 0; transform: translateY(10px) scale(.8); } 20%, 75% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+/* summary */
+.vsum { display: none; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 520px; overflow-y: auto; flex: 1; min-height: 0; padding: 10px 8px 8px; }
+.vsum.on { display: flex; }
+.vsum h2 { font-family: var(--font-display); letter-spacing: .14em; text-transform: uppercase; margin: 4px 0 0; font-size: 22px; }
+.vsum .vgain { color: var(--muted); font-size: 13.5px; margin: -8px 0 0; text-align: center; }
+.vsum .vgain b { color: #8dffb0; }
+.vsum-grid { padding: 8px 6px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.vsum-grid .vcell { position: relative; cursor: pointer; animation: vpop .4s both; }
+@keyframes vpop { from { transform: scale(.7); opacity: 0; } }
+.vb { position: absolute; top: -6px; right: -6px; z-index: 10; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: .08em; padding: 2px 6px; border-radius: 6px; background: #8dffb0; color: #032010; box-shadow: 0 0 10px #8dffb0aa; }
+.vb.cnt { background: #1b3157; color: #cfe0ff; box-shadow: none; }
+.vsum-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* =================== CARDS =================== */
+.tc { --mx: 50%; --my: 50%; --rx: 0deg; --ry: 0deg; --c: #8a9bb3; container-type: inline-size;
+  position: relative; aspect-ratio: 5 / 7; width: 100%; border-radius: 4.6cqw; overflow: hidden; isolation: isolate;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .2s ease-out;
+  background: #0d1424; border: .9cqw solid var(--c); display: flex; flex-direction: column; padding: 3.2cqw; gap: 2.2cqw; user-select: none; -webkit-user-select: none; }
+.tc .ttop { display: flex; justify-content: space-between; align-items: baseline; gap: 2cqw; position: relative; z-index: 5; }
+.tc .tn { font-family: var(--font-display); font-weight: 700; font-size: 6.6cqw; line-height: 1.02; letter-spacing: .02em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc .tbst { font-family: var(--font-display); font-weight: 700; font-size: 5cqw; color: var(--c); white-space: nowrap; }
+.tc .tart { position: relative; flex: 1; border-radius: 2.4cqw; border: .4cqw solid rgb(255 255 255 / .14); background: #111c33; overflow: hidden; z-index: 1; min-height: 0; }
+.tc .tart img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 38%; display: block; pointer-events: none; -webkit-user-drag: none; }
+.tc .tmeta { position: relative; z-index: 5; display: flex; flex-direction: column; gap: 1.3cqw; }
+.tc .ttype { font-size: 4cqw; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; font-family: var(--font-display); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc .tfl { font-size: 4.4cqw; line-height: 1.3; color: #b8c7e0; font-style: italic; min-height: 2.6em; }
+.tc .tfoot { display: flex; justify-content: space-between; font-size: 4cqw; color: var(--muted); font-family: var(--font-display); font-weight: 600; letter-spacing: .06em; }
+.tc .tfoot .tsym { color: var(--c); }
+.tc .tperk { font-size: 4cqw; color: #2affea; font-family: var(--font-display); font-weight: 700; letter-spacing: .06em; }
+.tc.tmini { padding: 3.6cqw; gap: 2.6cqw; }
+.tc.tmini .tn { font-size: 9cqw; }
+.tc .tn.long { font-size: 5.4cqw; white-space: normal; }
+.tc.tmini .tn.long { font-size: 7.4cqw; }
+.tc.tmini .tbst { font-size: 7.5cqw; }
+.tc.tmini .tmeta .ttype, .tc.tmini .tmeta .tfl, .tc.tmini .tmeta .tperk { display: none; }
+.tc.tmini .tfoot { font-size: 7cqw; }
+
+.tc.common { --c: #8a9bb3; }
+.tc.uncommon { --c: #c9d6e8; background: linear-gradient(160deg, #142036, #0d1424); }
+.tc.uncommon::after, .tc.rare::after { content: ""; position: absolute; inset: -40%; z-index: 6; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / .2) 50%, transparent 58%); animation: sweep 6s ease-in-out infinite; }
+@keyframes sweep { 0%, 60% { transform: translateX(-60%); } 85%, 100% { transform: translateX(60%); } }
+.tc.rare { --c: #ffcf6b; border-color: transparent; background: linear-gradient(#0e1628, #0e1628) padding-box, linear-gradient(135deg, #8a5a12, #ffe39a, #b07a1c, #ffd56e) border-box; }
+.tc.rare::after { animation-duration: 4s; background: linear-gradient(105deg, transparent 40%, rgb(255 230 160 / .32) 50%, transparent 60%); }
+.tc.rare .tn, .tc.secret .tn { background: linear-gradient(90deg, #c98f22, #ffe9a8, #d99a2a, #fff3c9); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tc.holo { --c: #9fe7ff; border-color: transparent; background: linear-gradient(#0d1527, #0d1527) padding-box, linear-gradient(135deg, #6ad7ff, #b98aff, #ff8ad8, #ffe28a, #6affc8) border-box; }
+.tc.holo .tart::before { content: ""; position: absolute; inset: 0; z-index: 3; mix-blend-mode: color-dodge; opacity: .42; pointer-events: none;
+  background: repeating-linear-gradient(115deg, #ff6a88 0%, #ffd36a 6%, #6affb0 12%, #6ac8ff 18%, #c56aff 24%, #ff6a88 30%);
+  background-size: 300% 300%; background-position: var(--mx) var(--my); animation: drift 7s ease-in-out infinite alternate; }
+.tc.holo .tart::after { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: .7;
+  background-image: radial-gradient(circle, #fff 0 1px, transparent 1.5px); background-size: 6cqw 6cqw; animation: twinkle 2.4s steps(2) infinite; mix-blend-mode: overlay; }
+@keyframes drift { from { background-position: 0% 30%; } to { background-position: 100% 70%; } }
+@keyframes twinkle { 50% { opacity: .2; } }
+.tc.fullart, .tc.secret { padding: 0; }
+.tc.fullart { --c: #ffffff; border-color: transparent; background: linear-gradient(#0a0f1e, #0a0f1e) padding-box, linear-gradient(135deg, #ff9ad5, #9ad8ff, #c79aff, #ffe59a) border-box; }
+.tc.fullart .tart, .tc.secret .tart { position: absolute; inset: 0; border: 0; border-radius: 0; z-index: 0; }
+.tc.fullart::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: soft-light; opacity: .75;
+  background: repeating-linear-gradient(45deg, rgb(255 255 255 / 0) 0 2cqw, rgb(255 255 255 / .3) 2.3cqw 2.7cqw), repeating-linear-gradient(115deg, #ff6a88, #ffd36a 10%, #6affb0 20%, #6ac8ff 30%, #c56aff 40%, #ff6a88 50%);
+  background-size: auto, 400% 400%; background-position: 0 0, var(--mx) var(--my); animation: drift2 6s ease-in-out infinite alternate; }
+@keyframes drift2 { from { background-position: 0 0, 0% 0%; } to { background-position: 0 0, 100% 100%; } }
+.tc.fullart .ttop, .tc.fullart .tmeta, .tc.secret .ttop, .tc.secret .tmeta { margin: 3cqw; padding: 2cqw 2.8cqw; border-radius: 2.4cqw; background: rgb(6 10 22 / .6); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.tc.fullart .ttop, .tc.secret .ttop { margin-bottom: 0; }
+.tc.fullart .tmeta, .tc.secret .tmeta { margin-top: auto; }
+.tc.secret { --c: #ffd66e; border: 1.2cqw solid transparent; background: linear-gradient(#1e1404, #1e1404) padding-box, linear-gradient(135deg, #fff3c4, #c98f22, #fff8dc, #b07a1c, #ffe39a) border-box; }
+.tc.secret .tart img { filter: sepia(.25) saturate(1.15); }
+.tc.secret .tart::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(160deg, rgb(255 210 110 / .22), transparent 40%, rgb(255 190 80 / .25)); mix-blend-mode: overlay; }
+.tc.secret::before { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background-image: radial-gradient(circle, #fff7d6 0 1px, transparent 1.6px), radial-gradient(circle, #ffe08a 0 .8px, transparent 1.4px);
+  background-size: 7cqw 7cqw, 4cqw 4cqw; background-position: 0 0, 2cqw 3cqw; animation: glitter 1.8s steps(3) infinite; opacity: .85; }
+.tc.secret::after { content: ""; position: absolute; inset: -30%; z-index: 4; pointer-events: none; background: linear-gradient(110deg, transparent 40%, rgb(255 248 220 / .42) 50%, transparent 60%); animation: sweep 3.5s ease-in-out infinite; }
+@keyframes glitter { 33% { opacity: .35; background-position: 1cqw .5cqw, 1cqw 3.5cqw; } 66% { opacity: .75; background-position: 3cqw 2cqw, 3.5cqw .5cqw; } }
+.tc.secret .tfl, .tc.secret .ttype, .tc.secret .tfoot { color: #f6e3b4; }
+.tc.secret .ttop, .tc.secret .tmeta { background: rgb(26 16 2 / .72); }
+.tc.glitch { --c: #ff2a6d; border-color: transparent; background: linear-gradient(#05070d, #05070d) padding-box, conic-gradient(from var(--a, 0deg), #ff2a6d, #2affea, #b62aff, #ff2a6d) border-box; animation: spin 3s linear infinite, jolt 3.7s steps(1) infinite; }
+@property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes spin { to { --a: 360deg; } }
+@keyframes jolt { 0%, 91%, 100% { translate: 0 0; filter: none; } 92% { translate: -1.2cqw .4cqw; filter: hue-rotate(90deg); } 94% { translate: 1.5cqw -.4cqw; } 96% { translate: -.4cqw 0; filter: hue-rotate(-60deg) saturate(2); } }
+.tc.glitch .tart img.r, .tc.glitch .tart img.b { mix-blend-mode: screen; opacity: .55; z-index: 1; }
+.tc.glitch .tart img.r { filter: sepia(1) saturate(8) hue-rotate(-50deg); animation: rgb1 2.2s steps(1) infinite; }
+.tc.glitch .tart img.b { filter: sepia(1) saturate(8) hue-rotate(140deg); animation: rgb2 1.9s steps(1) infinite; }
+.tc.glitch .tart img.m { filter: saturate(.6) contrast(1.15); }
+@keyframes rgb1 { 0%, 100% { transform: translate(-1cqw, 0); } 30% { transform: translate(-2.5cqw, .5cqw); clip-path: inset(20% 0 50% 0); } 31% { clip-path: none; } 70% { transform: translate(-.5cqw, -1cqw); } }
+@keyframes rgb2 { 0%, 100% { transform: translate(1cqw, 0); } 45% { transform: translate(3cqw, -.5cqw); clip-path: inset(55% 0 10% 0); } 46% { clip-path: none; } 80% { transform: translate(.5cqw, 1cqw); } }
+.tc.glitch .tart::after { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: repeating-linear-gradient(0deg, rgb(0 0 0 / .35) 0 1px, transparent 1px 3px); }
+.tc.glitch .tart::before { content: ""; position: absolute; left: 0; right: 0; height: 14%; z-index: 3; background: rgb(255 42 109 / .2); animation: bar 2.8s linear infinite; mix-blend-mode: screen; }
+@keyframes bar { from { top: -15%; } to { top: 110%; } }
+.tc.glitch .tn { color: #ff9dbd; text-shadow: .3cqw 0 #2affea, -.3cqw 0 #ff2a6d; }
+.tc.glitch .tbst, .tc.glitch .tfoot .tsym { color: #2affea; }
+.tc.glitch .tfl { color: #9fb8d6; font-family: ui-monospace, Menlo, monospace; font-style: normal; font-size: 4cqw; }
+/* calm the grid: no looping foil on thumbnails */
+.vgrid .tc, .vgrid .tc::before, .vgrid .tc::after, .vgrid .tc *::before, .vgrid .tc *::after, .vsum-grid .tc::after { animation: none !important; }
+.vgrid .tc.glitch .tart img.r, .vgrid .tc.glitch .tart img.b { animation: none; }
+
+/* card back */
+.cback { position: absolute; inset: 0; border-radius: 4.6cqw; container-type: inline-size; overflow: hidden; --gc: #8a9bb3; --peek: 0;
+  background: radial-gradient(circle at 50% 50%, #12305a, #070d1c 70%); border: .9cqw solid var(--gc);
+  box-shadow: 0 0 calc(4px + var(--peek) * 40px) calc(var(--peek) * 8px) var(--gc), inset 0 0 calc(var(--peek) * 30px) var(--gc); transition: box-shadow .15s; }
+.cback::before { content: ""; position: absolute; inset: 6cqw; border-radius: 3cqw; border: .5cqw solid rgb(76 195 255 / .35);
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgb(76 195 255 / .08) 0 10deg, transparent 10deg 20deg); }
+.cback::after { content: "SOLO\A LIFTING"; white-space: pre; position: absolute; left: 0; right: 0; top: 50%; translate: 0 -50%; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 11cqw; line-height: .95; letter-spacing: .18em; color: #bfe6ff; text-shadow: 0 0 5cqw #4cc3ff; }
+.cback .rune { position: absolute; left: 50%; top: 50%; width: 62cqw; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: .6cqw solid rgb(76 195 255 / .5); box-shadow: 0 0 6cqw rgb(76 195 255 / .35), inset 0 0 6cqw rgb(76 195 255 / .25); animation: spinr 14s linear infinite; }
+.cback .rune::before { content: ""; position: absolute; inset: 7cqw; border-radius: 50%; border: .4cqw dashed rgb(76 195 255 / .5); }
+@keyframes spinr { to { rotate: 360deg; } }
+.cback.g-U { --gc: #e4eeff; }
+.cback.g-R { --gc: #ffcf6b; }
+.cback.g-H { --gc: #9fe7ff; border-color: transparent; background: radial-gradient(circle, #12305a, #070d1c 70%) padding-box, linear-gradient(135deg, #6ad7ff, #b98aff, #ff8ad8, #ffe28a, #6affc8) border-box; }
+.cback.g-F { --gc: #ff9ad5; border-color: transparent; background: radial-gradient(circle, #12305a, #070d1c 70%) padding-box, linear-gradient(135deg, #ff9ad5, #9ad8ff, #c79aff, #ffe59a) border-box; }
+.cback.g-S { --gc: #ffd66e; border-color: #ffd66e; }
+.cback.g-G { --gc: #ff2a6d; border-color: #ff2a6d; animation: gback .5s steps(1) infinite; }
+@keyframes gback { 50% { --gc: #2affea; border-color: #2affea; } }
+
+
+/* ---------- loot box cube ---------- */
+.cubewrap { --s: 120px; position: relative; width: calc(var(--s) * 1.5); height: calc(var(--s) * 1.55); display: grid; place-items: center; perspective: calc(var(--s) * 7); margin: 0 auto; }
+.cube { position: relative; width: var(--s); height: var(--s); transform-style: preserve-3d; transform: rotateX(-32deg) rotateY(-38deg); }
+.cubewrap.idle .cube { animation: cubesway 5s ease-in-out infinite; }
+.cubewrap.idle { animation: cubefloat 3s ease-in-out infinite; }
+@keyframes cubesway { 50% { transform: rotateX(-32deg) rotateY(-26deg); } }
+@keyframes cubefloat { 50% { translate: 0 calc(var(--s) * -.06); } }
+.cf { position: absolute; inset: 0; display: block; backface-visibility: hidden;
+  background: radial-gradient(circle at 30% 25%, rgb(255 255 255 / .16), transparent 55%), linear-gradient(150deg, var(--c1), var(--c2));
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .18), inset 0 0 calc(var(--s) * .25) rgb(0 0 0 / .55); }
+/* the ribbon: a glowing band down the middle of every side, crossing on the lid, no bow */
+.cf::before, .ft::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 13%; translate: -50% 0;
+  background: linear-gradient(90deg, transparent, var(--rb) 30%, #fff 50%, var(--rb) 70%, transparent);
+  box-shadow: 0 0 calc(var(--s) * .12) var(--rb); opacity: .92; animation: ribbon 2.4s ease-in-out infinite; }
+.ft::after { left: 0; right: 0; top: 50%; bottom: auto; width: auto; height: 13%; translate: 0 -50%; background: linear-gradient(180deg, transparent, var(--rb) 30%, #fff 50%, var(--rb) 70%, transparent); }
+@keyframes ribbon { 50% { opacity: .65; filter: brightness(.85); } }
+.ft { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); filter: brightness(1.25); }
+.fb { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
+.ff { transform: translateZ(calc(var(--s) / 2)); }
+.fk { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); }
+.fr { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); filter: brightness(.8); }
+.fl { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); filter: brightness(.8); }
+.cshadow { position: absolute; bottom: 2%; left: 22%; right: 22%; height: 8%; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / .6), transparent); filter: blur(2px); }
+.cubewrap::after { content: ""; position: absolute; left: 50%; top: 50%; width: 120%; aspect-ratio: 1; translate: -50% -55%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--rb) 35%, transparent), transparent 70%); pointer-events: none; z-index: -1; }
+.cube-B .cf { box-shadow: inset 0 0 0 1px rgb(255 240 184 / .45), inset 0 0 calc(var(--s) * .25) rgb(0 0 0 / .45); }
+.cube-C .cf { background: radial-gradient(circle at 70% 80%, rgb(255 74 106 / .18), transparent 50%), repeating-linear-gradient(125deg, transparent 0 18%, rgb(0 0 0 / .35) 18.5% 19.5%, transparent 20% 46%), linear-gradient(150deg, var(--c1), var(--c2)); }
+.cube-C .cf::before, .cube-C .ft::after { animation: ribbonc 1.3s steps(2) infinite; }
+@keyframes ribbonc { 50% { opacity: .55; } }
+.cubewrap.opening .cube { animation: rattle .12s linear infinite; }
+.cubewrap.opening .cf::before, .cubewrap.opening .ft::after { animation: none; opacity: 1; filter: brightness(1.6); box-shadow: 0 0 calc(var(--s) * .3) var(--rb); }
+@keyframes rattle { 0%, 100% { transform: rotateX(-32deg) rotateY(-38deg) rotateZ(0); } 25% { transform: rotateX(-32deg) rotateY(-36deg) rotateZ(2.5deg); } 75% { transform: rotateX(-32deg) rotateY(-40deg) rotateZ(-2.5deg); } }
+.cubewrap.burstopen .ft { animation: lidoff .7s cubic-bezier(.2, .7, .3, 1) forwards; }
+.cubewrap.burstopen .cube { animation: cubegone .7s .15s ease-in forwards; }
+.cubewrap.burstopen::before { content: ""; position: absolute; left: 30%; right: 30%; bottom: 45%; height: 260%; z-index: 3; pointer-events: none;
+  background: linear-gradient(0deg, var(--rb), color-mix(in srgb, var(--rb) 30%, transparent) 60%, transparent); filter: blur(6px); animation: beam .8s ease-out forwards; transform-origin: bottom; }
+@keyframes lidoff { to { transform: rotateX(90deg) translateZ(calc(var(--s) * 2.4)) rotateZ(30deg); opacity: 0; } }
+@keyframes cubegone { to { transform: rotateX(-32deg) rotateY(-38deg) scale(.4); opacity: 0; } }
+@keyframes beam { from { transform: scaleY(0); opacity: 1; } 60% { opacity: 1; } to { transform: scaleY(1); opacity: 0; } }
+.boxstage { border: 0; background: none; padding: 0; position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer; }
+.boxbtn .cubewrap { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+
+/* ---------- loot reel ---------- */
+.reel { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 22px; min-height: 0; }
+.reel[hidden] { display: none; }
+.reelwin { position: relative; overflow: hidden; margin: 0 -16px; padding: 18px 0; -webkit-mask: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.strip { display: flex; gap: 8px; will-change: transform; padding-left: 0; }
+.rt { --tc: #9fb3cc; flex: none; width: 96px; height: 118px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px 6px;
+  border: 1px solid color-mix(in srgb, var(--tc) 60%, transparent); background: radial-gradient(90% 70% at 50% 100%, color-mix(in srgb, var(--tc) 35%, transparent), transparent 70%), #08111f;
+  box-shadow: inset 0 -3px 0 var(--tc), 0 0 12px color-mix(in srgb, var(--tc) 30%, transparent); }
+.rt span { font-family: var(--font-display); font-weight: 600; font-size: 12px; line-height: 1.1; text-align: center; color: #dbe8ff; max-height: 2.3em; overflow: hidden; }
+.rt.lit { animation: winpulse 1s ease-in-out infinite; box-shadow: inset 0 -3px 0 var(--tc), 0 0 26px var(--tc), 0 0 0 2px var(--tc); }
+@keyframes winpulse { 50% { transform: scale(1.06); } }
+.marker { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; translate: -50% 0; background: linear-gradient(#fff, var(--glow), #fff); box-shadow: 0 0 12px var(--glow), 0 0 24px var(--glow); z-index: 2; }
+.marker::before, .marker::after { content: ""; position: absolute; left: 50%; translate: -50% 0; border: 8px solid transparent; }
+.marker::before { top: 0; border-top-color: #fff; }
+.marker::after { bottom: 0; border-bottom-color: #fff; }
+.reelres { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-height: 160px; }
+.reelres h2 { margin: 0; font-family: var(--font-display); font-size: 26px; letter-spacing: .08em; text-transform: uppercase; }
+.reelres .vsum-actions { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.framepreview { margin: 8px 0 2px; }
+.ri { display: grid; place-items: center; font-style: normal; flex: none; }
+.ri-pack { width: 40px; height: 56px; border-radius: 4px; background: linear-gradient(115deg, var(--p1), var(--p2) 50%, var(--p1)); box-shadow: 0 0 10px rgb(0 0 0 / .5), inset 0 0 0 1px rgb(255 255 255 / .25); }
+.ri-pack b { font-family: var(--font-display); font-size: 18px; color: #fff; text-shadow: 0 0 6px var(--p2); }
+.ri-frame { width: 50px; height: 50px; border-radius: 14px; background: var(--frb); padding: 5px; }
+.ri-frame::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 10px; background: #08111f; }
+.ri-title { width: 54px; height: 32px; border: 1px solid var(--tc, #9fb3cc); color: var(--tc, #9fb3cc); font-size: 22px; line-height: 1; background: #08111f; }
+.ri-lock { width: 44px; height: 44px; border: 1px dashed var(--tc); color: var(--tc); font-family: var(--font-display); font-weight: 700; font-size: 20px; opacity: .6; }
+
+/* ---------- appearance: picture inside a frame ---------- */
+@property --fa { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.av { --frb: linear-gradient(135deg, #24406b, #3a6aa8, #24406b); position: relative; display: inline-block; width: 48px; height: 48px; padding: 3px; border-radius: 13px; background: var(--frb); flex: none; }
+.av.lg { width: 80px; height: 80px; padding: 5px; border-radius: 20px; }
+.av .avi { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 10px; overflow: hidden; background: #08111f; }
+.av.lg .avi { border-radius: 15px; }
+.av img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; }
+.avt { font-size: 22px; line-height: 1; }
+.av.lg .avt { font-size: 36px; }
+.avt.rk { font-family: var(--font-display); font-weight: 700; color: var(--gold); font-size: 20px; }
+.av.lg .avt.rk { font-size: 34px; }
+.av.spin, .ri-frame.spin { animation: frspin 4s linear infinite; }
+@keyframes frspin { to { --fa: 360deg; } }
+.av.glow, .ri-frame.glow { box-shadow: 0 0 14px rgb(255 214 110 / .55); }
+.av.glitch, .ri-frame.glitch { animation: frspin 2s linear infinite, jolt 3.7s steps(1) infinite; }
+.row .av { grid-row: span 2; }
+.phead .av { grid-row: span 3; }
+.look { display: flex; gap: 14px; align-items: flex-start; }
+.lookp { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lookp label { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--muted); }
+.lookp select { width: 100%; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 8px 10px; color: var(--fg); }
+.cosgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cos { --tc: #9fb3cc; display: flex; align-items: center; gap: 10px; border: 1px solid color-mix(in srgb, var(--tc) 55%, transparent); background: var(--sunk); padding: 8px; text-align: left; min-width: 0; box-shadow: inset 3px 0 0 var(--tc); }
+.cos span { display: flex; flex-direction: column; min-width: 0; font-family: var(--font-display); font-weight: 600; font-size: 14px; line-height: 1.15; }
+.cos small { font-family: var(--font-body); font-weight: 500; font-size: 11.5px; color: var(--muted); }
+.cos .ri-frame { width: 38px; height: 38px; border-radius: 11px; padding: 4px; }
+.cos .ri-title { width: 38px; height: 28px; font-size: 18px; }
+.cos.lock { opacity: .5; }
+.odds summary { cursor: pointer; color: var(--glow); font-size: 13px; }
+.odds table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+.odds th, .odds td { padding: 4px 3px; text-align: center; border-bottom: 1px solid var(--edge-dim); }
+.odds td:first-child { text-align: left; }
+.odds p { font-size: 12.5px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .pov *, .pov *::before, .pov *::after, .cdet *, .cdet *::before, .cdet *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 </style>
 <script src="config.js"></script>
+<script src="cards/cards.js"></script>
 </head>
 <body>
 <div class="vignette" aria-hidden="true"></div>
@@ -346,6 +706,17 @@ details.hist summary::-webkit-details-marker { display: none; }
     <button class="btn" id="timerAdd">+15 s</button>
     <button class="btn" id="timerStop">Done</button>
   </div>
+</div>
+<div class="pov" id="packOv" hidden role="dialog" aria-modal="true" aria-label="Opening a loot box">
+  <div class="vtop"><button class="btn" data-act="pclose" aria-label="Close">✕</button><div class="vttl" id="povT"></div><span style="width:40px"></span></div>
+  <div class="vstage" id="povStage"><div class="vstage-in" id="povIn"></div></div>
+  <div class="reel" id="povReel" hidden></div>
+  <div class="vcount" id="povCount"></div><p class="vhint" id="povHint"></p><div class="vsum" id="povSum"></div>
+</div>
+<div class="cdet" id="cardDet" hidden role="dialog" aria-modal="true" aria-label="Card">
+  <button class="btn cdx" data-act="cdclose" aria-label="Close">✕</button>
+  <div class="cdhold" id="cdHold"></div><div class="cdinfo" id="cdInfo"></div>
+  <div class="cdnav"><button class="btn" id="cdPrev" data-act="cdprev" aria-label="Previous card">‹</button><button class="btn" data-act="cdtilt">Tilt with phone</button><button class="btn" id="cdNext" data-act="cdnext" aria-label="Next card">›</button></div>
 </div>
 <div class="win toast" id="toast" hidden role="status"></div>
 <button class="win update" id="updateBar" hidden>Update available<small>Tap to refresh</small></button>
@@ -372,9 +743,13 @@ const PROGRAM = {
   FR: { short: "Fri", name: "Cardio + Catch-up", label: "Catch-up", focus: "Keep it lighter", cardio: { goal: "Cardio: walk 5, then run", min: 15 }, ex: [
     ["pushdown", "Triceps pushdown (rope)", 2, 10, 12], ["cable-curl", "Cable bicep curl", 2, 10, 12],
     ["lateral-raise", "Cable lateral raise", 2, 12, 15], ["crunch", "Cable crunch or ab machine", 2, 12, 15]]},
+  SA: { short: "Sat", name: "Weekend Session", label: "Weekend", focus: "Easy cardio or anything you like", cardio: { goal: "Easy cardio", min: 30 }, ex: [] },
+  SU: { short: "Sun", name: "Weekend Session", label: "Weekend", focus: "Easy cardio or anything you like", cardio: { goal: "Easy cardio", min: 30 }, ex: [] },
+  // sessions logged before Saturday and Sunday were split keep this day
   WK: { short: "Wknd", name: "Recovery Run", label: "Recovery", focus: "Easy pace, go into Monday fresh", cardio: { goal: "Easy jog", min: 15 }, ex: [] }
 };
-const DAYS = Object.keys(PROGRAM);
+const DAYS = ["UA", "LA", "UB", "LB", "FR", "SA", "SU"];
+const WEEKEND = new Set(["SA", "SU", "WK"]);
 const EX = {};
 for (const d of DAYS) for (const [id, name, sets, lo, hi] of PROGRAM[d].ex) if (!EX[id]) EX[id] = { id, name, sets, lo, hi, day: d };
 const EXSTAT = {};
@@ -382,9 +757,26 @@ for (const id of Object.keys(EX)) EXSTAT[id] = ["LA", "LB"].includes(EX[id].day)
 EXSTAT.crunch = "END"; EXSTAT["back-ext"] = "END";
 // a day plan: { name, label, focus, cardio (min), ex: [[id, sets, lo, hi], ...] }
 const DEFAULT = {};
-for (const d of DAYS) DEFAULT[d] = { name: PROGRAM[d].name, label: PROGRAM[d].label, focus: PROGRAM[d].focus, cardio: PROGRAM[d].cardio.min, ex: PROGRAM[d].ex.map(([id, , s, lo, hi]) => [id, s, lo, hi]) };
-const CARDIO_GOAL = d => d === "WK" ? "Easy jog" : "Cardio: walk 5, then run";
-// fairness floor: a day only counts as a quest if its plan is at least this big
+for (const d of Object.keys(PROGRAM)) DEFAULT[d] = { name: PROGRAM[d].name, label: PROGRAM[d].label, focus: PROGRAM[d].focus, cardio: PROGRAM[d].cardio.min, ex: PROGRAM[d].ex.map(([id, , s, lo, hi]) => [id, s, lo, hi]) };
+/* cardio machines: the warm-up and main fields keep their old storage names (walk, run) so history carries over */
+const KINDS = {
+  run: { name: "Run", warm: "walk", main: "run", goal: "Treadmill: walk to warm up, then run", easy: "Easy jog", pace: "km", rate: 4 },
+  bike: { name: "Bike", warm: "easy spin", main: "ride", goal: "Bike: easy spin, then ride", easy: "Easy ride", pace: "kmh", rate: 4 },
+  row: { name: "Row", warm: "easy row", main: "row", goal: "Rower: easy warm-up, then row", easy: "Easy row", pace: "500", rate: 4 },
+  cross: { name: "Cross trainer", warm: "easy", main: "push", goal: "Cross trainer: easy, then push", easy: "Easy cross trainer", pace: null, rate: 4 },
+  stairs: { name: "Stairs", warm: "easy", main: "climb", goal: "Stair climber: easy, then climb", easy: "Easy stairs", pace: null, rate: 4 },
+  swim: { name: "Swim", warm: "easy laps", main: "swim", goal: "Swim: easy laps, then swim", easy: "Easy swim", pace: "100", rate: 4 },
+  walk: { name: "Incline walk", warm: "flat walk", main: "incline", goal: "Treadmill: flat walk, then incline", easy: "Easy walk", pace: "km", rate: 3 }
+};
+const kindOf = k => KINDS[k] ? k : "run";
+const cardioGoal = (day, k) => WEEKEND.has(day) ? KINDS[kindOf(k)].easy : KINDS[kindOf(k)].goal;
+/* quest points: any mix of training clears the day once it reaches the target */
+const PTS = { set: 10 };
+const TARGET = d => d === "WK" ? 60 : 120; // old combined weekend sessions keep their old, smaller target
+const penTarget = d => Math.round(TARGET(d) * 1.5);
+const SLOW = new Set(["walk", "dog-walk", "stretch", "yoga"]), STEADY = new Set(["incline-walk", "hike", "yard", "dance", "manual"]);
+const rateOf = L => L.type !== "min" ? 0 : SLOW.has(L.id) ? 2 : STEADY.has(L.id) ? 3 : 4;
+/* the old fairness floor, now in points: a plan must be worth the day's target to count by finishing it */
 const FLOOR = { sets: d => d === "WK" ? 0 : d === "FR" ? 6 : 12, cardio: d => d === "WK" || d === "FR" ? 15 : 10 };
 const RANGE = { wr: [8, 12], r: [10, 20], s: [30, 60] };
 
@@ -443,7 +835,8 @@ function catalogue() {
 }
 const CX = id => catalogue()[id];
 const typeOf = id => (CX(id) && CX(id).type) || "wr";
-const setOk = (type, s) => !!s && (type === "wr" ? (s.w != null || s.r != null) : type === "r" ? s.r != null : s.s != null);
+const hasVals = (type, s) => !!s && (type === "wr" ? (s.w != null || s.r != null) : type === "r" ? s.r != null : s.s != null);
+const setOk = (type, s) => hasVals(type, s) && s.ok !== false;
 const filled = s => setOk("wr", s);
 
 /* ================= ACHIEVEMENTS ================= */
@@ -477,8 +870,8 @@ function baseAchievements() {
   cat("Recovery runs", "🌅", "wkQ", .1, [[1, "Weekend Warrior"], [10, "Sunday Strider"], [25, "Rest Day Rebel"], [50, "No Days Off"], [100, "Weekend Myth"]], n => `Clear ${plural(n, "weekend quest")}`);
   cat("Records", "🏆", "prs", .3, [[1, "New Record"], [10, "Record Breaker"], [25, "PR Hunter"], [50, "Record Collector"], [100, "Hall of Records"], [250, "Unbeaten"], [500, "History Maker"]], n => `Set ${plural(n, "personal record")}`);
   cat("Weekly boss", "👹", "bossWins", .085, [[1, "First Blood"], [5, "Boss Hunter"], [10, "Raid Leader"], [25, "Dungeon Breaker"], [52, "A Year of Bosses"], [104, "Boss of Bosses"]], n => `Defeat ${plural(n, "weekly boss")}`);
-  cat("Perfect weeks", "📆", "perfectWeeks", .1, [[1, "Perfect Week"], [4, "Four Flawless Weeks"], [12, "Quarter of Perfection"], [26, "Half Year Flawless"], [52, "Flawless Year"], [104, "Two Flawless Years"]], n => `Clear every weekday quest in ${plural(n, "week")}`);
-  cat("Perfect months", "🗓️", "perfectMonths", .02, [[1, "Perfect Month"], [3, "Perfect Quarter"], [6, "Perfect Half"], [12, "Perfect Year"], [24, "Perfect Era"]], n => `Clear every weekday quest in ${plural(n, "calendar month")}`);
+  cat("Perfect weeks", "📆", "perfectWeeks", .1, [[1, "Perfect Week"], [4, "Four Flawless Weeks"], [12, "Quarter of Perfection"], [26, "Half Year Flawless"], [52, "Flawless Year"], [104, "Two Flawless Years"]], n => `Clear every quest day in ${plural(n, "week")}`);
+  cat("Perfect months", "🗓️", "perfectMonths", .02, [[1, "Perfect Month"], [3, "Perfect Quarter"], [6, "Perfect Half"], [12, "Perfect Year"], [24, "Perfect Era"]], n => `Clear every quest day in ${plural(n, "calendar month")}`);
   cat("Bonus training", "✨", "bonusLogs", .4, [[1, "Extra Credit"], [10, "Overachiever"], [50, "Side Quester"], [100, "Bonus Hunter"], [250, "Insatiable"], [500, "Always More"], [1000, "Infinite Drive"]], n => `Log ${plural(n, "bonus exercise")}`);
   cat("Push-ups", "🤜", "pushups", 10, [[100, "Hundred Push-ups"], [500, "Five Hundred"], [1000, "Thousand Push-ups"], [5000, "Ground Pounder"], [10000, "Ten Thousand Push-ups"], [25000, "Earth Pusher"], [50000, "Planet Mover"]], n => `Do ${fmtN(n)} push-ups`);
   cat("Core", "🧱", "core", 30, [[500, "Core Initiate"], [2500, "Core Tempered"], [10000, "Iron Core"], [25000, "Abs of Steel"], [50000, "Core Overlord"], [100000, "Unbreakable Core"]], n => `Do ${fmtN(n)} core reps (crunches, sit-ups, leg raises)`);
@@ -504,7 +897,7 @@ const MASTERY = [[5, "Initiate"], [25, "Adept"], [50, "Master"], [100, "Grandmas
 function ensureAchievements() {
   const ids = new Set(Object.keys(EX));
   for (const b of Object.values(S.sessions)) { for (const id of Object.keys(b.ex || {})) ids.add(id); for (const e of b.bonus || []) ids.add(e.id); for (const id of b.extra || []) ids.add(id); }
-  for (const h of Object.values(S.hunters)) for (const d of Object.values(h.program || {})) for (const e of (d && d.ex) || []) ids.add(e[0]);
+  for (const h of Object.values(S.hunters)) for (const d of Object.values(h.program || {})) for (const e of (d && !Array.isArray(d) && d.ex) || []) ids.add(e[0]);
   const list = [...ids].filter(id => CX(id) && CX(id).type !== "min").sort();
   const sig = list.join(",") + "|" + list.map(shortName).join(",");
   if (sig === achSig) return;
@@ -546,6 +939,8 @@ const WARN_DAY = {
   UB: ["Pull day. Row like the couch owes you money.", "Halfway through the week. The System is mildly impressed."],
   LB: ["Thursday: the last full quest before Friday. Don't fumble it now.", "Glute day. Tomorrow's chairs will remember this."],
   FR: ["Friday quest. Clear it and the weekend is yours.", "The weekend is a reward. Rewards must be earned."],
+  SA: ["Saturday quest. The System doesn't do weekends off if you said you'd train.", "Weekends count. The System is still watching, just with sunglasses on."],
+  SU: ["Sunday quest. Finish it and walk into Monday ahead.", "Weekends count. The System is still watching, just with sunglasses on."],
   WK: ["Recovery day. Easy pace. The System is feeling generous.", "Weekends count. The System is still watching, just with sunglasses on."]
 };
 const WARN_PZ = [
@@ -559,7 +954,7 @@ const WARN_PZ = [
 const PZ_LINES = [
   "You did not complete your last quest. The System does not forget.",
   "The couch filed a missing person report. Too late now.",
-  "Every set +1. Cardio 25 minutes. Complaints will be ignored.",
+  "The points target is up by half. Complaints will be ignored.",
   "Clear this quest to return to normal training. There is no other exit.",
   "The System has revoked your rest day privileges. Temporarily. Probably."
 ];
@@ -570,7 +965,7 @@ const ONLINE = !!(CFG.url && CFG.key);
 const LS = "solo.v2", OLD_LS = "liftlog.v1";
 const S = {
   me: null, hunters: {}, sessions: {}, custom: {}, outbox: { s: {}, h: {}, x: {} }, since: null, sinceX: null, sound: true, schemaOld: false,
-  view: "log", viewing: null, day: null, date: null, pday: "UA", creating: false, ver: 0, cache: {}, seen: null, armed: null, net: ONLINE ? "busy" : "local", wasPz: null
+  view: "log", viewing: null, day: null, date: null, pday: "UA", creating: false, ver: 0, cache: {}, seen: null, armed: null, net: ONLINE ? "busy" : "local", wasPz: null, ckind: "run", pickKind: null
 };
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2, "0");
@@ -584,7 +979,16 @@ const isTraining = s => { const w = parseDate(s).getDay(); return w >= 1 && w <=
 const fmtDate = s => parseDate(s).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
 const fmtShort = s => parseDate(s).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
 const relDay = s => { const n = daysBetween(s, todayStr()); return n === 0 ? "Today" : n === 1 ? "Yesterday" : n < 7 ? parseDate(s).toLocaleDateString("en-AU", { weekday: "short" }) : fmtShort(s); };
-const dayForDate = s => ({ 0: "WK", 1: "UA", 2: "LA", 3: "UB", 4: "LB", 5: "FR", 6: "WK" })[parseDate(s).getDay()];
+const dayForDate = s => ({ 0: "SU", 1: "UA", 2: "LA", 3: "UB", 4: "LB", 5: "FR", 6: "SA" })[parseDate(s).getDay()];
+/* each hunter picks their quest days; changes apply from the day they're made, so past weeks keep their old schedule */
+const DEF_SCHED = ["UA", "LA", "UB", "LB", "FR"];
+function schedFor(hid, date) {
+  const list = ((S.hunters[hid] && S.hunters[hid].program) || {})._sched || [];
+  let days = DEF_SCHED;
+  for (const x of list) if (x.from <= date) days = x.days;
+  return days;
+}
+const isQuestDay = (hid, date) => schedFor(hid, date).includes(dayForDate(date));
 const keyOf = (h, date, day) => `${h}_${date}_${day}`;
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const wTxt = w => (w == null || w === 0) ? "BW" : `${+w}`;
@@ -612,7 +1016,7 @@ function load() {
 let persistT = null;
 function persistNow() {
   clearTimeout(persistT);
-  try { localStorage.setItem(LS, JSON.stringify({ me: S.me, hunters: S.hunters, sessions: S.sessions, custom: S.custom, outbox: S.outbox, since: S.since, sinceX: S.sinceX, sound: S.sound, schemaOld: S.schemaOld })); } catch (e) {}
+  try { localStorage.setItem(LS, JSON.stringify({ me: S.me, hunters: S.hunters, sessions: S.sessions, custom: S.custom, outbox: S.outbox, since: S.since, sinceX: S.sinceX, sound: S.sound, schemaOld: S.schemaOld, ckind: S.ckind })); } catch (e) {}
 }
 function persist() { clearTimeout(persistT); persistT = setTimeout(persistNow, 250); }
 addEventListener("pagehide", persistNow);
@@ -714,12 +1118,14 @@ function dirtyHunter(id) { S.outbox.h[id] = rnd(); S.ver++; persist(); pushSoon(
 /* ================= PROGRAMS ================= */
 function progDay(hid, day) {
   const p = (S.hunters[hid] && S.hunters[hid].program) || {};
-  return p[day] ? { ...DEFAULT[day], ...p[day] } : DEFAULT[day];
+  const own = p[day] || ((day === "SA" || day === "SU") && p.WK ? { ...p.WK, name: DEFAULT[day].name, label: DEFAULT[day].label } : null);
+  return own ? { ...DEFAULT[day], ...own } : DEFAULT[day];
 }
 // sessions remember the plan they were logged against; ones from before custom programs used the default script
 const planFor = (hid, day, b) => (b && b.plan) || (b ? DEFAULT[day] : progDay(hid, day));
 const planSets = plan => sumBy(plan.ex, e => e[1]);
-const meetsFloor = (plan, day) => planSets(plan) >= FLOOR.sets(day) && plan.cardio >= FLOOR.cardio(day);
+const planPts = plan => planSets(plan) * PTS.set + plan.cardio * 4;
+const meetsFloor = (plan, day) => planPts(plan) >= TARGET(day);
 function reqs(plan, day, pen) {
   return {
     ex: plan.ex.filter(e => CX(e[0])).map(([id, sets, lo, hi]) => ({ id, name: CX(id).name, type: typeOf(id), sets: sets + (pen ? 1 : 0), base: sets, lo, hi })),
@@ -729,7 +1135,7 @@ function reqs(plan, day, pen) {
 function myProgramEdit(day) {
   const h = S.hunters[S.me];
   h.program ||= {};
-  h.program[day] ||= clone(DEFAULT[day]);
+  h.program[day] ||= clone(progDay(S.me, day));
   return h.program[day];
 }
 function programChanged(day) {
@@ -744,14 +1150,37 @@ function cardioOf(b) {
   const c = (b && b.cardio) || {};
   const walk = c.walk ?? null, run = c.run ?? null;
   const total = (walk || run) ? (walk || 0) + (run || 0) : (c.mins ?? null);
-  return { walk, run, total, dist: c.dist ?? null, kcal: c.kcal ?? null };
+  return { walk, run, total, dist: c.dist ?? null, kcal: c.kcal ?? null, kind: KINDS[c.kind] ? c.kind : null };
 }
 const cardioMeets = (b, min) => { const c = cardioOf(b); return min <= 0 ? true : !!c.total && c.total >= min; };
 const pace = c => c.total && c.dist ? c.total / c.dist : null;
-const paceTxt = p => p ? `${Math.floor(p)}:${pad(Math.round((p % 1) * 60) % 60)} /km` : "";
+const mmss = m => `${Math.floor(m)}:${pad(Math.round((m % 1) * 60) % 60)}`;
+const paceTxt = (p, k = "run") => {
+  if (!p) return "";
+  const u = KINDS[kindOf(k)].pace;
+  return u === "kmh" ? `${(60 / p).toFixed(1)} km/h` : u === "500" ? `${mmss(p / 2)} /500 m` : u === "100" ? `${mmss(p / 10)} /100 m` : u ? `${mmss(p)} /km` : "";
+};
+/* points for a session: confirmed sets, cardio minutes and timed activities */
+function pointsOf(b) {
+  const o = { sets: 0, cardio: 0, act: 0, total: 0 };
+  if (!b || b.excused || b.vault) return o;
+  let n = 0;
+  for (const [id, arr] of Object.entries(b.ex || {})) n += arr.filter(s => setOk(typeOf(id), s)).length;
+  for (const e of b.bonus || []) {
+    const L = CX(e.id); if (!L || !bonusLogged(e)) continue;
+    if (L.type === "min") o.act += (+e.min || 0) * rateOf(L); else n += (e.sets || []).filter(s => setOk(L.type, s)).length;
+  }
+  o.sets = n * PTS.set;
+  const c = cardioOf(b);
+  o.cardio = (c.total || 0) * KINDS[kindOf(c.kind)].rate;
+  o.sets = Math.round(o.sets); o.cardio = Math.round(o.cardio); o.act = Math.round(o.act);
+  o.total = o.sets + o.cardio + o.act;
+  return o;
+}
 const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length >= e.sets;
 function questDone(b, pen) {
-  if (!b || !PROGRAM[b.day] || b.excused) return false;
+  if (!b || !PROGRAM[b.day] || b.excused || b.vault) return false;
+  if (pointsOf(b).total >= (pen ? penTarget(b.day) : TARGET(b.day))) return true;
   const r = reqs(planFor(b.profile, b.day, b), b.day, pen);
   return r.floor && r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
 }
@@ -767,10 +1196,10 @@ function hasTraining(b) {
 }
 function isEmpty(b) {
   if (!b) return true;
-  if (b.excused) return false;
+  if (b.excused || b.vault) return false;
   const c = cardioOf(b); if (c.total || c.dist || c.kcal) return false;
   if ((b.extra || []).length || (b.bonus || []).length) return false;
-  return !Object.entries(b.ex || {}).some(([id, arr]) => arr.some(s => setOk(typeOf(id), s)));
+  return !Object.entries(b.ex || {}).some(([id, arr]) => arr.some(s => hasVals(typeOf(id), s)));
 }
 function levelOf(xp) {
   let L = 1;
@@ -781,7 +1210,7 @@ function levelOf(xp) {
 const floorXp = L => 50 * (L - 1) * L;
 function bossPool(hid) {
   const ids = new Set();
-  for (const d of ["UA", "LA", "UB", "LB", "FR"]) for (const e of progDay(hid, d).ex) if (typeOf(e[0]) === "wr" && e[0] !== "back-ext") ids.add(e[0]);
+  for (const d of DAYS) for (const e of progDay(hid, d).ex) if (typeOf(e[0]) === "wr" && e[0] !== "back-ext") ids.add(e[0]);
   return [...ids].sort();
 }
 const bossFor = (ws, pool) => { if (!pool.length) return null; let h = 0; for (const c of ws) h = (h * 31 + c.charCodeAt(0)) >>> 0; return pool[h % pool.length]; };
@@ -805,20 +1234,21 @@ function metricVal(M, metric, st) {
 function replay(hid) {
   const c = S.cache[hid]; if (c && c.ver === S.ver) return c.r;
   const byDate = {};
-  for (const b of Object.values(S.sessions)) if (b.profile === hid && !isEmpty(b)) (byDate[b.date] ||= []).push(b);
+  for (const b of Object.values(S.sessions)) if (b.profile === hid && !b.vault && !isEmpty(b)) (byDate[b.date] ||= []).push(b);
   const dates = Object.keys(byDate).sort(), today = todayStr(), thisWeek = mondayOf(today), current = bossPool(hid);
   // a week's boss comes from the plans the hunter actually used before that week, so editing a program never rewrites past bosses
   const seen = new Set();
   const poolFor = w => { const ids = new Set(seen); if (w === thisWeek) for (const id of current) ids.add(id); return ids.size ? [...ids].sort() : current; };
-  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, peak: 1, ach: {}, events: [], best: {}, bestReps: {}, streak: 0, boss: null };
+  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, peak: 1, ach: {}, events: [], best: {}, bestReps: {}, streak: 0, boss: null, boxes: [] };
   const M = R.M;
+  const box = (k, id, d) => { R.boxes.push({ id, k, d }); R.events.push({ d, type: "box", txt: id, k }); };
   const checkAch = d => {
     const st = statsOf(M);
     for (const a of ACH) if (!R.ach[a.id] && metricVal(M, a.metric, st) >= a.n) { R.ach[a.id] = d; R.xp += a.xp; R.events.push({ d, type: "ach", a }); }
   };
   const levelUp = d => {
     const lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
-    if (lv.L > R.peak) { R.events.push({ d, type: "lvl", L: lv.L }); R.peak = lv.L; M.level = lv.L; }
+    if (lv.L > R.peak) { R.events.push({ d, type: "lvl", L: lv.L }); for (let L = R.peak + 1; L <= lv.L; L++) box(L % 5 ? "R" : "B", "lvl:" + L, d); R.peak = lv.L; M.level = lv.L; }
   };
   if (R.first) {
     const last = dates[dates.length - 1] > today ? dates[dates.length - 1] : today;
@@ -849,7 +1279,7 @@ function replay(hid) {
         if (id === "plank" || id === "side-plank") M.plankSec += sumBy(f, s => s.s);
         if (type === "wr") {
           const top = Math.max(...f.map(s => +s.w || 0));
-          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: label }); }
+          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: label }); box("B", "boss:" + w, d); }
           if (top > 0) {
             if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg` }); }
             if (R.best[id] == null || top > R.best[id]) R.best[id] = top;
@@ -896,25 +1326,25 @@ function replay(hid) {
         if (done.day === "UA" || done.day === "UB") M.upperQ++;
         if (done.day === "LA" || done.day === "LB") M.lowerQ++;
         if (done.day === "FR") M.friQ++;
-        if (done.day === "WK") M.wkQ++;
-        if (owed) { M.penSurvived++; xp += 25; R.events.push({ d, type: "pzs" }); }
-        else R.events.push({ d, type: "clear", txt: planFor(hid, done.day, done).name });
+        if (WEEKEND.has(done.day)) M.wkQ++;
+        if (owed) { M.penSurvived++; xp += 25; R.events.push({ d, type: "pzs" }); box("C", "pz:" + d, d); }
+        else { R.events.push({ d, type: "clear", txt: planFor(hid, done.day, done).name }); box("R", "q:" + d, d); }
         owed = false; cur++;
       } else if (R.exc[d]) { /* excused: nothing changes */ }
-      else if (isTraining(d) && d < today) {
+      else if (isQuestDay(hid, d) && d < today) {
         if (!owed) R.events.push({ d: addDays(d, 1), type: "pz" });
         owed = true; R.missed.push(d); xp -= 25; cur = 0;
       }
       M.bestStreak = Math.max(M.bestStreak, cur);
-      if (parseDate(d).getDay() === 5) {
-        const mon = addDays(d, -4);
-        if (mon >= R.first && [0, 1, 2, 3, 4].every(i => R.clr[addDays(mon, i)])) { M.perfectWeeks++; R.events.push({ d, type: "pw" }); }
+      {
+        const mon = mondayOf(d), qd = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(mon, i)).filter(x => isQuestDay(hid, x));
+        if (qd.length && qd[qd.length - 1] === d && mon >= R.first && qd.every(x => R.clr[x])) { M.perfectWeeks++; R.events.push({ d, type: "pw" }); box("B", "pw:" + d, d); }
       }
       if (addDays(d, 1).slice(0, 7) !== d.slice(0, 7)) {
         const ms = d.slice(0, 8) + "01";
         if (ms >= R.first) {
           let ok = true, any = false;
-          for (let x = ms; x <= d; x = addDays(x, 1)) if (isTraining(x)) { any = true; if (!R.clr[x]) { ok = false; break; } }
+          for (let x = ms; x <= d; x = addDays(x, 1)) if (isQuestDay(hid, x)) { any = true; if (!R.clr[x]) { ok = false; break; } }
           if (ok && any) { M.perfectMonths++; R.events.push({ d, type: "pm" }); }
         }
       }
@@ -924,11 +1354,15 @@ function replay(hid) {
     }
     R.streak = cur;
     R.boss = { id: bossId, best: bossBest, won: bossWon, week: ws };
+    if (R.first <= today) R.boxes.push({ id: "gift:v6", k: "B", d: R.first });
   }
   if (!R.boss || R.boss.week !== thisWeek) R.boss = { id: bossFor(thisWeek, poolFor(thisWeek)), best: null, won: false, week: thisWeek };
+  const perk = cardBonus(hid).xp;
+  if (perk && R.xp > 0) { R.cardXp = Math.round(R.xp * perk / 100); R.xp += R.cardXp; }
   R.lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
   R.stats = statsOf(M);
   R.inPz = !!(R.pen[today] && !R.clr[today] && !R.exc[today]);
+  R.rest = d => !isQuestDay(hid, d);
   S.cache[hid] = { ver: S.ver, r: R };
   return R;
 }
@@ -1017,6 +1451,7 @@ function announce(R) {
     if (e.type === "boss") toast({ tag: "Boss defeated", title: e.txt, text: "+100 XP. The weekly boss falls.", sound: "boss" });
     if (e.type === "pzs") toast({ tag: "Penalty survived", title: "You escaped", text: "+75 XP. The Penalty Zone releases you. For now.", sound: "clear" });
     if (e.type === "clear") toast({ tag: "Quest cleared", title: e.txt, text: "+50 XP. The Penalty Zone will have to wait.", sound: "clear" });
+    if (e.type === "box") toast({ tag: "Loot earned", title: BOX[e.k].name, text: "Open it in the Vault tab.", sound: "ach" });
   }
   S.seen.keys = keys;
 }
@@ -1049,13 +1484,14 @@ setInterval(() => {
   el.classList.add("gl");
   setTimeout(() => { el.textContent = pool[n]; }, 170);
   setTimeout(() => el.classList.remove("gl"), 460);
-}, 9000);
+}, 15000);
 
 /* ================= COMPONENTS ================= */
 const badge = (a, size = "") => a ? `<span class="badge ${size}" style="--rc:${RAR[a.rar][2]}" title="${esc(a.name)}">${a.icon}</span>` : "";
 const lockBadge = (a, size = "", locked = true) => badge(a, size).replace(`class="badge ${size}"`, `class="badge ${size}${locked ? " locked" : ""}"`);
 function titleOf(id, R) {
   const t = S.hunters[id] && S.hunters[id].title;
+  if (t && t.startsWith("t:")) return COS[t] && cosOf(id)[t] ? { id: t, name: COS[t].name, rar: COS[t].tier, icon: "🎖️", loot: true } : null;
   return t && ACHX[t] && R.ach[t] ? ACHX[t] : null;
 }
 const rankBadge = R => `<span class="badge" style="--rc:${RAR[R.lv.L >= 50 ? 5 : R.lv.L >= 35 ? 4 : R.lv.L >= 20 ? 3 : R.lv.L >= 10 ? 2 : R.lv.L >= 5 ? 1 : 0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`;
@@ -1082,6 +1518,7 @@ function shell() {
       <button id="tab-log" role="tab" data-view="log">Quest</button>
       <button id="tab-board" role="tab" data-view="board">Board</button>
       <button id="tab-profile" role="tab" data-view="profile">Profile</button>
+      <button id="tab-vault" role="tab" data-view="vault">Vault<i class="dot" id="vaultDot" hidden></i></button>
       <button id="tab-rec" role="tab" data-view="records">Records</button>
     </nav>
     <main id="view"></main></div>`;
@@ -1092,6 +1529,7 @@ function renderStatus(R) {
     <div class="srow"><span class="nm">${t ? badge(t, "sm") : ""}<strong>${esc(nameOf(S.me))}</strong></span><span>${t ? `<span style="color:${RAR[t.rar][2]}">${esc(t.name)}</span>` : "No title"}</span></div>
     <div class="srow"><span>Rank <strong class="rank">${R.lv.rank}</strong> · Streak <strong>${R.streak}</strong></span><span>${R.lv.into}/${R.lv.need} XP</span></div>
     <div class="xp" aria-label="XP to next level"><i style="width:${Math.min(100, R.lv.into / R.lv.need * 100).toFixed(1)}%"></i></div>`;
+  const vd = $("#vaultDot"); if (vd) { const n = boxesOf(S.me).length + packsOf(S.me).length; vd.hidden = !n; vd.textContent = n > 9 ? "9+" : n; }
   applyTheme(R);
 }
 function applyTheme(R) {
@@ -1115,6 +1553,7 @@ function render() {
   else if (S.view === "board") renderBoard();
   else if (S.view === "profile") renderProfile(S.viewing || S.me);
   else if (S.view === "program") renderProgram();
+  else if (S.view === "vault") renderVault();
   else renderRecords();
 }
 function softRender() {
@@ -1163,26 +1602,47 @@ function login(id) {
 }
 
 /* ================= QUEST VIEW ================= */
+function curKind(b, plan) {
+  const k = b && b.cardio && b.cardio.kind;
+  if (KINDS[k]) return k;
+  if (S.pickKind && S.pickKind.key === curKey() && KINDS[S.pickKind.k]) return S.pickKind.k;
+  return KINDS[plan && plan.kind] ? plan.kind : kindOf(S.ckind);
+}
 function questHTML(R) {
   const plan = curPlan(), b = session(false), pen = penHere(R), r = reqs(plan, S.day, pen);
+  const P = pointsOf(b), need = pen ? penTarget(S.day) : TARGET(S.day), kind = curKind(b, plan);
   const goals = r.ex.map(e => { const n = (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length; return `<li class="${n >= e.sets ? "ok" : ""}"><span>${esc(e.name)}</span><span>[${Math.min(n, e.sets)}/${e.sets}]</span></li>`; });
   const c = cardioOf(b);
-  if (r.cardio > 0) goals.unshift(`<li class="${cardioMeets(b, r.cardio) ? "ok" : ""}"><span>${esc(CARDIO_GOAL(S.day))}</span><span>[${c.total ? Math.round(c.total) : 0}/${r.cardio} min]</span></li>`);
-  const done = questDone(b, pen), isToday = S.date === todayStr(), excused = b && b.excused;
+  if (r.cardio > 0) goals.unshift(`<li class="${cardioMeets(b, r.cardio) ? "ok" : ""}"><span>${esc(cardioGoal(S.day, kind))}</span><span>[${c.total ? Math.round(c.total) : 0}/${r.cardio} min]</span></li>`);
+  const done = questDone(b, pen), isToday = S.date === todayStr(), excused = b && b.excused, rest = !pen && !isQuestDay(S.me, S.date);
   const seed = parseDate(S.date).getDate();
   const exBtn = label => `<button class="linkbtn${S.armed === "excuse" ? " armed" : ""}" data-act="excuse">${S.armed === "excuse" ? "Tap again to confirm" : label}</button>`;
   let foot;
   if (excused) foot = `<div class="qfoot"><p class="note"><b>Excused.</b> Rest up. No penalty and no XP lost for this day.</p><button class="linkbtn" data-act="unexcuse">Undo</button></div>`;
   else if (done) foot = pen ? `<p class="cleared">Penalty survived<small>+75 XP. The Penalty Zone releases you. For now.</small></p>` : `<p class="cleared">Quest cleared<small>+50 XP. The Penalty Zone will have to wait.</small></p>`;
+  else if (rest) foot = `<p class="note"><b>Rest day.</b> Nothing is due today. Reach ${need} points anyway and it counts as a cleared quest: XP, streak and a loot box.</p>`;
   else if (isToday) foot = `<div class="clock"><span>Time remaining</span><b id="clock">--:--:--</b></div>
       <p class="warn"><b>WARNING</b> <span id="warnTxt">${esc(warnText(R, pen))}</span></p>
       <div class="qfoot"><span></span>${exBtn("Sick or injured? Excuse today")}</div>`;
   else foot = `<div class="qfoot"><p class="note">Editing the log for ${fmtDate(S.date)}.</p>${S.date < todayStr() ? exBtn("Excuse this day") : ""}</div>`;
-  const floorNote = r.floor ? "" : `<p class="note alert"><b>Below the quest minimum.</b> This plan has ${planSets(plan)} sets and ${plan.cardio} min cardio; ${S.day === "WK" ? "" : `${FLOOR.sets(S.day)} sets and `}${FLOOR.cardio(S.day)} min are needed for it to count. Edit it in Profile, My program.</p>`;
+  const floorNote = r.floor ? "" : `<p class="note">This plan is worth ${planPts(plan)} points, under the day's ${TARGET(S.day)}, so finishing it alone won't clear the quest. Top it up with anything else you do.</p>`;
+  const pts = `<div class="qpts${P.total >= need ? " ok" : ""}"><div class="qrow"><span>Quest points</span><b>${P.total}<small> / ${need}</small></b></div>
+    <div class="xp"><i style="width:${Math.min(100, P.total / need * 100).toFixed(1)}%"></i></div>
+    <small>Sets ${P.sets} · Cardio ${P.cardio} · Activities ${P.act}${P.total >= need ? "" : ` · ${need - P.total} to go`}</small></div>`;
   const head = pen
-    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">Every set +1 · Cardio ${r.cardio} min</span></p>`
-    : `<p class="tag">Daily quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(plan.focus || "")}</p>`;
-  return `${head}<ul class="goals">${goals.join("")}</ul>${floorNote}${foot}`;
+    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">${need} points · or the plan with every set +1 and ${r.cardio} min cardio</span></p>`
+    : `<p class="tag">${rest ? "Rest day · optional" : "Daily quest"}</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(plan.focus || "")}</p>`;
+  return `${head}${pts}<p class="plan-h">Or finish your plan</p><ul class="goals">${goals.join("")}</ul>${floorNote}${foot}${weekStrip(R)}`;
+}
+/* the last seven days at a glance, so it's clear why the Penalty Zone is (or isn't) on */
+function weekStrip(R) {
+  const t = todayStr(), cells = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = addDays(t, -i), st = R.clr[d] ? "ok" : R.exc[d] ? "ex" : d === t ? "now" : !R.first || d < R.first ? "pre" : isQuestDay(S.me, d) ? "miss" : "rest";
+    const lbl = { ok: "Cleared", ex: "Excused", now: "Today", pre: "Before you started", miss: "Missed", rest: "Rest day" }[st];
+    cells.push(`<span class="wd ${st}" title="${fmtDate(d)}: ${lbl}"><b>${parseDate(d).toLocaleDateString("en-AU", { weekday: "narrow" })}</b><i aria-label="${lbl}"></i></span>`);
+  }
+  return `<div class="wstrip" aria-label="Last seven days">${cells.join("")}<small>◆ cleared · ✕ missed · ○ rest or excused</small></div>`;
 }
 function bossHTML(R) {
   const B = R.boss;
@@ -1194,34 +1654,38 @@ function bossHTML(R) {
   return `<section class="win boss" id="bossCard"><span class="ico" aria-hidden="true">👹</span><div><p class="tag">Weekly boss</p><b>${esc(name)}</b><p>${txt}</p></div></section>`;
 }
 /* one set row; attrs carries the data-* that tell the input handler where to write */
+const setState = (type, s) => setOk(type, s) ? " done" : hasVals(type, s) ? " pend" : "";
+function paintSet(row, type, s) { if (!row) return; row.classList.toggle("done", setOk(type, s)); row.classList.toggle("pend", hasVals(type, s) && !setOk(type, s)); }
 function setRow(attrs, pre, i, s, type, ph, extra) {
+  const tick = `<button class="tick" data-act="sconf" ${attrs} aria-label="${setOk(type, s) ? "Undo" : "Confirm"} set ${i + 1}"></button>`;
   if (type === "r" || type === "s") {
     const f = type;
-    return `<div class="set one${s[f] != null ? " done" : ""}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
+    return `<div class="set one${setState(type, s)}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
       <div class="field"><input id="${f}-${pre}-${i}" ${attrs} data-f="${f}" inputmode="numeric" placeholder="${ph[f] ?? ""}" value="${s[f] ?? ""}" aria-label="Set ${i + 1} ${f === "s" ? "seconds" : "reps"}"><span>${f === "s" ? "sec" : "reps"}</span></div>
-      <span class="tick" aria-hidden="true"></span></div>`;
+      ${tick}</div>`;
   }
-  return `<div class="set${s.r != null ? " done" : ""}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
+  return `<div class="set${setState(type, s)}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
     <div class="field"><input id="w-${pre}-${i}" ${attrs} data-f="w" inputmode="decimal" placeholder="${ph.w ?? ""}" value="${s.w ?? ""}" aria-label="Set ${i + 1} weight"><span>kg</span></div>
     <span class="x">×</span>
     <div class="field"><input id="r-${pre}-${i}" ${attrs} data-f="r" inputmode="numeric" placeholder="${ph.r ?? ""}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
-    <span class="tick" aria-hidden="true"></span></div>`;
+    ${tick}</div>`;
 }
 function renderLog(R) {
   const plan = curPlan(), b = session(false), pen = penHere(R), r = reqs(plan, S.day, pen), list = exList(R);
   let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
-    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
+    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}${schedFor(S.me, S.date).includes(d) ? "" : " rest"}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
   <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
   <section class="win quest" id="quest">${questHTML(R)}</section>${bossHTML(R)}`;
 
-  const c = cardioOf(b), pc = pace(c);
-  h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(CARDIO_GOAL(S.day))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
+  const c = cardioOf(b), kind = curKind(b, plan), K = KINDS[kind];
+  h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(cardioGoal(S.day, kind))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
+    <div class="kinds" role="group" aria-label="Cardio machine">${Object.entries(KINDS).map(([k, x]) => `<button data-act="ckind" data-k="${k}" aria-pressed="${k === kind}">${x.name}</button>`).join("")}</div>
     <div class="cgrid">
-      <div class="field"><input id="c-walk" data-c="walk" inputmode="decimal" placeholder="5" value="${c.walk ?? ""}" aria-label="Walk minutes"><span>walk min</span></div>
-      <div class="field"><input id="c-run" data-c="run" inputmode="decimal" placeholder="${pen ? 20 : 10}" value="${c.run ?? ""}" aria-label="Run minutes"><span>run min</span></div>
+      <div class="field"><input id="c-walk" data-c="walk" inputmode="decimal" placeholder="5" value="${c.walk ?? ""}" aria-label="Warm-up minutes, ${esc(K.warm)}"><span>${esc(K.warm)} min</span></div>
+      <div class="field"><input id="c-run" data-c="run" inputmode="decimal" placeholder="${pen ? 20 : 10}" value="${c.run ?? ""}" aria-label="Main minutes, ${esc(K.main)}"><span>${esc(K.main)} min</span></div>
       <div class="field"><input id="c-dist" data-c="dist" inputmode="decimal" placeholder="0.0" value="${c.dist ?? ""}" aria-label="Distance in kilometres"><span>km</span></div>
       <div class="field"><input id="c-kcal" data-c="kcal" inputmode="numeric" placeholder="150" value="${c.kcal ?? ""}" aria-label="Calories from the machine"><span>kcal</span></div>
-    </div><p class="derived" id="derived">${c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong>` : "Enter what the treadmill shows when you stop."}${pc ? ` · Pace <strong>${paceTxt(pc)}</strong>` : ""}</p></article>`;
+    </div><p class="derived" id="derived">${derivedTxt(c, kind)}</p></article>`;
 
   for (const e of list) {
     const arr = (b && b.ex[e.id]) || [];
@@ -1266,10 +1730,15 @@ function renderLog(R) {
   });
 
   const inDay = new Set(list.map(e => e.id));
-  h += `<div class="add"><select id="addEx" aria-label="Add a bonus exercise"><option value="">+ Add bonus exercise</option>${catalogueOptions(x => !inDay.has(x.id), "A:")}</select></div>
-  <p class="note">Each set is 10 XP, each cardio minute 2 XP, a cleared quest 50. Bonus exercises earn XP and stat points up to ${BONUS_CAP} XP a day. Hit the top of the rep range on every set and the card tells you to go up. A missed weekday drains 25 XP and sends you to the <b>Penalty Zone</b>.</p></div>`;
+  h += `<div class="add"><select id="addEx" aria-label="Add an exercise or activity"><option value="">+ Add exercise, sport or activity</option>${catalogueOptions(x => !inDay.has(x.id), "A:")}</select></div>
+  <p class="note"><b>Quest points.</b> Every confirmed set is ${PTS.set} points, cardio 4 a minute (incline walk 3), sport, swimming, cycling or classes 4 a minute, and walks, yoga or stretching 2. Any day that reaches ${TARGET("UA")} points counts as cleared, ${penTarget("UA")} in the Penalty Zone. Finishing a plan worth ${TARGET("UA")} or more clears it too.</p>
+  <p class="note">Tap the diamond to confirm each set. Only confirmed sets count. An empty set uses the grey numbers. Each set is 10 XP, each cardio minute 2 XP, a cleared quest 50, and extra exercises up to ${BONUS_CAP} XP a day. A missed weekday drains 25 XP and sends you to the <b>Penalty Zone</b>.</p></div>`;
   $("#view").innerHTML = h;
   tickClock();
+}
+function derivedTxt(c, kind) {
+  const p = pace(c), K = KINDS[kindOf(kind)];
+  return (c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong> · ${Math.round(c.total * K.rate)} points` : `Enter what the machine shows when you stop. Every minute is worth ${K.rate} points.`) + (p && K.pace ? ` · <strong>${paceTxt(p, kind)}</strong>` : "");
 }
 function tickClock() {
   const el = $("#clock"); if (!el) return;
@@ -1286,6 +1755,8 @@ function renderProgram() {
   let h = `<div class="list"><button class="linkbtn" data-view="profile" style="align-self:flex-start">Back to profile</button>
     <section class="win card"><p class="tag">My program</p><h1 class="title" style="font-size:26px">Edit your quests</h1>
       <p>Changes apply from today. Quests you've already logged keep the plan they were done with. ${S.schemaOld ? "<b>Run supabase-update-v4.sql</b> so your program syncs between phones." : ""}</p></section>
+    <section class="win card"><h2>Quest days</h2><p>Pick the days you commit to. Miss one and you're sent to the Penalty Zone. Every other day is optional: reach ${TARGET("UA")} points and it still counts as cleared. Changes apply from today.</p>
+      <div class="days sched" role="group" aria-label="Quest days">${DAYS.map(d => `<button data-act="sched" data-d="${d}" aria-pressed="${schedFor(S.me, todayStr()).includes(d)}"><b>${PROGRAM[d].short}</b><small>${schedFor(S.me, todayStr()).includes(d) ? "Quest" : "Rest"}</small></button>`).join("")}</div></section>
     <div class="days" role="group" aria-label="Day to edit">${DAYS.map(d => `<button data-pday="${d}" aria-pressed="${d === day}"><b>${PROGRAM[d].short}</b><small>${esc(progDay(S.me, d).label)}</small></button>`).join("")}</div>
     <section class="win card">
       <div class="pgrid">
@@ -1293,8 +1764,9 @@ function renderProgram() {
         <label>Short label<input id="p-label" data-pf="label" maxlength="10" value="${esc(plan.label)}"></label>
         <label class="wide">Focus line<input id="p-focus" data-pf="focus" maxlength="60" value="${esc(plan.focus || "")}"></label>
         <label>Cardio minutes<input id="p-cardio" data-pf="cardio" inputmode="numeric" value="${plan.cardio}"></label>
+        <label>Cardio machine<select id="p-kind" data-pf="kind">${Object.entries(KINDS).map(([k, x]) => `<option value="${k}" ${kindOf(plan.kind || S.ckind) === k ? "selected" : ""}>${x.name}</option>`).join("")}</select></label>
       </div>
-      <p class="${ok ? "floor ok" : "floor bad"}">${sets} sets · ${plan.cardio} min cardio · ${ok ? "Meets the quest minimum" : `Needs at least ${day === "WK" ? "" : FLOOR.sets(day) + " sets and "}${FLOOR.cardio(day)} min cardio to count as a quest`}</p>
+      <p class="${ok ? "floor ok" : "floor bad"}">${sets} sets · ${plan.cardio} min cardio · worth ${planPts(plan)} points · ${ok ? "finishing it clears the quest" : `under the ${TARGET(day)} point target, so finishing it won't clear the quest by itself`}</p>
     </section>
     <div class="prows">`;
   plan.ex.forEach(([id, n, lo, hi], i) => {
@@ -1304,7 +1776,7 @@ function renderProgram() {
         <span class="rng"><input id="plo-${i}" data-pr="lo" data-i="${i}" inputmode="numeric" value="${lo}" aria-label="Low end of range">–<input id="phi-${i}" data-pr="hi" data-i="${i}" inputmode="numeric" value="${hi}" aria-label="High end of range">${L.type === "s" ? "s" : ""}</span>
         <span class="mv"><button class="btn" data-act="pmove" data-i="${i}" data-d="-1" aria-label="Move up">↑</button><button class="btn" data-act="pmove" data-i="${i}" data-d="1" aria-label="Move down">↓</button><button class="btn" data-act="pdel" data-i="${i}" aria-label="Remove">✕</button></span></div></div>`;
   });
-  if (!plan.ex.length) h += `<div class="win empty">No exercises on this day. Add some below${day === "WK" ? ", or keep it as a cardio-only recovery day" : ""}.</div>`;
+  if (!plan.ex.length) h += `<div class="win empty">No exercises on this day. Add some below${WEEKEND.has(day) ? ", or keep it as a cardio-only day" : ""}.</div>`;
   const inPlan = new Set(plan.ex.map(e => e[0]));
   h += `</div><div class="add"><select id="pAdd" aria-label="Add an exercise to this day"><option value="">+ Add exercise to ${esc(PROGRAM[day].short)}</option><option value="__new">Create a new exercise…</option>${catalogueOptions(x => x.type !== "min" && !inPlan.has(x.id), "")}</select></div>`;
   if (S.creating) h += `<section class="win card" id="createCard"><h2>New exercise</h2><p>It's added to the shared list, so everyone on the board can use it too.</p>
@@ -1329,30 +1801,36 @@ function todayChip(R) {
   if (R.inPz) return `<span class="st pz">Penalty Zone</span>`;
   if (R.clr[t]) return `<span class="st ok">Cleared</span>`;
   if (R.exc[t]) return `<span class="st ex">Excused</span>`;
+  if (R.rest && R.rest(t)) return `<span class="st ex">Rest day</span>`;
   return `<span class="st">Pending</span>`;
 }
-function weekClears(R) { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 5; i++) if (R.clr[addDays(ws, i)]) n++; return n; }
+function weekClears(R) { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 7; i++) if (R.clr[addDays(ws, i)]) n++; return n; }
+const weekQuestDays = id => { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 7; i++) if (isQuestDay(id, addDays(ws, i))) n++; return n; };
 const EV_TXT = {
   clear: e => ["⚔️", `cleared ${esc(e.txt)}`], pzs: () => ["💀", "survived the Penalty Zone"], pz: () => ["🩸", "was sent to the Penalty Zone"],
   pr: e => ["🏆", `set a record: ${esc(e.txt)}`], boss: e => ["👹", `defeated the weekly boss: ${esc(e.txt)}`], lvl: e => ["⭐", `reached Level ${e.L}`],
   ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week"],
-  pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"]
+  pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"],
+  cos: e => ["🎁", `won the <b style="color:${TIERS[e.c.tier][1]}">${esc(e.c.name)}</b>`],
+  pull: e => ["🃏", `pulled <b style="color:${CR[e.c.r].col}">${esc(e.c.n)}</b> (${CR[e.c.r].label})`]
 };
 function renderBoard() {
   const all = Object.keys(S.hunters).map(id => ({ id, R: replay(id) })).sort((a, b) => (b.R.xp - a.R.xp) || nameOf(a.id).localeCompare(nameOf(b.id)));
   let h = `<div class="list"><div class="sect">Hunter rankings<small>${all.length} hunter${all.length === 1 ? "" : "s"}</small></div><div class="rows">`;
   all.forEach(({ id, R }, i) => {
     const t = titleOf(id, R);
-    h += `<button class="row${id === S.me ? " me" : ""}" data-profile="${esc(id)}"><span class="pos">${i + 1}</span>${t ? badge(t) : rankBadge(R)}
+    h += `<button class="row${id === S.me ? " me" : ""}" data-profile="${esc(id)}"><span class="pos">${i + 1}</span>${avatarHTML(id, R)}
       <span class="who"><b>${esc(nameOf(id))}</b><small style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? esc(t.name) : `Rank ${R.lv.rank} hunter`}</small></span>
       <span class="lv">Lv ${R.lv.L}<small>${fmtN(Math.max(R.xp, 0))} XP</small></span>
-      <span class="meta">${todayChip(R)}<span>Streak ${R.streak}</span><span>Week ${weekClears(R)}/5</span><span>${Object.keys(R.ach).length} achievements</span></span></button>`;
+      <span class="meta">${todayChip(R)}<span>Streak ${R.streak}</span><span>Week ${weekClears(R)}/${weekQuestDays(id)}</span><span>${Object.keys(R.ach).length} achievements</span></span></button>`;
   });
   h += `</div>`;
   if (!ONLINE) h += `<p class="note alert"><b>Board not connected.</b> Each phone only sees its own hunters until the shared database is set up (see the README).</p>`;
   const cutoff = addDays(todayStr(), -14), evs = [];
-  for (const { id, R } of all) for (const e of R.events) if (e.d >= cutoff && e.d <= todayStr() && !(e.type === "ach" && e.a.mastery && e.a.rar === 0)) evs.push({ id, e });
-  const order = { ach: 0, lvl: 1, boss: 2, pr: 3, pzs: 4, pw: 5, pm: 5, comeback: 6, clear: 7, pz: 8 };
+  for (const { id, R } of all) for (const e of R.events) if (e.type !== "box" && e.d >= cutoff && e.d <= todayStr() && !(e.type === "ach" && e.a.mastery && e.a.rar === 0)) evs.push({ id, e });
+  for (const { id } of all) for (const x of pullsOf(id)) { const c = CARDX[x.id]; if (x.d >= cutoff && CR[c.r].rank >= 3) evs.push({ id, e: { d: x.d, type: "pull", c } }); }
+  for (const { id } of all) for (const x of Object.values(vaultOf(id).opened || {})) { const c = COS[x.item]; if (c && c.tier >= 3 && x.d >= cutoff) evs.push({ id, e: { d: x.d, type: "cos", c } }); }
+  const order = { pull: 0, cos: 0, ach: 0, lvl: 1, boss: 2, pr: 3, pzs: 4, pw: 5, pm: 5, comeback: 6, clear: 7, pz: 8 };
   evs.sort((a, b) => (b.e.d.localeCompare(a.e.d)) || (order[a.e.type] - order[b.e.type]));
   h += `<div class="sect">Activity<small>Last 2 weeks</small></div>`;
   h += evs.length ? `<div class="feed">${evs.slice(0, 25).map(({ id, e }) => { const [ic, t] = (EV_TXT[e.type] || (() => ["•", e.type]))(e); return `<div><span class="ic">${ic}</span><span><b>${esc(nameOf(id))}</b> ${t}</span><time>${relDay(e.d)}</time></div>`; }).join("")}</div>`
@@ -1361,18 +1839,33 @@ function renderBoard() {
 }
 
 /* ================= PROFILE ================= */
+function appearanceHTML(id, opts) {
+  const L = lookOf(id), mine = cosOf(id), own = ownedOf(id), R = replay(id);
+  const lootT = Object.keys(mine).filter(k => k.startsWith("t:")).map(k => COS[k]).sort((a, b) => b.tier - a.tier);
+  const frames = Object.keys(mine).filter(k => k.startsWith("f:")).map(k => COS[k]).sort((a, b) => b.tier - a.tier);
+  const cur = S.hunters[id].title, pic = L.avatar && own[L.avatar] ? CARDX[L.avatar] : null;
+  return `<section class="win card titlepick"><h2>Appearance</h2><p>How you show up on the board. Titles come from achievements and loot boxes, frames from loot boxes, and your picture can be any card you've collected.</p>
+    <div class="look">${avatarHTML(id, R, "lg")}<div class="lookp">
+      <label>Title<select id="titleSel" aria-label="Choose your title"><option value="">No title</option>
+        ${lootT.length ? `<optgroup label="Loot titles">${lootT.map(c => `<option value="${c.key}" ${cur === c.key ? "selected" : ""}>${esc(c.name)} (${TIERS[c.tier][0]})</option>`).join("")}</optgroup>` : ""}
+        <optgroup label="Achievements">${opts.map(a => `<option value="${a.id}" ${cur === a.id ? "selected" : ""}>${a.icon} ${esc(a.name)} (${RAR[a.rar][0]})</option>`).join("")}</optgroup></select></label>
+      <label>Frame<select id="frameSel" aria-label="Choose your frame"><option value="f:">No frame</option>${frames.map(c => `<option value="${c.key}" ${L.frame === c.id ? "selected" : ""}>${esc(c.short)} (${TIERS[c.tier][0]})</option>`).join("")}</select></label>
+      <p class="sub">${pic ? `Picture: <b style="color:var(--fg)">${esc(pic.n)}</b> · <button class="linkbtn" data-act="equip" data-item="a:">Remove</button>` : "Picture: open any card in the Vault and tap <b>Use as picture</b>."}</p>
+    </div></div></section>`;
+}
 function renderProfile(id) {
   if (!S.hunters[id]) id = S.me;
   const R = replay(id), M = R.M, st = R.stats, mine = id === S.me, t = titleOf(id, R);
-  const unlocked = Object.keys(R.ach).length, maxStat = Math.max(...Object.values(st), 20);
+  const unlocked = Object.keys(R.ach).length, maxStat = Math.max(...Object.values(st), 20), cb = cardBonus(id), own = ownedOf(id);
   let h = `<div class="list">${mine ? "" : `<button class="linkbtn" data-view="board" style="align-self:flex-start">Back to board</button>`}
-    <section class="win phead">${t ? badge(t, "lg") : `<span class="badge lg" style="--rc:${RAR[0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`}
+    <section class="win phead">${avatarHTML(id, R, "lg")}
       <h1>${esc(nameOf(id))}</h1>
       <span class="ttl" style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? `${esc(t.name)} · <span class="rar">${RAR[t.rar][0]}</span>` : "No title equipped"}</span>
       <span class="sub">Level <b style="color:var(--fg)">${R.lv.L}</b> · Rank <b style="color:var(--gold)">${R.lv.rank}</b> · ${fmtN(Math.max(R.xp, 0))} XP${R.inPz ? ` · <span class="st pz">Penalty Zone</span>` : ""}</span>
     </section>
-    <section class="win card"><h2>Stats</h2><div class="statgrid">${["STR", "AGI", "VIT", "END"].map(k => `<div class="stat2"><span>${k}</span><div class="meter"><i style="width:${Math.min(100, st[k] / maxStat * 100).toFixed(0)}%"></i></div><b>${st[k]}</b></div>`).join("")}</div>
-      <p>Everyone starts at 10. STR grows with upper-body sets, AGI with leg sets, VIT with cardio and active time, END with core work and cleared quests.</p></section>
+    <section class="win card"><h2>Stats</h2><div class="statgrid">${["STR", "AGI", "VIT", "END"].map(k => `<div class="stat2"><span>${k}</span><div class="meter"><i style="width:${Math.min(100, st[k] / maxStat * 100).toFixed(0)}%"></i></div><b>${st[k]}${cb.st[k] ? `<small class="cbon">+${cb.st[k]}</small>` : ""}</b></div>`).join("")}</div>
+      <p>Everyone starts at 10. STR grows with upper-body sets, AGI with leg sets, VIT with cardio and active time, END with core work and cleared quests.${Object.keys(own).length ? " Gold numbers are bonuses from collected cards. They don't count towards stat achievements." : ""}</p></section>
+    ${cardShowcase(id, own)}
     <div class="nums">
       <div class="num"><b>${M.quests}</b><small>quests cleared</small></div><div class="num"><b>${M.days}</b><small>days trained</small></div>
       <div class="num"><b>${M.bestStreak}</b><small>best streak</small></div><div class="num"><b>${M.prs}</b><small>records set</small></div>
@@ -1381,9 +1874,8 @@ function renderProfile(id) {
   if (mine) {
     const opts = Object.keys(R.ach).map(k => ACHX[k]).filter(Boolean).sort((a, b) => b.rar - a.rar || a.name.localeCompare(b.name));
     h += `<section class="win card"><div class="toggle"><h2>My program</h2><button class="btn primary" data-view="program">Edit</button></div>
-      <div class="psum">${DAYS.map(d => { const p = progDay(id, d); return `<div><b>${PROGRAM[d].short}</b><span>${esc(p.name)}</span><small>${p.ex.length ? `${p.ex.length} exercises · ${planSets(p)} sets` : "Cardio only"} · ${p.cardio} min</small></div>`; }).join("")}</div></section>
-      <section class="win card titlepick"><h2>Title</h2><p>Show one of your achievements next to your name on the board.</p>
-      <select id="titleSel" aria-label="Choose your title"><option value="">No title</option>${opts.map(a => `<option value="${a.id}" ${S.hunters[id].title === a.id ? "selected" : ""}>${a.icon} ${esc(a.name)} (${RAR[a.rar][0]})</option>`).join("")}</select></section>`;
+      <div class="psum">${DAYS.map(d => { const p = progDay(id, d), q = schedFor(id, todayStr()).includes(d); return `<div class="${q ? "" : "restday"}"><b>${PROGRAM[d].short}</b><span>${esc(p.name)}${q ? "" : " · rest"}</span><small>${p.ex.length ? `${p.ex.length} exercises · ${planSets(p)} sets` : "Cardio only"} · ${p.cardio} min</small></div>`; }).join("")}</div></section>
+      ${appearanceHTML(id, opts)}`;
   } else {
     h += `<section class="win card"><h2>${esc(nameOf(id))}'s program</h2><div class="psum">${DAYS.map(d => { const p = progDay(id, d); return `<div><b>${PROGRAM[d].short}</b><span>${esc(p.name)}</span><small>${p.ex.map(e => esc(shortName(e[0]))).join(", ") || "Cardio only"}</small></div>`; }).join("")}</div></section>`;
   }
@@ -1408,14 +1900,14 @@ function renderProfile(id) {
   $("#view").innerHTML = h;
 }
 function machineLog(id) {
-  const mine = Object.values(S.sessions).filter(b => b.profile === id && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
+  const mine = Object.values(S.sessions).filter(b => b.profile === id && !b.vault && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
   let h = "";
   const cardio = mine.filter(b => { const c = cardioOf(b); return c.total || c.dist; });
   if (cardio.length) {
     const rows = cardio.map(b => ({ b, c: cardioOf(b) })), z = rows[rows.length - 1].c;
-    h += `<details class="hist"><summary><span class="hn">Walk and run</span>${spark(rows.filter(r => r.c.dist).map(r => r.c.dist))}<span class="hs">${rows.length} sessions · last ${z.dist ? z.dist + " km" : Math.round(z.total) + " min"}${pace(z) ? " at " + paceTxt(pace(z)) : ""}</span></summary>
-      <div class="scroll"><table><tr><th>Date</th><th>Walk</th><th>Run</th><th>Km</th><th>Pace</th><th>Kcal</th></tr>${rows.slice(-10).reverse().map(({ b, c }) =>
-        `<tr><td>${fmtDate(b.date)}</td><td>${c.walk ?? ""}</td><td>${c.run ?? (c.walk == null ? Math.round(c.total) : "")}</td><td>${c.dist ?? ""}</td><td>${paceTxt(pace(c))}</td><td>${c.kcal ?? ""}</td></tr>`).join("")}</table></div></details>`;
+    h += `<details class="hist"><summary><span class="hn">Cardio</span>${spark(rows.map(r => r.c.total || 0))}<span class="hs">${rows.length} sessions · last ${KINDS[kindOf(z.kind)].name.toLowerCase()} ${z.dist ? z.dist + " km" : Math.round(z.total) + " min"}${pace(z) && KINDS[kindOf(z.kind)].pace ? " at " + paceTxt(pace(z), z.kind) : ""}</span></summary>
+      <div class="scroll"><table><tr><th>Date</th><th>Type</th><th>Warm-up</th><th>Main</th><th>Km</th><th>Pace</th><th>Kcal</th></tr>${rows.slice(-10).reverse().map(({ b, c }) =>
+        `<tr><td>${fmtDate(b.date)}</td><td>${KINDS[kindOf(c.kind)].name}</td><td>${c.walk ?? ""}</td><td>${c.run ?? (c.walk == null ? Math.round(c.total) : "")}</td><td>${c.dist ?? ""}</td><td>${paceTxt(pace(c), c.kind)}</td><td>${c.kcal ?? ""}</td></tr>`).join("")}</table></div></details>`;
   }
   const ids = new Set(); for (const b of mine) for (const k of Object.keys(b.ex || {})) ids.add(k);
   for (const eid of [...ids].sort((a, b) => (CX(a) ? CX(a).name : a).localeCompare(CX(b) ? CX(b).name : b))) {
@@ -1435,14 +1927,39 @@ function machineLog(id) {
 }
 
 /* ================= RECORDS ================= */
+/* find logged numbers that look like typos, so they can be fixed (everything is recalculated from the log) */
+function suspects(hid) {
+  const mine = Object.values(S.sessions).filter(b => b.profile === hid && !b.vault && !b.excused), wts = {}, out = [];
+  const eachSet = (b, f) => {
+    for (const [id, arr] of Object.entries(b.ex || {})) arr.forEach((x, i) => f(id, typeOf(id), x, i));
+    for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type !== "min") (e.sets || []).forEach((x, i) => f(e.id, L.type, x, i)); }
+  };
+  for (const b of mine) eachSet(b, (id, type, x) => { if (type === "wr" && setOk(type, x) && +x.w > 0) (wts[id] ||= []).push(+x.w); });
+  const med = a => { const v = [...a].sort((p, q) => p - q); return v[Math.floor(v.length / 2)]; };
+  for (const b of mine.sort((a, c) => a.date < c.date ? 1 : -1)) {
+    eachSet(b, (id, type, x, i) => {
+      if (!setOk(type, x)) return;
+      const nm = CX(id) ? CX(id).name : id, m = wts[id] && wts[id].length >= 3 ? med(wts[id]) : null;
+      if ((type === "wr" && (+x.w > 300 || (m && +x.w > m * 2 && +x.w - m >= 20))) || +x.r > 100 || +x.s > 900)
+        out.push({ b, txt: `${nm} set ${i + 1}: ${setTxt(x, type)}${type === "wr" && x.w ? " kg" : ""}`, why: m && type === "wr" ? `usually about ${m} kg` : "very high" });
+    });
+    const c = cardioOf(b);
+    if ((c.total || 0) > 240 || (c.dist || 0) > 60) out.push({ b, txt: `Cardio: ${Math.round(c.total || 0)} min${c.dist ? `, ${c.dist} km` : ""}`, why: "very long" });
+    for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type === "min" && ((+e.min || 0) > 300 || (+e.km || 0) > 100)) out.push({ b, txt: `${L.name}: ${e.min || 0} min${e.km ? `, ${e.km} km` : ""}`, why: "very long" }); }
+  }
+  return out;
+}
 function renderRecords() {
-  const n = Object.values(S.sessions).filter(b => b.profile === S.me).length, p = pending();
+  const n = Object.values(S.sessions).filter(b => b.profile === S.me && !b.vault).length, p = pending();
+  const sus = suspects(S.me);
   $("#view").innerHTML = `<div class="list">
     <p class="note${ONLINE && !S.schemaOld ? "" : " alert"}">${!ONLINE ? "<b>Saved on this phone only.</b> The shared board isn't connected yet. Export a backup every few weeks."
       : S.schemaOld ? "<b>Database needs the v4 update.</b> Run supabase-update-v4.sql in Supabase so custom programs and exercises sync. Everything else is syncing."
       : `<b>Connected to the shared board.</b> ${p ? `${p} change${p === 1 ? "" : "s"} waiting to sync.` : "Everything is synced."} Your log is also kept on this phone, so it works offline at the gym.`}</p>
     <section class="win card"><h2>Hunter</h2><p>Signed in as <b style="color:var(--fg)">${esc(nameOf(S.me))}</b>.</p>
       <div class="ex-actions"><button class="btn${S.armed === "switch" ? " armed" : ""}" data-act="switch">${S.armed === "switch" ? "Tap again to switch" : "Switch hunter"}</button></div></section>
+    <section class="win card"><h2>Check my log</h2><p>Looks for numbers that are probably typos, like 1000 kg instead of 100. Fix the number and anything it unlocked by mistake (XP, achievements, records, loot) is taken back automatically.</p>
+      ${sus.length ? `<div class="sus">${sus.slice(0, 30).map(x => `<div><span><b>${esc(x.txt)}</b><small>${fmtDate(x.b.date)} · ${esc(x.why)}</small></span><button class="btn" data-act="logfix" data-date="${x.b.date}" data-day="${x.b.day}">Fix</button></div>`).join("")}</div>` : `<p class="floor ok">Nothing unusual found.</p>`}</section>
     <section class="win card"><div class="toggle"><h2>Sound</h2><button class="btn${S.sound ? " primary" : ""}" data-act="sound">${S.sound ? "On" : "Off"}</button></div><p>System chimes for cleared quests, records, level ups and achievements.</p></section>
     <section class="win card"><h2>Export for analysis</h2><p>A spreadsheet-friendly CSV of every set, bonus exercise and cardio session you've logged. Send it to Claude for trend analysis.</p>
       <div class="ex-actions"><button class="btn primary" id="csvBtn">Export CSV</button></div></section>
@@ -1450,6 +1967,551 @@ function renderRecords() {
       <div class="ex-actions"><button class="btn primary" id="exportBtn">Export backup</button><button class="btn" id="copyBtn">Copy as text</button>
       <span class="file btn">Restore from file<input type="file" id="importFile" accept=".json,application/json" aria-label="Choose backup file"></span></div>
       <textarea id="exportText" hidden readonly aria-label="Export text"></textarea><p id="importMsg" hidden></p></section></div>`;
+}
+
+/* ================= SET CONFIRMATION AND LIMITS ================= */
+// typing never counts by itself: a set counts once its diamond is tapped, and big numbers ask first
+const LIM = { walk: 240, run: 240, dist: 60, kcal: 3000, min: 300, km: 100 };
+function setCardio(f, v) {
+  const b = session(true);
+  b.cardio = { ...(b.cardio || {}), [f]: v }; delete b.cardio.mins;
+  b.cardio.kind = curKind(b, curPlan());
+  const c = cardioOf(b), el = $("#derived");
+  if (el) el.innerHTML = derivedTxt(c, c.kind);
+  dirtySession(curKey());
+  const cc = $("#cardioCard"); if (cc) cc.classList.toggle("complete", cardioMeets(b, reqs(curPlan(), S.day, penHere(replay(S.me))).cardio));
+  refreshLive();
+}
+function checkSet(id, type, x) {
+  const name = CX(id) ? CX(id).name : id;
+  if (type === "wr" && x.r == null) return { block: "Add the reps first." };
+  if (type === "wr" && x.w == null) return { block: "Add the weight first (0 for bodyweight)." };
+  if (x.w != null && (x.w < 0 || x.w > 500)) return { block: `${x.w} kg is outside what the app accepts (0 to 500 kg).` };
+  if (x.r != null && (x.r <= 0 || x.r > 500)) return { block: `${x.r} reps doesn't look right.` };
+  if (x.s != null && (x.s <= 0 || x.s > 3600)) return { block: `${x.s} seconds doesn't look right.` };
+  const best = replay(S.me).best[id];
+  if (type === "wr" && +x.w > 0 && (best ? x.w > Math.max(best * 1.5, best + 20) : x.w > 150))
+    return { warn: best ? `${x.w} kg on ${name} is a big jump from your best of ${best} kg.` : `${x.w} kg on ${name} is a lot for a first log.` };
+  if (x.r > 50) return { warn: `${x.r} reps in one set of ${name}?` };
+  if (x.s > 300) return { warn: `${x.s} seconds in one set of ${name}?` };
+  return {};
+}
+function confirmSet(t) {
+  const row = t.closest(".set"), b = session(true);
+  let arr, id, type;
+  if (t.dataset.bi != null) { const en = b.bonus[+t.dataset.bi]; if (!en) return; en.sets ||= []; arr = en.sets; id = en.id; type = CX(id).type; }
+  else { id = t.dataset.ex; arr = (b.ex[id] ||= []); type = typeOf(id); }
+  const j = +(t.dataset.j ?? t.dataset.i);
+  while (arr.length <= j) arr.push({});
+  const x = arr[j];
+  if (setOk(type, x)) x.ok = false;
+  else {
+    const was = { ...x };
+    // empty boxes take the grey suggestion (last time's numbers)
+    for (const inp of row.querySelectorAll("input[data-f]")) { const f = inp.dataset.f; if (x[f] == null && num(inp.placeholder) != null) x[f] = num(inp.placeholder); }
+    const chk = checkSet(id, type, x);
+    if (chk.block || (chk.warn && !confirm(`${chk.warn}\n\nTap OK if that's right.`))) {
+      for (const k of Object.keys(x)) delete x[k];
+      Object.assign(x, was);
+      if (chk.block) toast({ tag: "Check that set", title: chk.block });
+      render(); return;
+    }
+    x.ok = true;
+  }
+  dirtySession(curKey()); render();
+}
+
+/* ================= CARDS AND LOOT BOXES ================= */
+const CD = window.SL_CARDS || { sets: [], cards: [] };
+const CARDS = CD.cards, CSETS = CD.sets, CARDX = Object.fromEntries(CARDS.map(c => [c.id, c]));
+const CR = {
+  C: { k: "common", label: "Common", b: 1, sym: "●", col: "#9fb3cc", rank: 0 },
+  U: { k: "uncommon", label: "Uncommon", b: 2, sym: "◆", col: "#e4eeff", rank: 1 },
+  R: { k: "rare", label: "Rare", b: 3, sym: "★", col: "#ffcf6b", rank: 2 },
+  H: { k: "holo", label: "Holo Rare", b: 5, sym: "★★", col: "#9fe7ff", rank: 3 },
+  F: { k: "fullart", label: "Full Art", b: 8, sym: "✦✦", col: "#ff9ad5", rank: 4 },
+  S: { k: "secret", label: "Secret Rare", b: 12, sym: "✧✧✧", col: "#ffd66e", rank: 5 },
+  G: { k: "glitch", label: "??? Glitched", b: 20, sym: "??", col: "#ff2a6d", rank: 6 }
+};
+const RORDER = ["C", "U", "R", "H", "F", "S", "G"];
+/* Loot boxes open with a tap and spin a reel. The prize is a card pack, a frame or a title; better boxes roll better tiers. */
+const TIERS = [["Common", "#9fb3cc"], ["Uncommon", "#5ee39a"], ["Rare", "#4c9bff"], ["Epic", "#b46bff"], ["Legendary", "#ffc861"]];
+const BOX = {
+  R: { name: "Random Loot Box", c: ["#173c66", "#0a1a33", "#7fdcff"], odds: [62, 25, 9, 3, 1], how: "Random: every cleared quest and level up" },
+  B: { name: "Blessed Loot Box", c: ["#6b4a10", "#2a1a04", "#fff0b8"], odds: [0, 30, 40, 22, 8], how: "Blessed: weekly bosses, perfect weeks and every 5th level, never Common" },
+  C: { name: "Cursed Loot Box", c: ["#4a0a18", "#14020a", "#ff4a6a"], odds: [34, 20, 18, 16, 12], cursed: true, how: "Cursed: escaping the Penalty Zone, high risk, high reward, with cursed-only prizes" }
+};
+const PACK = {
+  N: { name: "Hunter Pack", n: 3, tier: 0, cover: "bg001", p: ["#0c2a4a", "#2a7fc4", "#0a1a33"], note: "3 cards" },
+  E: { name: "Elite Pack", n: 5, tier: 1, cover: "wh013", p: ["#14233a", "#9fb8d6", "#0b1220"], note: "5 cards" },
+  H: { name: "Blessed Pack", n: 5, tier: 2, cover: "ir031", p: ["#3a2606", "#d9a43a", "#1b1204"], note: "5 cards · last one Rare or better", last: [["R", 58], ["H", 26], ["F", 10], ["S", 5], ["G", 1]] },
+  D: { name: "Radiant Pack", n: 5, tier: 3, cover: "cn030", p: ["#1f0e3d", "#b98aff", "#0b1838"], note: "5 cards · last one Holo or better", last: [["H", 70], ["F", 20], ["S", 8], ["G", 2]] },
+  M: { name: "Sovereign Pack", n: 5, tier: 4, cover: "bg031", p: ["#1b1204", "#ffd66e", "#05070d"], note: "5 cards · last one Full Art or better", last: [["F", 60], ["S", 32], ["G", 8]] },
+  X: { name: "Cursed Pack", n: 3, tier: 1, cover: "ir030", p: ["#2a0610", "#b3192e", "#14020a"], note: "3 cards · cursed odds", table: [["C", 40], ["U", 24], ["R", 18], ["H", 10], ["F", 4], ["S", 3], ["G", 1]] }
+};
+const packForTier = (t, cursed) => cursed && t <= 1 ? "X" : ["N", "E", "H", "D", "M"][t];
+/* frames sit around your picture on the board and profile; "spin" frames rotate, "glitch" ones jolt */
+const FRAMES = [
+  ["iron", "Iron", 0, "linear-gradient(135deg,#4b5563,#c4ccd8,#4b5563)"], ["frost", "Frost", 0, "linear-gradient(135deg,#3a8fc4,#e8f8ff,#7fdcff)"],
+  ["ember", "Ember", 0, "linear-gradient(135deg,#a83a00,#ffd29a,#ff7a1a)"], ["moss", "Moss", 0, "linear-gradient(135deg,#2f4a1e,#9fd36a,#2f4a1e)"],
+  ["rune", "Runebound", 1, "repeating-conic-gradient(#4cc3ff 0 12deg,#0a1a33 12deg 24deg)"], ["jade", "Jade", 1, "linear-gradient(135deg,#0b5a3c,#a8ffd8,#1f9e6e)"],
+  ["storm", "Storm", 1, "linear-gradient(135deg,#ffe24a,#4cc3ff,#ffe24a)"], ["rose", "Rose Quartz", 1, "linear-gradient(135deg,#7a2a4a,#ffc2dc,#c25a8a)"],
+  ["gilded", "Gilded", 2, "linear-gradient(135deg,#8a5a12,#ffe39a,#b07a1c,#ffd56e)"], ["moon", "Moonlit", 2, "linear-gradient(135deg,#e8eeff,#8a7dff,#c9d6e8)"],
+  ["abyss", "Abyssal", 2, "linear-gradient(135deg,#062a33,#3fffe0,#0b4a52)"],
+  ["shadow", "Shadow Sovereign", 3, "conic-gradient(from var(--fa),#2a0a4a,#b98aff,#12001f,#7a3dff,#2a0a4a)", "spin"],
+  ["aurora", "Aurora", 3, "conic-gradient(from var(--fa),#6affc8,#4cc3ff,#b98aff,#6affc8)", "spin"],
+  ["inferno", "Inferno", 3, "conic-gradient(from var(--fa),#ff3d00,#ffd36a,#ff6a00,#ff3d00)", "spin"],
+  ["prism", "Prismatic", 4, "conic-gradient(from var(--fa),#ff6a88,#ffd36a,#6affb0,#6ac8ff,#c56aff,#ff6a88)", "spin"],
+  ["celestial", "Celestial", 4, "conic-gradient(from var(--fa),#ffd66e,#fff8dc,#0b0f2e,#ffd66e)", "spin glow"],
+  ["corrupt", "??? Corrupted", 4, "conic-gradient(from var(--fa),#ff2a6d,#2affea,#b62aff,#ff2a6d)", "spin glitch"],
+  ["blood", "Bloodbound", 2, "linear-gradient(135deg,#2a0006,#ff3048,#5a0010)", "", 1],
+  ["chains", "Cursed Chains", 3, "repeating-linear-gradient(45deg,#3a3a3a 0 5px,#b3192e 5px 8px)", "", 1],
+  ["pz", "Penalty Zone", 4, "conic-gradient(from var(--fa),#ff3048,#1a0005,#ff3048,#1a0005)", "spin glow", 1]
+];
+const TITLES = [
+  ["goblin", "Gym Goblin", 0], ["counter", "Rep Counter", 0], ["warmup", "Warm-up Specialist", 0], ["roller", "Foam Roller Enthusiast", 0], ["rack", "Squat Rack Squatter", 0],
+  ["plates", "Plate Collector", 1], ["cardio", "Cardio Survivor", 1], ["legday", "Leg Day Loyalist", 1], ["alchemist", "Protein Alchemist", 1], ["dawn", "Up Before the System", 1],
+  ["gate", "Gatebreaker", 2], ["disciple", "Iron Disciple", 2], ["frostborn", "Frostborn", 2], ["night", "Night Hunter", 2],
+  ["plateau", "Breaker of Plateaus", 3], ["unrested", "The Unrested", 3], ["shadowrack", "Shadow of the Squat Rack", 3],
+  ["monarch", "Monarch of Iron", 4], ["sovereign", "Sovereign of Sweat", 4], ["rerack", "The One Who Re-racks", 4],
+  ["sand", "Sand in My Shoes", 1, 1], ["escapee", "Penalty Zone Escapee", 2, 1], ["cursed", "Cursed Lifter", 3, 1], ["warden", "Warden of the Wasteland", 4, 1]
+];
+const COS = {};
+for (const [id, name, tier, grad, fx = "", cursed = 0] of FRAMES) COS["f:" + id] = { key: "f:" + id, kind: "f", id, name: name + " Frame", short: name, tier, grad, fx, cursed: !!cursed };
+for (const [id, name, tier, cursed = 0] of TITLES) COS["t:" + id] = { key: "t:" + id, kind: "t", id, name, tier, cursed: !!cursed };
+function itemInfo(item) {
+  if (item.startsWith("p:")) { const P = PACK[item.slice(2)]; return { kind: "p", t: item.slice(2), name: P.name, tier: P.tier, note: P.note }; }
+  const c = COS[item]; return c ? { ...c, note: c.kind === "f" ? "Frame for your picture on the board" : "Title shown under your name" } : { kind: "?", name: item, tier: 0, note: "" };
+}
+const ODDS = [["C", 60], ["U", 25], ["R", 10], ["H", 3.5], ["F", 1.2], ["S", .25], ["G", .05]];
+const HIT = [["R", 58], ["H", 26], ["F", 10], ["S", 5], ["G", 1]];
+const CURSE = [["C", 40], ["U", 24], ["R", 18], ["H", 10], ["F", 4], ["S", 3], ["G", 1]];
+const vaultKey = hid => `${hid}_0000-00-00_VAULT`;
+const vaultOf = hid => { const b = S.sessions[vaultKey(hid)]; return (b && b.vault) || { opened: {}, pity: { h: 0, s: 0 } }; };
+function pullsOf(hid) {
+  const out = [];
+  for (const x of Object.values(vaultOf(hid).opened || {})) for (const p of x.packs || []) if (p.torn) for (const id of p.cards) if (CARDX[id]) out.push({ id, d: p.td || x.d });
+  return out;
+}
+function ownedOf(hid) { const o = {}; for (const { id } of pullsOf(hid)) o[id] = (o[id] || 0) + 1; return o; }
+function packsOf(hid) {
+  const out = [];
+  for (const [bid, x] of Object.entries(vaultOf(hid).opened || {})) (x.packs || []).forEach((p, i) => { if (!p.torn) out.push({ bid, i, t: p.t, cards: p.cards, d: x.d }); });
+  return out.sort((a, b) => a.d < b.d ? -1 : 1);
+}
+function cosOf(hid) { const o = {}; for (const x of Object.values(vaultOf(hid).opened || {})) if (x.item && COS[x.item]) o[x.item] ||= x.d; return o; }
+const lookOf = hid => ((S.hunters[hid] && S.hunters[hid].program) || {})._look || {};
+function cardBonus(hid) {
+  const st = { STR: 0, AGI: 0, VIT: 0, END: 0 }; let xp = 0;
+  for (const id of Object.keys(ownedOf(hid))) { const c = CARDX[id]; if (st[c.st] != null) st[c.st] += CR[c.r].b; if (c.r === "G") xp += 2; }
+  return { st, xp, total: st.STR + st.AGI + st.VIT + st.END };
+}
+function boxesOf(hid) { const op = vaultOf(hid).opened || {}; return replay(hid).boxes.filter(b => !op[b.id]).sort((a, b) => a.d < b.d ? -1 : 1); }
+const roll = t => { const tot = t.reduce((a, x) => a + x[1], 0); let v = Math.random() * tot; for (const [r, w] of t) if ((v -= w) < 0) return r; return t[0][0]; };
+function pickCard(r) {
+  for (let i = RORDER.indexOf(r); i >= 0; i--) { const pool = CARDS.filter(c => c.r === RORDER[i]); if (pool.length) return pool[Math.floor(Math.random() * pool.length)]; }
+  return CARDS[0];
+}
+function myVault() {
+  const k = vaultKey(S.me);
+  const b = S.sessions[k] ||= { profile: S.me, date: "0000-00-00", day: "VAULT", vault: { opened: {}, pity: { h: 0, s: 0, b: 0 } } };
+  b.vault.opened ||= {}; b.vault.pity ||= { h: 0, s: 0, b: 0 };
+  return b.vault;
+}
+/* card pity: a Holo within 20 packs and a Secret within 60 */
+function rollPack(t, pity) {
+  const P = PACK[t], base = P.table || ODDS, out = [];
+  for (let i = 0; i < P.n; i++) {
+    const last = i === P.n - 1;
+    let r = roll(last && P.last ? P.last : base);
+    if (last && pity.s >= 59 && CR[r].rank < 5) r = "S";
+    else if (last && pity.h >= 19 && CR[r].rank < 3) r = "H";
+    out.push(pickCard(r));
+  }
+  const top = Math.max(...out.map(c => CR[c.r].rank));
+  pity.h = top >= 3 ? 0 : pity.h + 1; pity.s = top >= 5 ? 0 : pity.s + 1;
+  return out.sort((a, b) => CR[a.r].rank - CR[b.r].rank).map(c => c.id);
+}
+/* box pity: an Epic or better within 25 boxes. Cosmetics you already own never come up. */
+function rollLoot(k, v) {
+  const B = BOX[k], own = cosOf(S.me);
+  let tier = +roll(B.odds.map((w, i) => [String(i), w]));
+  if ((v.pity.b || 0) >= 24 && tier < 3) tier = 3;
+  v.pity.b = tier >= 3 ? 0 : (v.pity.b || 0) + 1;
+  const cos = Object.values(COS).filter(c => c.tier === tier && !own[c.key] && (!c.cursed || B.cursed));
+  if (cos.length && Math.random() < (B.cursed ? .45 : .35)) return cos[Math.floor(Math.random() * cos.length)].key;
+  return "p:" + packForTier(tier, B.cursed);
+}
+function decoy(k) {
+  const B = BOX[k], tier = +roll(B.odds.map((w, i) => [String(i), w]));
+  const cos = Object.values(COS).filter(c => c.tier === tier && (!c.cursed || B.cursed));
+  return cos.length && Math.random() < .4 ? cos[Math.floor(Math.random() * cos.length)].key : "p:" + packForTier(tier, B.cursed);
+}
+/* the prize (and any pack's cards) is rolled and saved the moment the box opens: closing the app never loses or rerolls it */
+function openBox(box) {
+  const v = myVault();
+  if (!v.opened[box.id]) {
+    const item = rollLoot(box.k, v);
+    v.opened[box.id] = { d: todayStr(), at: Date.now(), k: box.k, item, packs: item.startsWith("p:") ? [{ t: item.slice(2), cards: rollPack(item.slice(2), v.pity), torn: false }] : [] };
+  }
+  dirtySession(vaultKey(S.me));
+  return v.opened[box.id];
+}
+function tearPack(bid, i) {
+  const p = myVault().opened[bid].packs[i];
+  p.torn = true; p.td = todayStr();
+  dirtySession(vaultKey(S.me));
+}
+function equip(item) {
+  const h = S.hunters[S.me]; if (!h) return;
+  if (item.startsWith("t:") || item === "") h.title = item || null;
+  else { h.program ||= {}; h.program._look = { ...(h.program._look || {}), ...(item.startsWith("f:") ? { frame: item.slice(2) } : item.startsWith("a:") ? { avatar: item.slice(2) || null } : {}) }; }
+  if (item === "f:") h.program._look.frame = null;
+  dirtyHunter(S.me);
+}
+
+/* ---------- card markup ---------- */
+const imgOf = (c, mini) => `cards/${mini ? "thumb" : "img"}/${c.img}.webp`;
+function cardHTML(c, mini) {
+  const r = CR[c.r], src = imgOf(c, mini), set = CSETS.find(x => x.code === c.set) || { name: c.set, type: "Card" };
+  const art = c.r === "G" ? `<img class="m" src="${src}" alt=""><img class="r" src="${src}" alt=""><img class="b" src="${src}" alt="">`
+    : `<img src="${src}" alt="${esc(c.n)}" ${mini ? `loading="lazy"` : ""} decoding="async">`;
+  const no = c.r === "G" ? "???/030" : `${String(c.no).padStart(3, "0")}${c.alt || ""}/030`;
+  return `<div class="tc ${r.k}${mini ? " tmini" : ""}" data-cid="${c.id}">
+    <div class="ttop"><span class="tn${c.n.length > 17 ? " long" : ""}" data-name="${esc(c.n)}">${esc(c.n)}</span><span class="tbst">+${r.b} ${c.st}</span></div>
+    <div class="tart">${art}</div>
+    <div class="tmeta"><span class="ttype">${c.r === "G" ? set.type + "?" : set.type} · ${c.r === "G" ? "???" : c.alt ? "Alt Art" : esc(set.name)}</span><span class="tfl">${esc(c.f)}</span>${c.r === "G" ? `<span class="tperk">Perk: +2% XP</span>` : ""}
+      <span class="tfoot"><span>${no}</span><span class="tsym">${r.sym}</span></span></div></div>`;
+}
+const backHTML = r => `<div class="cback g-${r}"><div class="rune"></div></div>`;
+const skinInner = k => `<div class="pbrand">Solo Lifting</div><div class="pwin"><img src="cards/thumb/${CARDX[PACK[k].cover] ? CARDX[PACK[k].cover].img : PACK[k].cover}.webp" alt=""></div><div class="pname">${PACK[k].name}</div><div class="pcount">${PACK[k].n} cards</div>`;
+const packHTML = (k, idle) => `<div class="pack${idle ? " idle" : ""}" style="--p1:${PACK[k].p[0]};--p2:${PACK[k].p[1]};--p3:${PACK[k].p[2]}">
+  <div class="flap"><div class="skin">${skinInner(k)}</div></div><div class="pbody"><div class="skin">${skinInner(k)}</div></div><div class="tearline"></div><div class="tearglow"></div></div>`;
+/* a loot box: a cube tied with a glowing ribbon that crosses the lid and runs down every side */
+const cubeHTML = (k, size, idle) => `<div class="cubewrap${idle ? " idle" : ""}" style="--s:${size}px;--c1:${BOX[k].c[0]};--c2:${BOX[k].c[1]};--rb:${BOX[k].c[2]}">
+  <div class="cube cube-${k}"><i class="cf ft"></i><i class="cf ff"></i><i class="cf fr"></i><i class="cf fl"></i><i class="cf fk"></i><i class="cf fb"></i></div><i class="cshadow"></i></div>`;
+/* reel tile and prize icons */
+function itemIcon(I) {
+  if (I.kind === "p") { const P = PACK[I.t]; return `<i class="ri ri-pack" style="--p1:${P.p[0]};--p2:${P.p[1]};--p3:${P.p[2]}"><b>${P.n}</b></i>`; }
+  if (I.kind === "f") return `<i class="ri ri-frame ${I.fx}" style="--frb:${I.grad}"></i>`;
+  return `<i class="ri ri-title">❝</i>`;
+}
+const reelTile = (item, win) => { const I = itemInfo(item); return `<div class="rt${win ? " winner" : ""}" style="--tc:${TIERS[I.tier][1]}">${itemIcon(I)}<span>${esc(I.kind === "f" ? I.short : I.name)}</span></div>`; };
+/* a hunter's picture (a card they own) inside their frame; falls back to their title icon or rank */
+function avatarHTML(id, R, size = "") {
+  const L = lookOf(id), own = ownedOf(id), fr = L.frame && cosOf(id)["f:" + L.frame] ? COS["f:" + L.frame] : null;
+  const c = L.avatar && own[L.avatar] ? CARDX[L.avatar] : null, t = titleOf(id, R);
+  const inner = c ? `<img src="${imgOf(c, true)}" alt="">` : t && t.icon ? `<span class="avt">${t.icon}</span>` : `<span class="avt rk">${R.lv.rank}</span>`;
+  return `<span class="av ${size} ${fr ? fr.fx : ""}" style="${fr ? `--frb:${fr.grad}` : ""}"><span class="avi">${inner}</span></span>`;
+}
+const stillCards = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tiltCard(card, x, y) {
+  card.style.setProperty("--mx", `${x * 100}%`); card.style.setProperty("--my", `${y * 100}%`);
+  if (!stillCards) { card.style.setProperty("--ry", `${(x - .5) * 26}deg`); card.style.setProperty("--rx", `${(.5 - y) * 26}deg`); }
+}
+const untiltCard = card => { card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); };
+setInterval(() => {
+  if (document.hidden || stillCards) return;
+  const GL = "▓▒░#@%&?!01";
+  for (const el of document.querySelectorAll(".tc.glitch:not(.tmini) .tn")) {
+    if (Math.random() < .5) continue;
+    const real = el.dataset.name;
+    el.textContent = real.split("").map(ch => ch === " " || Math.random() < .6 ? ch : GL[Math.floor(Math.random() * GL.length)]).join("");
+    setTimeout(() => { el.textContent = Math.random() < .3 ? "???" : real; }, 120);
+    setTimeout(() => { el.textContent = real; }, 420);
+  }
+}, 1600);
+
+/* ---------- Vault tab ---------- */
+let vSet = "ALL";
+function renderVault() {
+  const own = ownedOf(S.me), boxes = boxesOf(S.me), packs = packsOf(S.me), cb = cardBonus(S.me), got = Object.keys(own).length, cos = cosOf(S.me);
+  const n = k => boxes.filter(b => b.k === k).length, np = t => packs.filter(p => p.t === t).length;
+  let h = `<div class="list"><section class="win card"><p class="tag">Loot boxes</p><h1 class="title" style="font-size:24px">${boxes.length ? `${boxes.length} box${boxes.length === 1 ? "" : "es"} to open` : "No boxes waiting"}</h1>
+    <div class="boxes">${["R", "B", "C"].map(k => `<button class="boxbtn" data-act="vopen" data-k="${k}" ${n(k) ? "" : "disabled"} aria-label="Open a ${BOX[k].name}, ${n(k)} waiting">${cubeHTML(k, 56, n(k) > 0)}<b>${n(k)}</b><span>${BOX[k].name}</span></button>`).join("")}</div>
+    <p class="sub">Tap a box to spin for a prize: a card pack, a frame or a title. ${BOX.R.how}. ${BOX.B.how}. ${BOX.C.how}.</p>
+    <details class="odds"><summary>Odds</summary><table><tr><th></th>${TIERS.map(t => `<th style="color:${t[1]}">${t[0]}</th>`).join("")}</tr>${["R", "B", "C"].map(k => `<tr><td>${BOX[k].name.replace(" Loot Box", "")}</td>${BOX[k].odds.map(o => `<td>${o}%</td>`).join("")}</tr>`).join("")}</table>
+      <p>Packs by tier: ${["N", "E", "H", "D", "M"].map(t => `${PACK[t].name} (${PACK[t].note})`).join(", ")}. Cursed boxes give a ${PACK.X.name} (${PACK.X.note}) instead of Hunter and Elite packs. Within a tier, about a third of prizes are frames or titles you don't have yet. An Epic or better is guaranteed within 25 boxes, a Holo card within 20 packs and a Secret within 60.</p></details></section>
+    ${packs.length ? `<section class="win card"><p class="tag">Packs</p><h1 class="title" style="font-size:24px">${packs.length} pack${packs.length === 1 ? "" : "s"} to open</h1>
+      <div class="boxes">${Object.keys(PACK).filter(t => np(t)).map(t => `<button class="boxbtn" data-act="popen" data-t="${t}" aria-label="Open a ${PACK[t].name}, ${np(t)} waiting">${packHTML(t, true)}<b>${np(t)}</b><span>${PACK[t].name}</span></button>`).join("")}</div></section>` : ""}
+    <section class="win card"><div class="toggle"><h2>Frames and titles</h2><span class="sub"><b style="color:var(--fg)">${Object.keys(cos).length}</b> / ${Object.keys(COS).length}</span></div>
+      ${Object.keys(cos).length ? `<div class="cosgrid">${Object.values(COS).filter(c => cos[c.key]).sort((a, b) => a.kind.localeCompare(b.kind) || b.tier - a.tier).map(c =>
+        `<button class="cos" data-act="equip" data-item="${c.key}" style="--tc:${TIERS[c.tier][1]}">${itemIcon(c)}<span>${esc(c.kind === "f" ? c.short : c.name)}<small>${(c.kind === "f" ? lookOf(S.me).frame === c.id : S.hunters[S.me].title === c.key) ? "Equipped" : "Tap to equip"}</small></span></button>`).join("")}</div>` : `<p class="sub">None yet. They come out of loot boxes.</p>`}
+      <p class="sub">Still to find: ${TIERS.map((t, i) => { const n = Object.values(COS).filter(c => c.tier === i && !cos[c.key]).length; return n ? `<b style="color:${t[1]}">${n} ${t[0]}</b>` : ""; }).filter(Boolean).join(" · ") || "nothing, you have them all"}.</p></section>
+    <section class="win card"><div class="toggle"><h2>Collection</h2><span class="sub"><b style="color:var(--fg)">${got}</b> / ${CARDS.length}</span></div>
+      <p>Each card adds a stat bonus the first time you collect it${cb.total ? `: <b style="color:var(--gold)">${["STR", "AGI", "VIT", "END"].filter(k => cb.st[k]).map(k => `+${cb.st[k]} ${k}`).join(" · ")}</b>` : ""}. Bonuses show on your profile but don't count towards stat achievements.${cb.xp ? ` Glitched cards add <b style="color:#2affea">+${cb.xp}% XP</b>.` : ""}</p></section>`;
+  const groups = [...CSETS.map(x => x.code), "G"];
+  const inG = (c, g) => g === "G" ? c.r === "G" : c.set === g && c.r !== "G";
+  const chips = [["ALL", "All", CARDS]].concat(groups.map(g => [g, g === "G" ? "???" : CSETS.find(x => x.code === g).short, CARDS.filter(c => inG(c, g))]));
+  h += `<div class="vchips" role="group" aria-label="Set">${chips.map(([k, l, list]) => `<button class="vchip" data-act="vset" data-k="${k}" aria-pressed="${vSet === k}">${l}<small>${list.filter(c => own[c.id]).length}/${list.length}</small></button>`).join("")}</div>`;
+  for (const g of vSet === "ALL" ? groups : [vSet]) {
+    const list = CARDS.filter(c => inG(c, g));
+    if (!list.length) continue;
+    const sname = g === "G" ? "??? Glitched" : CSETS.find(x => x.code === g).name;
+    h += `<div class="sect">${esc(sname)}<small>${list.filter(c => own[c.id]).length}/${list.length}</small></div><div class="vgrid">`;
+    h += list.map(c => own[c.id]
+      ? `<button class="vcell" data-act="vcard" data-cid="${c.id}" aria-label="${esc(c.n)}">${cardHTML(c, true)}${own[c.id] > 1 ? `<span class="vb cnt">x${own[c.id]}</span>` : ""}</button>`
+      : `<div class="vcell lock" aria-label="Not collected yet"><div class="lockcard">${backHTML("C")}<span class="lockno">${c.r === "G" ? "???" : String(c.no).padStart(3, "0") + (c.alt || "")}<small>${CR[c.r].sym}</small></span></div></div>`).join("");
+    h += `</div>`;
+  }
+  $("#view").innerHTML = h + `</div>`;
+}
+function cardShowcase(id, own) {
+  const list = Object.keys(own).map(k => CARDX[k]).sort((a, b) => CR[b.r].rank - CR[a.r].rank || a.n.localeCompare(b.n)).slice(0, 6);
+  return `<section class="win card"><div class="toggle"><h2>Cards</h2>${id === S.me ? `<button class="btn primary" data-view="vault">Vault</button>` : ""}</div>
+    <p>${Object.keys(own).length} / ${CARDS.length} collected${list.length ? ". Best pulls:" : ". No cards yet."}</p>
+    ${list.length ? `<div class="showcase">${list.map(c => `<button class="vcell" data-act="vcard" data-cid="${c.id}" data-owner="${esc(id)}" aria-label="${esc(c.n)}">${cardHTML(c, true)}</button>`).join("")}</div>` : ""}</section>`;
+}
+
+/* ---------- opening a box ---------- */
+let PO = null; // { box | ref, cards, idx, newIds, phase }
+function showOverlay(title) {
+  $("#packOv").hidden = false; document.body.classList.add("noscroll");
+  $("#povT").textContent = title;
+  $("#povSum").classList.remove("on"); $("#povStage").style.display = ""; $("#povCount").textContent = "";
+  $("#povHint").style.display = ""; $("#povReel").hidden = true;
+}
+function startBox(box) {
+  PO = { box, phase: "box" };
+  showOverlay(BOX[box.k].name);
+  $("#povHint").textContent = "Tap the box to open it";
+  $("#povIn").innerHTML = `<button class="boxstage" data-act="boxtap" aria-label="Open the ${BOX[box.k].name}">${cubeHTML(box.k, Math.min(180, Math.round(innerWidth * .4)), true)}</button>`;
+}
+function tapBox() {
+  if (!PO || PO.phase !== "box") return;
+  PO.phase = "opening";
+  const x = openBox(PO.box), k = PO.box.k, col = BOX[k].c[2];
+  for (const p of x.packs) for (const id of p.cards) { const im = new Image(); im.src = imgOf(CARDX[id], false); }
+  const wrap = $("#povIn .cubewrap"); wrap.classList.remove("idle"); wrap.classList.add("opening");
+  $("#povHint").textContent = ""; buzz([30, 40, 30, 40, 80]); chime("boss");
+  setTimeout(() => {
+    wrap.classList.add("burstopen");
+    $("#povIn").insertAdjacentHTML("afterbegin", `<div class="burst" style="--bc:${col}"></div>`);
+    document.body.insertAdjacentHTML("beforeend", `<div class="flash" style="--bc:${col}"></div>`); setTimeout(() => document.querySelectorAll(".flash").forEach(f => f.remove()), 800);
+  }, 750);
+  setTimeout(() => spinReel(x), 1350);
+}
+/* the reel: prizes scroll past with their tier glow, slow down and stop on what was rolled */
+function spinReel(x) {
+  PO.phase = "reel"; PO.x = x;
+  $("#povStage").style.display = "none"; $("#povHint").textContent = "";
+  const reel = $("#povReel"); reel.hidden = false;
+  const N = 52, WIN = 44, items = Array.from({ length: N }, (_, i) => i === WIN ? x.item : decoy(PO.box.k));
+  reel.innerHTML = `<div class="reelwin"><div class="strip" id="strip">${items.map((it, i) => reelTile(it, i === WIN)).join("")}</div><i class="marker"></i></div><div class="reelres" id="reelRes"></div>`;
+  const strip = $("#strip"), tile = strip.children[0], step = tile.offsetWidth + 8, vw = reel.querySelector(".reelwin").offsetWidth;
+  const end = WIN * step + tile.offsetWidth / 2 - vw / 2 + (Math.random() - .5) * tile.offsetWidth * .7;
+  const T = stillCards ? 400 : 6200, t0 = performance.now(); let lastI = -1;
+  const ease = p => 1 - Math.pow(1 - p, 4);
+  const frame = now => {
+    if (!PO || PO.phase !== "reel") return;
+    const p = Math.min(1, (now - t0) / T), pos = end * ease(p);
+    strip.style.transform = `translateX(${-pos}px)`;
+    const i = Math.floor((pos + vw / 2) / step); if (i !== lastI) { lastI = i; tickSound(); }
+    if (p < 1) requestAnimationFrame(frame); else reelDone();
+  };
+  requestAnimationFrame(frame);
+}
+function tickSound() {
+  if (!S.sound) return;
+  try {
+    AC ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = "square"; o.frequency.value = 1400; g.gain.setValueAtTime(.025, t); g.gain.exponentialRampToValueAtTime(.0001, t + .03);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t + .035);
+  } catch (e) {}
+}
+function reelDone() {
+  PO.phase = "won";
+  const x = PO.x, I = itemInfo(x.item), col = TIERS[I.tier][1], reel = $("#povReel");
+  reel.querySelector(".winner").classList.add("lit");
+  reel.querySelector(".reelwin").insertAdjacentHTML("afterbegin", `<div class="burst" style="--bc:${col};width:120%"></div>`);
+  if (I.tier >= 3) { document.body.insertAdjacentHTML("beforeend", `<div class="flash" style="--bc:${col}"></div>`); setTimeout(() => document.querySelectorAll(".flash").forEach(f => f.remove()), 800); }
+  if (I.tier >= 4) { reel.classList.remove("vshake"); void reel.offsetWidth; reel.classList.add("vshake"); }
+  buzz(I.tier >= 3 ? [60, 40, 120] : [40]); chime(I.tier >= 3 ? "lvl" : I.tier >= 2 ? "ach" : "pr");
+  const more = boxesOf(S.me).length, bid = PO.box.id;
+  const btns = I.kind === "p"
+    ? `<button class="btn primary" data-act="ppick" data-bid="${esc(bid)}" data-i="0">Open the pack</button><button class="btn" data-act="${more ? "vnext" : "pclose"}">${more ? `Save it, open next box (${more})` : "Save it for later"}</button>`
+    : `<button class="btn primary" data-act="equipclose" data-item="${x.item}">Equip it</button><button class="btn" data-act="${more ? "vnext" : "pclose"}">${more ? `Next box (${more})` : "Done"}</button>`;
+  $("#reelRes").innerHTML = `<p class="tag" style="color:${col}">${TIERS[I.tier][0]}${I.cursed ? " · cursed" : ""}</p><h2>${esc(I.name)}</h2><p class="sub">${esc(I.note)}</p>
+    ${I.kind === "f" ? `<div class="framepreview">${`<span class="av lg ${I.fx}" style="--frb:${I.grad}"><span class="avi">${(() => { const L = lookOf(S.me), c = L.avatar && CARDX[L.avatar]; return c ? `<img src="${imgOf(c, true)}" alt="">` : `<span class="avt rk">${replay(S.me).lv.rank}</span>`; })()}</span></span>`}</div>` : ""}
+    <div class="vsum-actions">${btns}</div>`;
+}
+function startPack(ref) {
+  const cards = ref.cards.map(id => CARDX[id]).filter(Boolean);
+  for (const c of cards) { const im = new Image(); im.src = imgOf(c, false); }
+  const own = ownedOf(S.me);
+  PO = { ref, cards, idx: 0, newIds: new Set(cards.filter(c => !own[c.id]).map(c => c.id)), phase: "pack" };
+  showOverlay(PACK[ref.t].name);
+  $("#povHint").textContent = "Swipe across the top to tear it open";
+  const inner = $("#povIn");
+  inner.innerHTML = packHTML(ref.t) + `<div class="finger"></div><div class="stack" id="pstack" style="visibility:hidden">${cards.map((c, i) =>
+    `<div class="slot" data-i="${i}"><div class="flip"><div class="face front">${cardHTML(c)}</div><div class="face back">${backHTML(c.r)}</div></div></div>`).join("")}</div>`;
+  layoutStack(); bindTear(inner.querySelector(".pack"));
+}
+function closeOpen() {
+  $("#packOv").hidden = true; document.body.classList.remove("noscroll");
+  PO = null; S.ver++; render();
+}
+function layoutStack() {
+  for (const sl of document.querySelectorAll("#pstack .slot")) {
+    const d = +sl.dataset.i - PO.idx; if (d < 0) continue;
+    sl.style.zIndex = 100 - d;
+    sl.style.transform = d === 0 ? "" : `translateY(${Math.min(d, 3) * -7}px) scale(${1 - Math.min(d, 3) * .035})`;
+    const bk = sl.querySelector(".cback"); if (bk) bk.style.setProperty("--peek", 0);
+  }
+}
+function bindTear(pack) {
+  const glow = pack.querySelector(".tearglow");
+  let start = null, done = false;
+  const zone = e => { const r = pack.getBoundingClientRect(); return (e.clientY - r.top) / r.height < .3; };
+  pack.addEventListener("pointerdown", e => { if (done || !zone(e)) return; start = e.clientX; pack.setPointerCapture(e.pointerId); const f = $("#povIn .finger"); if (f) f.remove(); });
+  pack.addEventListener("pointermove", e => {
+    if (start == null || done) return;
+    const r = pack.getBoundingClientRect(), prog = Math.min(1, Math.abs(e.clientX - start) / (r.width * .8));
+    glow.style.width = `${prog * 100}%`;
+    if (e.clientX < start) { glow.style.left = "auto"; glow.style.right = "0"; } else { glow.style.left = "0"; glow.style.right = "auto"; }
+    if (prog >= .7) { done = true; tearOpen(pack); }
+  });
+  const end = () => { if (!done) { start = null; glow.style.transition = "width .25s"; glow.style.width = "0"; setTimeout(() => glow.style.transition = "", 260); } };
+  pack.addEventListener("pointerup", end); pack.addEventListener("pointercancel", end);
+}
+function tearOpen(pack) {
+  tearPack(PO.ref.bid, PO.ref.i); // the cards join the collection the moment the pack is torn
+  PO.phase = "cards"; buzz(30);
+  pack.querySelector(".tearglow").style.width = "100%";
+  pack.classList.add("torn", "drop");
+  const st = $("#pstack"); st.style.visibility = ""; st.classList.add("rise");
+  $("#povHint").textContent = "";
+  setTimeout(() => { pack.remove(); reveal(); bindSwipe(); }, 1050);
+}
+function reveal() {
+  const sl = document.querySelector(`#pstack .slot[data-i="${PO.idx}"]`); if (!sl) return;
+  const c = PO.cards[PO.idx];
+  sl.querySelector(".flip").classList.add("up");
+  $("#povCount").textContent = `${PO.idx + 1} / ${PO.cards.length}`;
+  $("#povHint").textContent = PO.idx < PO.cards.length - 1 ? "Swipe the card away · drag a little to peek" : "Swipe to finish";
+  if (CR[c.r].rank >= 2) setTimeout(() => celebrate(c), 280);
+  if (PO.newIds.has(c.id)) setTimeout(() => { if (sl.isConnected && !sl.querySelector(".vb")) sl.insertAdjacentHTML("beforeend", `<span class="vb" style="top:-8px;right:-8px">NEW</span>`); }, 450);
+}
+function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+function celebrate(c) {
+  const rank = CR[c.r].rank, col = CR[c.r].col, inner = $("#povIn"); if (!inner) return;
+  inner.insertAdjacentHTML("afterbegin", `<div class="burst" style="--bc:${col}"></div>`);
+  inner.insertAdjacentHTML("beforeend", `<div class="rlabel" style="--bc:${col}">${CR[c.r].label}</div>`);
+  setTimeout(() => inner.querySelectorAll(".burst,.rlabel").forEach(x => x.remove()), 1700);
+  if (rank >= 4) { document.body.insertAdjacentHTML("beforeend", `<div class="flash" style="--bc:${col}"></div>`); setTimeout(() => document.querySelectorAll(".flash").forEach(x => x.remove()), 800); }
+  const st = $("#povStage");
+  if (c.r === "G") { st.classList.remove("glitchfx"); void st.offsetWidth; st.classList.add("glitchfx"); setTimeout(() => st.classList.remove("glitchfx"), 1900); buzz([40, 30, 80, 30, 40]); chime("pz"); }
+  else if (rank >= 4) { st.classList.remove("vshake"); void st.offsetWidth; st.classList.add("vshake"); buzz([60, 40, 120]); chime("boss"); }
+  else if (rank >= 3) { buzz([40, 30, 40]); chime("ach"); } else { buzz(25); chime("pr"); }
+}
+function bindSwipe() {
+  const stack = $("#pstack");
+  let sx = 0, sy = 0, dx = 0, dy = 0, active = null, t0 = 0;
+  stack.onpointerdown = e => {
+    const sl = document.querySelector(`#pstack .slot[data-i="${PO.idx}"]`);
+    if (!sl || PO.phase !== "cards") return;
+    active = sl; sx = e.clientX; sy = e.clientY; dx = dy = 0; t0 = performance.now();
+    sl.style.transition = "none"; stack.setPointerCapture(e.pointerId);
+  };
+  stack.onpointermove = e => {
+    if (!active) return;
+    dx = e.clientX - sx; dy = e.clientY - sy;
+    active.style.transform = `translate(${dx}px, ${dy * .35}px) rotate(${dx * .06}deg)`;
+    const nb = document.querySelector(`#pstack .slot[data-i="${PO.idx + 1}"] .cback`);
+    if (nb) nb.style.setProperty("--peek", Math.min(1, Math.abs(dx) / (active.offsetWidth * .6)).toFixed(3));
+    const card = active.querySelector(".tc"), r = active.getBoundingClientRect();
+    if (card) tiltCard(card, Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)));
+  };
+  const end = () => {
+    if (!active) return;
+    const sl = active; active = null;
+    const card = sl.querySelector(".tc"); if (card) untiltCard(card);
+    const w = sl.offsetWidth, v = Math.abs(dx) / Math.max(1, performance.now() - t0);
+    sl.style.transition = "";
+    if (Math.abs(dx) > w * .38 || (v > .6 && Math.abs(dx) > 40)) {
+      sl.classList.add("fly");
+      const dir = Math.sign(dx) || 1;
+      sl.style.transform = `translate(${dir * innerWidth * 1.1}px, ${dy * .5 - 60}px) rotate(${dir * 28}deg)`;
+      sl.style.opacity = "0";
+      PO.idx++;
+      setTimeout(() => sl.remove(), 460);
+      if (PO.idx >= PO.cards.length) { setTimeout(packSummary, 380); return; }
+      layoutStack(); setTimeout(reveal, 120);
+    } else {
+      sl.style.transform = "";
+      const nb = document.querySelector(`#pstack .slot[data-i="${PO.idx + 1}"] .cback`); if (nb) nb.style.setProperty("--peek", 0);
+    }
+  };
+  stack.onpointerup = end; stack.onpointercancel = end;
+}
+function packSummary() {
+  PO.phase = "done";
+  $("#povStage").style.display = "none"; $("#povCount").textContent = ""; $("#povHint").style.display = "none";
+  const own = ownedOf(S.me), gained = [...PO.newIds].reduce((a, id) => a + CR[CARDX[id].r].b, 0), morePacks = packsOf(S.me).length, more = boxesOf(S.me).length;
+  const el = $("#povSum"); el.classList.add("on");
+  el.innerHTML = `<h2>Pack opened</h2><p class="vgain">${PO.newIds.size ? `${PO.newIds.size} new card${PO.newIds.size > 1 ? "s" : ""} · <b>+${gained} stat</b>` : "All duplicates this time"}<br>${Object.keys(own).length} / ${CARDS.length} collected</p>
+    <div class="vsum-grid">${PO.cards.map((c, i) => `<button class="vcell" data-act="vcard" data-cid="${c.id}" data-list="${PO.cards.map(x => x.id).join(",")}" style="animation-delay:${i * 70}ms">${cardHTML(c, true)}${PO.newIds.has(c.id) ? `<span class="vb">NEW</span>` : `<span class="vb cnt">x${own[c.id]}</span>`}</button>`).join("")}</div>
+    <div class="vsum-actions">${more ? `<button class="btn primary" data-act="vnext">Open next box (${more})</button>` : morePacks ? `<button class="btn primary" data-act="pnext">Open next pack (${morePacks})</button>` : ""}<button class="btn" data-act="pclose">Done</button></div>`;
+}
+
+/* ---------- card close-up ---------- */
+let DL = [], DI = 0, gyro = false, gyroBase = null;
+function openDetail(id, list) { DL = list && list.length ? list : [id]; DI = Math.max(0, DL.indexOf(id)); $("#cardDet").hidden = false; drawDetail(); }
+function drawDetail() {
+  const c = CARDX[DL[DI]], r = CR[c.r], set = CSETS.find(x => x.code === c.set) || { name: c.set };
+  $("#cdHold").innerHTML = cardHTML(c);
+  const own = ownedOf(S.me)[c.id] || 0;
+  const isPic = lookOf(S.me).avatar === c.id;
+  $("#cdInfo").innerHTML = `<b style="color:${r.col}">${r.label}</b>${c.r === "G" ? "Corrupted " + esc(set.name) : esc(set.name)} · +${r.b} ${c.st}${c.r === "G" ? " and +2% XP" : ""} on first copy<br>${own ? `You own x${own}` : "Not in your collection"}${DL.length > 1 ? ` · ${DI + 1} of ${DL.length}` : ""}
+    ${own ? `<br><button class="btn${isPic ? "" : " primary"}" data-act="equip" data-item="a:${isPic ? "" : c.id}" style="margin-top:8px">${isPic ? "Stop using as picture" : "Use as picture"}</button>` : ""}`;
+  $("#cdPrev").hidden = $("#cdNext").hidden = DL.length < 2;
+  const card = $("#cdHold .tc"); gyroBase = null;
+  const at = e => { const b = card.getBoundingClientRect(); tiltCard(card, Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)), Math.min(1, Math.max(0, (e.clientY - b.top) / b.height))); };
+  card.addEventListener("pointerdown", e => { card.setPointerCapture(e.pointerId); at(e); });
+  card.addEventListener("pointermove", e => { if (e.pointerType === "mouse" || e.buttons) at(e); });
+  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) card.addEventListener(ev, () => { if (!gyro) untiltCard(card); });
+}
+addEventListener("deviceorientation", e => {
+  if (!gyro || e.beta == null || $("#cardDet").hidden) return;
+  const card = $("#cdHold .tc"); if (!card) return;
+  if (!gyroBase) gyroBase = { b: e.beta, g: e.gamma };
+  tiltCard(card, Math.max(0, Math.min(1, .5 + (e.gamma - gyroBase.g) / 50)), Math.max(0, Math.min(1, .5 + (e.beta - gyroBase.b) / 50)));
+});
+addEventListener("keydown", e => {
+  if ($("#cardDet").hidden) return;
+  if (e.key === "Escape") $("#cardDet").hidden = true;
+  if (e.key === "ArrowLeft" && DL.length > 1) { DI = (DI - 1 + DL.length) % DL.length; drawDetail(); }
+  if (e.key === "ArrowRight" && DL.length > 1) { DI = (DI + 1) % DL.length; drawDetail(); }
+});
+$("#cardDet").addEventListener("click", e => { if (e.target.id === "cardDet") $("#cardDet").hidden = true; });
+
+/* ---------- vault buttons (called from the main click handler) ---------- */
+function vaultClick(t, act) {
+  if (act === "vopen") { const box = boxesOf(S.me).find(b => b.k === t.dataset.k); if (box) startBox(box); return true; }
+  if (act === "vnext") { const box = boxesOf(S.me)[0]; if (box) startBox(box); else closeOpen(); return true; }
+  if (act === "boxtap") { tapBox(); return true; }
+  if (act === "ppick") { const ref = packsOf(S.me).find(p => p.bid === t.dataset.bid && p.i === +t.dataset.i); if (ref) startPack(ref); return true; }
+  if (act === "popen") { const ref = packsOf(S.me).find(p => p.t === t.dataset.t); if (ref) startPack(ref); return true; }
+  if (act === "pnext") { const ref = packsOf(S.me)[0]; if (ref) startPack(ref); else closeOpen(); return true; }
+  if (act === "equip") { equip(t.dataset.item); if (!$("#cardDet").hidden) drawDetail(); else render(); toast({ tag: "Appearance", title: "Updated", text: "This is how you show up on the board now." }); return true; }
+  if (act === "equipclose") { equip(t.dataset.item); const more = boxesOf(S.me).length; if (more) startBox(boxesOf(S.me)[0]); else closeOpen(); return true; }
+  if (act === "pclose") { closeOpen(); return true; }
+  if (act === "vset") { vSet = t.dataset.k; renderVault(); return true; }
+  if (act === "vcard") {
+    const list = t.dataset.list ? t.dataset.list.split(",") : [...t.parentElement.querySelectorAll("[data-act=vcard]")].map(x => x.dataset.cid);
+    openDetail(t.dataset.cid, list); return true;
+  }
+  if (act === "cdclose") { $("#cardDet").hidden = true; return true; }
+  if (act === "cdprev") { DI = (DI - 1 + DL.length) % DL.length; drawDetail(); return true; }
+  if (act === "cdnext") { DI = (DI + 1) % DL.length; drawDetail(); return true; }
+  if (act === "cdtilt") {
+    if (gyro) { gyro = false; t.textContent = "Tilt with phone"; const c = $("#cdHold .tc"); if (c) untiltCard(c); return true; }
+    const go = () => { gyro = true; gyroBase = null; t.textContent = "Stop tilt"; };
+    try { if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission().then(p => { if (p === "granted") go(); }).catch(() => {}); else go(); } catch (e) {}
+    return true;
+  }
+  return false;
 }
 
 /* ================= EVENTS ================= */
@@ -1473,11 +2535,19 @@ document.addEventListener("click", e => {
   if (t.dataset.day) { S.day = t.dataset.day; render(); return; }
   if (t.dataset.pday) { S.pday = t.dataset.pday; S.creating = false; renderProgram(); return; }
   const act = t.dataset.act, id = t.dataset.ex, i = +t.dataset.i;
+  if (act === "sconf") { confirmSet(t); return; }
+  if (act === "ckind") {
+    S.ckind = t.dataset.k; S.pickKind = { key: curKey(), k: t.dataset.k };
+    const b = session(false); if (b && b.cardio) { b.cardio.kind = t.dataset.k; dirtySession(curKey()); }
+    persist(); render(); return;
+  }
+  if (act === "logfix") { S.date = t.dataset.date; S.day = t.dataset.day; S.view = "log"; render(); scrollTo(0, 0); return; }
+  if (vaultClick(t, act)) return;
   if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
   if (act === "uselast") {
     const last = lastFor(id, S.date, "wr"); if (!last) return;
     const b = session(true), arr = (b.ex[id] ||= []), n = exList().find(x => x.id === id).sets;
-    for (let k = 0; k < n; k++) { const s = last.sets[Math.min(k, last.sets.length - 1)]; arr[k] = arr[k] || {}; if (arr[k].w == null) arr[k].w = s.w; }
+    for (let k = 0; k < n; k++) { const s = last.sets[Math.min(k, last.sets.length - 1)]; arr[k] = arr[k] || {}; if (arr[k].w == null) { arr[k].w = s.w; arr[k].ok = false; } }
     dirtySession(curKey()); render();
   }
   if (act === "remove") { const b = session(true); b.extra = b.extra.filter(x => x !== id); delete b.ex[id]; dirtySession(curKey()); render(); }
@@ -1488,6 +2558,13 @@ document.addEventListener("click", e => {
   if (act === "unexcuse") { const b = session(false); if (b) { delete b.excused; dirtySession(curKey()); } render(); }
   if (act === "switch") { if (S.armed !== "switch") { arm("switch"); renderRecords(); return; } S.armed = null; S.me = null; persist(); render(); }
   if (act === "sound") { S.sound = !S.sound; persist(); renderRecords(); if (S.sound) chime("clear"); }
+  if (act === "sched") {
+    const h = S.hunters[S.me], t0 = todayStr(), cur = schedFor(S.me, t0), d = t.dataset.d;
+    const days = DAYS.filter(x => x === d ? !cur.includes(x) : cur.includes(x));
+    h.program ||= {}; const list = (h.program._sched ||= []);
+    if (list.length && list[list.length - 1].from === t0) list[list.length - 1].days = days; else list.push({ from: t0, days });
+    dirtyHunter(S.me); renderProgram(); return;
+  }
   if (act === "psets") editPlan(p => { p.ex[i][1] = Math.max(1, Math.min(8, p.ex[i][1] + +t.dataset.d)); });
   if (act === "pmove") editPlan(p => { const j = i + +t.dataset.d; if (j >= 0 && j < p.ex.length) [p.ex[i], p.ex[j]] = [p.ex[j], p.ex[i]]; });
   if (act === "pdel") editPlan(p => { p.ex.splice(i, 1); });
@@ -1517,8 +2594,8 @@ document.addEventListener("input", e => {
   if (d.ex && d.f) {
     const b = session(true), arr = (b.ex[d.ex] ||= []), i = +d.i, type = typeOf(d.ex);
     while (arr.length <= i) arr.push({});
-    arr[i][d.f] = num(t.value);
-    t.closest(".set").classList.toggle("done", type === "wr" ? arr[i].r != null : setOk(type, arr[i]));
+    arr[i][d.f] = num(t.value); arr[i].ok = false;
+    paintSet(t.closest(".set"), type, arr[i]);
     const ex = exList().find(x => x.id === d.ex);
     if (ex) t.closest(".ex").classList.toggle("complete", exDone(b, ex));
     dirtySession(curKey()); refreshLive();
@@ -1526,28 +2603,33 @@ document.addEventListener("input", e => {
     const b = session(true), en = b.bonus[+d.bi]; if (!en) return;
     en.sets ||= []; const j = +d.j;
     while (en.sets.length <= j) en.sets.push({});
-    en.sets[j][d.f] = num(t.value);
+    en.sets[j][d.f] = num(t.value); en.sets[j].ok = false;
     const L = CX(en.id);
-    t.closest(".set").classList.toggle("done", L.type === "wr" ? en.sets[j].r != null : setOk(L.type, en.sets[j]));
+    paintSet(t.closest(".set"), L.type, en.sets[j]);
     t.closest(".ex").classList.toggle("complete", bonusLogged(en));
     dirtySession(curKey()); refreshLive();
   } else if (d.bi != null && d.bf) {
     const b = session(true), en = b.bonus[+d.bi]; if (!en) return;
-    en[d.bf] = num(t.value);
+    const v = num(t.value); if (v != null && v > LIM[d.bf]) return; // big numbers wait for the check when the field is left
+    en[d.bf] = v;
     t.closest(".ex").classList.toggle("complete", bonusLogged(en));
     dirtySession(curKey()); refreshLive();
   } else if (d.c) {
-    const b = session(true); b.cardio = { ...(b.cardio || {}), [d.c]: num(t.value) }; delete b.cardio.mins; delete b.cardio.kind;
-    const c = cardioOf(b), pc = pace(c);
-    $("#derived").innerHTML = (c.total ? `Total <strong>${+c.total.toFixed(1)} min</strong>` : "Enter what the treadmill shows when you stop.") + (pc ? ` · Pace <strong>${paceTxt(pc)}</strong>` : "");
-    dirtySession(curKey());
-    $("#cardioCard").classList.toggle("complete", cardioMeets(b, reqs(curPlan(), S.day, penHere(replay(S.me))).cardio));
-    refreshLive();
+    const v = num(t.value); if (v != null && v > LIM[d.c]) return; // big numbers wait for the check when the field is left
+    setCardio(d.c, v);
   }
 });
 document.addEventListener("change", e => {
   const t = e.target, d = t.dataset || {};
-  if (t.id === "date" && t.value) { S.date = t.value; S.day = dayForDate(t.value); render(); }
+  if (d.c || (d.bi != null && d.bf)) {
+    const f = d.c || d.bf, v = num(t.value), unit = f === "dist" || f === "km" ? "km" : f === "kcal" ? "kcal" : "minutes";
+    if (v != null && v > LIM[f]) {
+      const okay = v <= LIM[f] * 3 && confirm(`${v} ${unit} in one session? That's a lot.\n\nTap OK if that's right.`);
+      if (!okay) { t.value = ""; t.dispatchEvent(new Event("input", { bubbles: true })); return; }
+      if (d.c) setCardio(d.c, v); else { const b = session(true), en = b.bonus[+d.bi]; if (en) { en[d.bf] = v; dirtySession(curKey()); render(); } }
+    }
+  }
+  if (t.id === "date" && t.value) { S.date = t.value; S.day = dayForDate(t.value); if (WEEKEND.has(S.day) && !S.sessions[curKey()] && S.sessions[keyOf(S.me, S.date, "WK")]) S.day = "WK"; render(); }
   if (t.id === "addEx" && t.value) {
     const b = session(true), id = t.value.slice(2), L = CX(id);
     if (L.type === "min") b.bonus.push({ id }); else if (!b.extra.includes(id)) b.extra.push(id);
@@ -1566,6 +2648,7 @@ document.addEventListener("change", e => {
   });
   if (d.pr) editPlan(p => { const v = num(t.value); if (v != null && v > 0) { p.ex[+d.i][d.pr === "lo" ? 2 : 3] = Math.round(v); if (p.ex[+d.i][2] > p.ex[+d.i][3]) p.ex[+d.i][3] = p.ex[+d.i][2]; } });
   if (t.id === "titleSel") { S.hunters[S.me].title = t.value || null; dirtyHunter(S.me); render(); }
+  if (t.id === "frameSel") { equip(t.value); render(); }
   if (t.id === "importFile" && t.files[0]) doImport(t.files[0]);
 });
 document.addEventListener("visibilitychange", () => {
@@ -1660,19 +2743,19 @@ $("#timerAdd").onclick = () => { if (tDone) { tEnd = Date.now(); tDone = false; 
 $("#timerStop").onclick = () => { clearInterval(tInt); $("#timer").hidden = true; };
 
 /* ================= EXPORT / BACKUP ================= */
-const backupJson = () => JSON.stringify({ app: "lift-log", version: 5, exported: new Date().toISOString(), hunters: S.hunters, custom: S.custom, sessions: S.sessions }, null, 1);
+const backupJson = () => JSON.stringify({ app: "lift-log", version: 6, exported: new Date().toISOString(), hunters: S.hunters, custom: S.custom, sessions: S.sessions }, null, 1);
 function csvText() {
   const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
   const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"];
   const rows = [head];
   const R = replay(S.me), who = nameOf(S.me);
-  const mine = Object.values(S.sessions).filter(b => b.profile === S.me).sort((a, b) => a.date < b.date ? -1 : 1);
+  const mine = Object.values(S.sessions).filter(b => b.profile === S.me && !b.vault).sort((a, b) => a.date < b.date ? -1 : 1);
   const row = o => rows.push(head.map(k => o[k] ?? ""));
   for (const b of mine) {
     const plan = planFor(S.me, b.day, b), planIds = new Set(plan.ex.map(e => e[0]));
     const base = { person: who, date: b.date, day: plan.name, penalty_day: R.pen[b.date] ? "yes" : "no", quest_cleared: questDone(b, !!R.pen[b.date]) ? "yes" : "no", excused: b.excused ? "yes" : "no" };
     const c = cardioOf(b);
-    if (c.total || c.dist || c.kcal) row({ ...base, type: "cardio", item: "walk/run", category: "Program cardio", stat: "VIT", in_plan: "yes", walk_min: c.walk, run_min: c.run, total_min: c.total, distance_km: c.dist, pace_min_per_km: pace(c) ? pace(c).toFixed(2) : "", kcal: c.kcal });
+    if (c.total || c.dist || c.kcal) row({ ...base, type: "cardio", item: KINDS[kindOf(c.kind)].name, category: "Program cardio", stat: "VIT", in_plan: "yes", walk_min: c.walk, run_min: c.run, total_min: c.total, distance_km: c.dist, pace_min_per_km: pace(c) ? pace(c).toFixed(2) : "", kcal: c.kcal });
     for (const [id, arr] of Object.entries(b.ex || {})) {
       const L = CX(id) || { name: id, cat: "", stat: "", type: "wr" };
       arr.forEach((s, i) => { if (setOk(L.type, s)) row({ ...base, type: "lift", item: L.name, category: L.cat, stat: L.stat, in_plan: planIds.has(id) ? "yes" : "no", set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s }); });
@@ -1709,7 +2792,7 @@ async function doImport(file) {
     let n = 0;
     for (const [id, x] of Object.entries(o.custom || {})) if (!S.custom[id]) { S.custom[id] = x; S.outbox.x[id] = rnd(); CATALOGUE = null; }
     for (const [k, b] of Object.entries(o.sessions)) {
-      if (!/^[a-z0-9]+_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK)$/.test(k) || !b) continue;
+      if (!/^[a-z0-9]+_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK|VAULT)$/.test(k) || !b) continue;
       const cur = S.sessions[k];
       if (!cur || (b.ts || 0) > (cur.ts || 0)) { S.sessions[k] = b; S.outbox.s[k] = rnd(); n++; }
     }
