@@ -693,6 +693,41 @@ body.noscroll { overflow: hidden; }
 .odds td:first-child { text-align: left; }
 .odds p { font-size: 12.5px; color: var(--muted); }
 
+/* ---------- fuel ---------- */
+.fuel { display: flex; flex-direction: column; gap: 9px; border-color: #3a9a6a; box-shadow: 0 0 22px rgb(94 227 154 / .16); }
+.fuel::before, .fuel::after { border-color: #5ee39a; }
+.fuel .tag { color: #5ee39a; }
+.fbar { display: flex; flex-direction: column; gap: 4px; }
+.fbar .frow { display: flex; justify-content: space-between; align-items: baseline; }
+.fbar .frow span { font-family: var(--font-display); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 12.5px; color: var(--muted); }
+.fbar b { font-family: var(--font-display); font-size: 21px; line-height: 1; }
+.fbar b small { font-size: 13px; color: var(--muted); }
+.fbar > small { color: var(--muted); font-size: 12px; }
+.fbar .xp i { background: linear-gradient(90deg, #2f8a5c, #5ee39a); box-shadow: 0 0 10px #5ee39a; }
+.fbar.ok b { color: #5ee39a; }
+.fbar.over .xp i { background: linear-gradient(90deg, #b3192e, #ff5d6c); box-shadow: 0 0 10px #ff5d6c; }
+.fbar.over b { color: var(--red); }
+.fuelov { touch-action: auto; }
+.fbody { flex: 1; width: 100%; max-width: 560px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 24px; -webkit-overflow-scrolling: touch; }
+.fsum { display: flex; flex-direction: column; gap: 10px; border: 1px solid #3a9a6a; background: var(--sunk); padding: 12px; }
+.fsec h3 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 14px; color: #5ee39a; display: flex; justify-content: space-between; gap: 10px; }
+.fsec h3 small { color: var(--muted); letter-spacing: .04em; font-weight: 600; text-transform: none; font-size: 12px; }
+.fquick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.fquick > input { grid-column: 1 / -1; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 10px 11px; font-size: 16px; }
+.fsave { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 7px 10px; text-align: left; display: flex; flex-direction: column; max-width: 100%; }
+.fchip b { font-weight: 600; font-size: 13.5px; line-height: 1.2; }
+.fchip small { color: var(--muted); font-size: 11.5px; }
+.fchip:active { border-color: #5ee39a; }
+.flog { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.flog > div { display: flex; align-items: center; gap: 8px; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 7px 9px; }
+.flog > div > span:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.flog small { color: var(--muted); font-size: 12px; }
+.flog .step { display: inline-flex; align-items: center; gap: 6px; }
+.flog .btn { padding: 4px 10px; }
+.fueltick { color: #5ee39a; }
+
 @media (prefers-reduced-motion: reduce) { .pov *, .pov *::before, .pov *::after, .cdet *, .cdet *::before, .cdet *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 </style>
 <script src="config.js"></script>
@@ -715,6 +750,10 @@ body.noscroll { overflow: hidden; }
   <div class="vstage" id="povStage"><div class="vstage-in" id="povIn"></div></div>
   <div class="reel" id="povReel" hidden></div>
   <div class="vcount" id="povCount"></div><p class="vhint" id="povHint"></p><div class="vsum" id="povSum"></div>
+</div>
+<div class="pov fuelov" id="foodOv" hidden role="dialog" aria-modal="true" aria-label="Food log">
+  <div class="vtop"><button class="btn" data-act="fclose" aria-label="Close">✕</button><div class="vttl" id="foodT"></div><span style="width:40px"></span></div>
+  <div class="fbody" id="foodBody"></div>
 </div>
 <div class="cdet" id="cardDet" hidden role="dialog" aria-modal="true" aria-label="Card">
   <button class="btn cdx" data-act="cdclose" aria-label="Close">✕</button>
@@ -887,6 +926,9 @@ function baseAchievements() {
   cat("Vitality", "❤️", "VIT", .4, [[15, "Hardy"], [25, "Vital"], [50, "Lionheart"], [100, "Iron Heart"], [200, "Endless Engine"], [400, "Immortal Heart"]], n => `Reach ${n} VIT`);
   cat("Endurance", "🛡️", "END", .3, [[15, "Steady"], [25, "Tough"], [50, "Resolute"], [100, "Unyielding"], [200, "Indomitable"], [400, "Eternal Will"]], n => `Reach ${n} END`);
   cat("Milestones", "🎂", "anniv", 1, [[30, "First Month"], [100, "Hundred Days"], [365, "One Year Anniversary"], [730, "Two Years Strong"], [1095, "Three Years Strong"], [1825, "Five Years Strong"]], n => `Keep training ${n} days after your first session`);
+  cat("Protein", "🍗", "proteinDays", .7, [[1, "Protein Starter"], [7, "Protein Week"], [30, "Protein Month"], [100, "Built Different"], [250, "Protein Sovereign"]], n => `Hit your protein goal on ${plural(n, "day")}`);
+  cat("Calories", "🥗", "kcalDays", .6, [[1, "On Target"], [7, "Dialled In"], [30, "A Month on Point"], [100, "Precision Eater"], [250, "Calorie Monk"]], n => `Hit your calorie goal on ${plural(n, "day")}`);
+  cat("Food log", "📒", "fuelDays", .8, [[1, "First Bite"], [7, "A Week of Logs"], [30, "Habit Fed"], [100, "Hundred Days Fed"], [365, "A Year on the Scales"]], n => `Log your food on ${plural(n, "day")}`);
   cat("Comebacks", "🔄", "comebacks", .02, [[1, "The Comeback"], [5, "Never Down for Long"], [10, "Unkillable"]], n => `Clear a quest after a week or more away, ${n === 1 ? "once" : n + " times"}`);
 }
 const SHORT = { "chest-press": "Chest press", "lat-pulldown": "Lat pulldown", "shoulder-press": "Shoulder press", "cable-row": "Cable row",
@@ -1149,6 +1191,7 @@ function programChanged(day) {
 }
 
 /* ================= RULES ================= */
+const isMeta = b => !!(b && (b.vault || b.food));
 function cardioOf(b) {
   const c = (b && b.cardio) || {};
   const walk = c.walk ?? null, run = c.run ?? null;
@@ -1166,7 +1209,7 @@ const paceTxt = (p, k = "run") => {
 /* points for a session: confirmed sets, cardio minutes and timed activities */
 function pointsOf(b) {
   const o = { sets: 0, cardio: 0, act: 0, total: 0 };
-  if (!b || b.excused || b.vault) return o;
+  if (!b || b.excused || isMeta(b)) return o;
   let n = 0;
   for (const [id, arr] of Object.entries(b.ex || {})) n += arr.filter(s => setOk(typeOf(id), s)).length;
   for (const e of b.bonus || []) {
@@ -1182,7 +1225,7 @@ function pointsOf(b) {
 }
 const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length >= e.sets;
 function questDone(b, pen) {
-  if (!b || !PROGRAM[b.day] || b.excused || b.vault) return false;
+  if (!b || !PROGRAM[b.day] || b.excused || isMeta(b)) return false;
   if (pointsOf(b).total >= (pen ? penTarget(b.day) : TARGET(b.day))) return true;
   const r = reqs(planFor(b.profile, b.day, b), b.day, pen);
   return r.floor && r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
@@ -1199,6 +1242,7 @@ function hasTraining(b) {
 }
 function isEmpty(b) {
   if (!b) return true;
+  if (b.food) return !(b.food.items || []).length;
   if (b.excused || b.vault) return false;
   const c = cardioOf(b); if (c.total || c.dist || c.kcal) return false;
   if ((b.extra || []).length || (b.bonus || []).length) return false;
@@ -1225,7 +1269,7 @@ function statsOf(M) {
 }
 const newM = () => ({ days: 0, quests: 0, bestStreak: 0, penSurvived: 0, sets: 0, reps: 0, volume: 0, cardioMin: 0, km: 0, level: 1,
   upperQ: 0, lowerQ: 0, friQ: 0, wkQ: 0, prs: 0, bossWins: 0, perfectWeeks: 0, perfectMonths: 0, bonusLogs: 0, pushups: 0, core: 0,
-  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {},
+  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {}, proteinDays: 0, kcalDays: 0, fuelDays: 0,
   statSets: { STR: 0, AGI: 0, VIT: 0, END: 0 }, statMin: { STR: 0, AGI: 0, VIT: 0, END: 0 } });
 function metricVal(M, metric, st) {
   if (metric.startsWith("m:")) return M.machine[metric.slice(2)] || 0;
@@ -1237,7 +1281,7 @@ function metricVal(M, metric, st) {
 function replay(hid) {
   const c = S.cache[hid]; if (c && c.ver === S.ver) return c.r;
   const byDate = {};
-  for (const b of Object.values(S.sessions)) if (b.profile === hid && !b.vault && !isEmpty(b)) (byDate[b.date] ||= []).push(b);
+  for (const b of Object.values(S.sessions)) if (b.profile === hid && !isMeta(b) && !isEmpty(b)) (byDate[b.date] ||= []).push(b);
   const dates = Object.keys(byDate).sort(), today = todayStr(), thisWeek = mondayOf(today), current = bossPool(hid);
   // a week's boss comes from the plans the hunter actually used before that week, so editing a program never rewrites past bosses
   const seen = new Set();
@@ -1321,6 +1365,10 @@ function replay(hid) {
         }
       }
       for (const b of bs) for (const e of planFor(hid, b.day, b).ex) if (typeOf(e[0]) === "wr" && e[0] !== "back-ext") seen.add(e[0]);
+      { const fd = fuelDay(hid, d), fh = fuelHits(fd);
+        if (fd.items.length) M.fuelDays++;
+        if (fh.p) { M.proteinDays++; xp += 10; }
+        if (fh.k) { M.kcalDays++; xp += 10; } }
       if (dawn) M.dawn++;
       if (night) M.night++;
       xp += Math.min(BONUS_CAP, bonusXp);
@@ -1571,6 +1619,7 @@ function refreshLive() {
   renderStatus(R); announce(R);
   const q = $("#quest"); if (q) { q.innerHTML = questHTML(R); tickClock(); }
   const bo = $("#bossCard"); if (bo) bo.outerHTML = bossHTML(R);
+  const fc = $("#fuelCard"); if (fc) fc.outerHTML = fuelCardHTML();
   for (const btn of document.querySelectorAll(".days button[data-day]")) btn.classList.toggle("clear", questDone(S.sessions[keyOf(S.me, S.date, btn.dataset.day)], penHere(R)));
   const nt = $("#net"); if (nt) nt.textContent = netText();
 }
@@ -1678,7 +1727,7 @@ function renderLog(R) {
   let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
     `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}${schedFor(S.me, S.date).includes(d) ? "" : " rest"}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
   <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
-  <section class="win quest" id="quest">${questHTML(R)}</section>${bossHTML(R)}`;
+  <section class="win quest" id="quest">${questHTML(R)}</section>${bossHTML(R)}${fuelCardHTML()}`;
 
   const c = cardioOf(b), kind = curKind(b, plan), K = KINDS[kind];
   h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(cardioGoal(S.day, kind))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
@@ -1825,7 +1874,7 @@ function renderBoard() {
     h += `<button class="row${id === S.me ? " me" : ""}" data-profile="${esc(id)}"><span class="pos">${i + 1}</span>${avatarHTML(id, R)}
       <span class="who"><b>${esc(nameOf(id))}</b><small style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? esc(t.name) : `Rank ${R.lv.rank} hunter`}</small></span>
       <span class="lv">Lv ${R.lv.L}<small>${fmtN(Math.max(R.xp, 0))} XP</small></span>
-      <span class="meta">${todayChip(R)}<span>Streak ${R.streak}</span><span>Week ${weekClears(R)}/${weekQuestDays(id)}</span><span>${Object.keys(R.ach).length} achievements</span></span></button>`;
+      <span class="meta">${todayChip(R)}<span>Streak ${R.streak}</span><span>Week ${weekClears(R)}/${weekQuestDays(id)}</span>${(() => { const h = fuelHits(fuelDay(id, todayStr())); return h.p || h.k ? `<span class="fueltick">${h.p ? "Protein ✓" : ""}${h.p && h.k ? " · " : ""}${h.k ? "Calories ✓" : ""}</span>` : ""; })()}<span>${Object.keys(R.ach).length} achievements</span></span></button>`;
   });
   h += `</div>`;
   if (!ONLINE) h += `<p class="note alert"><b>Board not connected.</b> Each phone only sees its own hunters until the shared database is set up (see the README).</p>`;
@@ -1903,7 +1952,7 @@ function renderProfile(id) {
   $("#view").innerHTML = h;
 }
 function machineLog(id) {
-  const mine = Object.values(S.sessions).filter(b => b.profile === id && !b.vault && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
+  const mine = Object.values(S.sessions).filter(b => b.profile === id && !isMeta(b) && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
   let h = "";
   const cardio = mine.filter(b => { const c = cardioOf(b); return c.total || c.dist; });
   if (cardio.length) {
@@ -1932,7 +1981,7 @@ function machineLog(id) {
 /* ================= RECORDS ================= */
 /* find logged numbers that look like typos, so they can be fixed (everything is recalculated from the log) */
 function suspects(hid) {
-  const mine = Object.values(S.sessions).filter(b => b.profile === hid && !b.vault && !b.excused), wts = {}, out = [];
+  const mine = Object.values(S.sessions).filter(b => b.profile === hid && !isMeta(b) && !b.excused), wts = {}, out = [];
   const eachSet = (b, f) => {
     for (const [id, arr] of Object.entries(b.ex || {})) arr.forEach((x, i) => f(id, typeOf(id), x, i));
     for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type !== "min") (e.sets || []).forEach((x, i) => f(e.id, L.type, x, i)); }
@@ -1953,7 +2002,7 @@ function suspects(hid) {
   return out;
 }
 function renderRecords() {
-  const n = Object.values(S.sessions).filter(b => b.profile === S.me && !b.vault).length, p = pending();
+  const n = Object.values(S.sessions).filter(b => b.profile === S.me && !isMeta(b)).length, p = pending();
   const sus = suspects(S.me);
   $("#view").innerHTML = `<div class="list">
     <p class="note${ONLINE && !S.schemaOld ? "" : " alert"}">${!ONLINE ? "<b>Saved on this phone only.</b> The shared board isn't connected yet. Export a backup every few weeks."
@@ -2517,6 +2566,126 @@ function vaultClick(t, act) {
   return false;
 }
 
+/* ================= FUEL: calories and protein ================= */
+// one row per day: <hunter>_<date>_FOOD, body.food = { items: [{ id, n, k, p, q }], goal: { k, mode, p } }
+// goals and saved foods live in hunters.program._fuel = { k, mode, p, foods: [{ id, n, k, p }] }
+const STARTER = [
+  ["Morning shake (WPI, milk, banana, oats)", 470, 40], ["Breakie burger + egg", 365, 29], ["Prepped chicken fried rice", 550, 50],
+  ["Prepped chilli con carne + rice", 580, 43], ["Prepped chicken burrito", 650, 50], ["Post-gym shake (WPI + milk)", 270, 35],
+  ["Protein shake (WPI + water)", 110, 27], ["Dinner: 200 g meat, carbs, veg", 650, 45], ["Dinner: 150 g meat, carbs, veg", 450, 32],
+  ["Greek yoghurt (150 g)", 100, 15], ["Boiled egg", 70, 6], ["Banana", 105, 1]
+].map(([n, k, p], i) => ({ id: "s" + i, n, k, p }));
+const foodKey = (hid, date) => `${hid}_${date}_FOOD`;
+const fuelCfg = hid => ((S.hunters[hid] && S.hunters[hid].program) || {})._fuel || {};
+function fuelDay(hid, date) {
+  const b = S.sessions[foodKey(hid, date)], items = (b && b.food && b.food.items) || [];
+  const k = Math.round(sumBy(items, x => (x.k || 0) * (x.q || 1))), p = Math.round(sumBy(items, x => (x.p || 0) * (x.q || 1)));
+  return { items, k, p, goal: (b && b.food && b.food.goal) || null };
+}
+/* a goal counts as hit with the goals saved that day; "stay under" also needs at least half the target logged */
+function fuelHits(f, g) {
+  g ||= f.goal; if (!g || !f.items.length) return { k: false, p: false };
+  return { p: !!g.p && f.p >= g.p, k: !!g.k && (g.mode === "min" ? f.k >= g.k : f.k <= g.k && f.k >= g.k * .5) };
+}
+let FD = null; // the date the food sheet is showing
+function foodEdit(date) {
+  const k = foodKey(S.me, date), c = fuelCfg(S.me);
+  const b = S.sessions[k] ||= { profile: S.me, date, day: "FOOD", food: { items: [] } };
+  b.food.items ||= [];
+  if (c.k || c.p) b.food.goal = { k: c.k || 0, mode: c.mode || "max", p: c.p || 0 };
+  return b;
+}
+function addFood(x, q = 1) {
+  const k = +x.k || 0, p = +x.p || 0;
+  if (k < 0 || p < 0 || k > 5000 || p > 400) { toast({ tag: "Check that food", title: "Calories 0 to 5000, protein 0 to 400 g" }); return false; }
+  if (k > 2000 && !confirm(`${k} kcal in one go?\n\nTap OK if that's right.`)) return false;
+  const b = foodEdit(FD);
+  b.food.items.push({ id: rnd().slice(0, 6), n: (x.n || "").trim().slice(0, 40) || "Food", k, p, q });
+  dirtySession(foodKey(S.me, FD));
+  return true;
+}
+function fuelBars(f, c, compact) {
+  const bar = (label, val, goal, unit, mode) => {
+    const pct = goal ? Math.min(100, val / goal * 100) : 0, over = goal && mode === "max" && val > goal;
+    const left = !goal ? "No goal set" : mode === "max" ? (over ? `${val - goal}${unit} over` : `${goal - val}${unit} left`) : val >= goal ? "Goal hit" : `${goal - val}${unit} to go`;
+    return `<div class="fbar${over ? " over" : goal && (mode === "max" ? val >= goal * .5 && !over : val >= goal) ? " ok" : ""}"><div class="frow"><span>${label}</span><b>${fmtN(val)}<small>${goal ? ` / ${fmtN(goal)}` : ""}${unit}</small></b></div>
+      <div class="xp"><i style="width:${pct.toFixed(1)}%"></i></div>${compact ? "" : `<small>${left}</small>`}</div>`;
+  };
+  return bar("Calories", f.k, c.k, " kcal", c.mode || "max") + bar("Protein", f.p, c.p, " g", "min");
+}
+function fuelCardHTML() {
+  const date = S.date, f = fuelDay(S.me, date), c = fuelCfg(S.me), g = f.goal || (c.k || c.p ? c : null);
+  return `<section class="win fuel" id="fuelCard"><div class="toggle"><p class="tag">Fuel${date === todayStr() ? "" : " · " + fmtShort(date)}</p><button class="btn primary" data-act="fopen">+ Food</button></div>
+    ${g ? fuelBars(f, g, false) : `<p class="sub">Track calories and protein through the day. Tap <b>+ Food</b> to set your goals and log your first meal.</p>`}
+    ${f.items.length ? `<p class="sub">${f.items.length} item${f.items.length === 1 ? "" : "s"} logged · ${fuelHits(f, g).p ? "protein goal hit ✓" : "keep going"}</p>` : ""}</section>`;
+}
+function renderFood() {
+  const f = fuelDay(S.me, FD), c = fuelCfg(S.me), mine = c.foods || [];
+  const recent = [], seen = new Set(mine.map(x => x.n.toLowerCase()).concat(STARTER.map(x => x.n.toLowerCase())));
+  for (let i = 1; i <= 14 && recent.length < 12; i++) for (const x of fuelDay(S.me, addDays(FD, -i)).items) { const n = x.n.toLowerCase(); if (!seen.has(n)) { seen.add(n); recent.push(x); } }
+  const chip = (x, src) => `<button class="fchip" data-act="fadd" data-src="${src}" data-id="${esc(x.id)}"><b>${esc(x.n)}</b><small>${x.k} kcal · ${x.p} g</small></button>`;
+  const yday = fuelDay(S.me, addDays(FD, -1));
+  $("#foodBody").innerHTML = `
+    <div class="fsum">${fuelBars(f, c.k || c.p ? c : {}, false)}</div>
+    <section class="fsec"><h3>Quick add</h3>
+      <div class="fquick"><input id="fq-n" maxlength="40" placeholder="What was it? (optional)" aria-label="Food name">
+        <div class="field"><input id="fq-k" inputmode="numeric" placeholder="0" aria-label="Calories"><span>kcal</span></div>
+        <div class="field"><input id="fq-p" inputmode="decimal" placeholder="0" aria-label="Protein grams"><span>g protein</span></div></div>
+      <div class="ex-actions"><button class="btn primary" data-act="fquick">Add</button><label class="fsave"><input type="checkbox" id="fq-save"> Save to my foods</label></div></section>
+    ${mine.length ? `<section class="fsec"><h3>My foods<small>tap to add</small></h3><div class="fchips">${mine.map(x => chip(x, "mine")).join("")}</div></section>` : ""}
+    ${recent.length ? `<section class="fsec"><h3>Recent</h3><div class="fchips">${recent.map(x => chip(x, "recent")).join("")}</div></section>` : ""}
+    <section class="fsec"><h3>Meal plan foods<small>from the nutrition plans</small></h3><div class="fchips">${STARTER.map(x => chip(x, "starter")).join("")}</div></section>
+    <section class="fsec"><h3>${FD === todayStr() ? "Today" : fmtDate(FD)}<small>${f.items.length} item${f.items.length === 1 ? "" : "s"}</small></h3>
+      ${f.items.length ? `<div class="flog">${f.items.map((x, i) => `<div><span><b>${esc(x.n)}</b><small>${Math.round(x.k * x.q)} kcal · ${Math.round(x.p * x.q * 10) / 10} g${x.q !== 1 ? ` · ${x.q} serves` : ""}</small></span>
+        <span class="step"><button class="btn" data-act="fqty" data-i="${i}" data-d="-0.5" aria-label="Less">−</button><b>${x.q}</b><button class="btn" data-act="fqty" data-i="${i}" data-d="0.5" aria-label="More">+</button></span>
+        <button class="btn" data-act="fdel" data-i="${i}" aria-label="Remove">✕</button>${mine.some(m => m.n.toLowerCase() === x.n.toLowerCase()) ? "" : `<button class="linkbtn" data-act="fkeep" data-i="${i}">Save</button>`}</div>`).join("")}</div>` : `<p class="sub">Nothing logged yet.</p>`}
+      ${yday.items.length ? `<button class="btn" data-act="fcopy">Copy ${FD === todayStr() ? "yesterday" : "the day before"} (${yday.items.length} items, ${yday.k} kcal)</button>` : ""}</section>
+    ${mine.length ? `<section class="fsec"><h3>Manage my foods</h3><div class="flog">${mine.map((x, i) => `<div><span><b>${esc(x.n)}</b><small>${x.k} kcal · ${x.p} g</small></span><button class="btn" data-act="funsave" data-i="${i}" aria-label="Remove from my foods">✕</button></div>`).join("")}</div></section>` : ""}
+    <section class="fsec"><h3>Goals</h3>
+      <div class="pgrid"><label>Calories<input id="fg-k" inputmode="numeric" value="${c.k || ""}" placeholder="e.g. 2400"></label>
+        <label>Calorie goal<select id="fg-m"><option value="max" ${(c.mode || "max") === "max" ? "selected" : ""}>Stay under</option><option value="min" ${c.mode === "min" ? "selected" : ""}>Reach at least</option></select></label>
+        <label>Protein (g)<input id="fg-p" inputmode="numeric" value="${c.p || ""}" placeholder="e.g. 170"></label></div>
+      <div class="ex-actions"><button class="btn primary" data-act="fgoal">Save goals</button></div>
+      <p class="sub">Hitting each goal is worth 10 XP and counts towards the Fuel achievements. A "stay under" day only counts once at least half the target is logged. Others only see a tick on the board, never your numbers.</p></section>`;
+}
+function openFood() { FD = S.date; $("#foodOv").hidden = false; document.body.classList.add("noscroll"); $("#foodT").textContent = FD === todayStr() ? "Fuel · Today" : "Fuel · " + fmtDate(FD); renderFood(); }
+function closeFood() { $("#foodOv").hidden = true; document.body.classList.remove("noscroll"); render(); }
+function foodClick(t, act) {
+  if (act === "fopen") { openFood(); return true; }
+  if (act === "fclose") { closeFood(); return true; }
+  const c = fuelCfg(S.me), h = S.hunters[S.me];
+  const saveCfg = n => { h.program ||= {}; h.program._fuel = { ...(h.program._fuel || {}), ...n }; dirtyHunter(S.me); };
+  if (act === "fquick") {
+    const n = $("#fq-n").value, k = num($("#fq-k").value), p = num($("#fq-p").value);
+    if (k == null && p == null) { $("#fq-k").focus(); return true; }
+    if (!addFood({ n, k: k || 0, p: p || 0 })) return true;
+    if ($("#fq-save").checked && n.trim()) saveCfg({ foods: [...(c.foods || []), { id: rnd().slice(0, 6), n: n.trim().slice(0, 40), k: k || 0, p: p || 0 }] });
+    renderFood(); refreshLive(); return true;
+  }
+  if (act === "fadd") {
+    const pool = t.dataset.src === "mine" ? c.foods || [] : t.dataset.src === "starter" ? STARTER : null;
+    let x = pool && pool.find(y => y.id === t.dataset.id);
+    if (!x) for (let i = 1; i <= 14 && !x; i++) x = fuelDay(S.me, addDays(FD, -i)).items.find(y => y.id === t.dataset.id);
+    if (x && addFood(x)) { renderFood(); refreshLive(); buzz(15); }
+    return true;
+  }
+  const b = S.sessions[foodKey(S.me, FD)], items = b && b.food && b.food.items, i = +t.dataset.i;
+  if (act === "fqty" && items && items[i]) { items[i].q = Math.max(.5, Math.min(10, (items[i].q || 1) + +t.dataset.d)); dirtySession(foodKey(S.me, FD)); renderFood(); refreshLive(); return true; }
+  if (act === "fdel" && items) { items.splice(i, 1); dirtySession(foodKey(S.me, FD)); renderFood(); refreshLive(); return true; }
+  if (act === "fkeep" && items && items[i]) { const x = items[i]; saveCfg({ foods: [...(c.foods || []), { id: rnd().slice(0, 6), n: x.n, k: x.k, p: x.p }] }); renderFood(); return true; }
+  if (act === "funsave") { saveCfg({ foods: (c.foods || []).filter((_, j) => j !== i) }); renderFood(); return true; }
+  if (act === "fcopy") { for (const x of fuelDay(S.me, addDays(FD, -1)).items) addFood(x, x.q || 1); renderFood(); refreshLive(); return true; }
+  if (act === "fgoal") {
+    const k = num($("#fg-k").value), p = num($("#fg-p").value);
+    if ((k != null && (k < 800 || k > 6000)) || (p != null && (p < 20 || p > 400))) { toast({ tag: "Check your goals", title: "Calories 800 to 6000, protein 20 to 400 g" }); return true; }
+    saveCfg({ k: k ? Math.round(k) : 0, mode: $("#fg-m").value, p: p ? Math.round(p) : 0 });
+    const fb = S.sessions[foodKey(S.me, FD)]; if (fb && fb.food) { fb.food.goal = { k: k || 0, mode: $("#fg-m").value, p: p || 0 }; dirtySession(foodKey(S.me, FD)); }
+    toast({ tag: "Goals saved", title: `${k ? fmtN(k) + " kcal" : "No calorie goal"} · ${p ? p + " g protein" : "no protein goal"}` });
+    renderFood(); refreshLive(); return true;
+  }
+  return false;
+}
+
 /* ================= EVENTS ================= */
 let armT = null;
 function arm(key) { S.armed = key; clearTimeout(armT); armT = setTimeout(() => { S.armed = null; softRender(); }, 4000); }
@@ -2546,6 +2715,7 @@ document.addEventListener("click", e => {
   }
   if (act === "logfix") { S.date = t.dataset.date; S.day = t.dataset.fday; if (WEEKEND.has(S.day) && !S.sessions[curKey()] && S.sessions[keyOf(S.me, S.date, "WK")]) S.day = "WK"; S.view = "log"; render(); scrollTo(0, 0); return; }
   if (vaultClick(t, act)) return;
+  if (foodClick(t, act)) return;
   if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
   if (act === "uselast") {
     const last = lastFor(id, S.date, "wr"); if (!last) return;
@@ -2755,7 +2925,7 @@ function csvText() {
   const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"];
   const rows = [head];
   const R = replay(S.me), who = nameOf(S.me);
-  const mine = Object.values(S.sessions).filter(b => b.profile === S.me && !b.vault).sort((a, b) => a.date < b.date ? -1 : 1);
+  const mine = Object.values(S.sessions).filter(b => b.profile === S.me && !isMeta(b)).sort((a, b) => a.date < b.date ? -1 : 1);
   const row = o => rows.push(head.map(k => o[k] ?? ""));
   for (const b of mine) {
     const plan = planFor(S.me, b.day, b), planIds = new Set(plan.ex.map(e => e[0]));
@@ -2798,7 +2968,7 @@ async function doImport(file) {
     let n = 0;
     for (const [id, x] of Object.entries(o.custom || {})) if (!S.custom[id]) { S.custom[id] = x; S.outbox.x[id] = rnd(); CATALOGUE = null; }
     for (const [k, b] of Object.entries(o.sessions)) {
-      if (!/^[a-z0-9]+_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK|VAULT)$/.test(k) || !b) continue;
+      if (!/^[a-z0-9]+_\d{4}-\d{2}-\d{2}_(UA|LA|UB|LB|FR|WK|SA|SU|VAULT|FOOD)$/.test(k) || !b) continue;
       const cur = S.sessions[k];
       if (!cur || (b.ts || 0) > (cur.ts || 0)) { S.sessions[k] = b; S.outbox.s[k] = rnd(); n++; }
     }

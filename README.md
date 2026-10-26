@@ -57,6 +57,10 @@ Install to the home screen:
 ### Tabs
 
 - **Quest:** today's quest, points bar, countdown, weekly boss, cardio and sets, plus anything extra (**+ Add exercise, sport or activity**). Pick the cardio machine with the buttons on the cardio card. Tap the diamond next to a set to confirm it; an empty set uses the grey numbers from last time. The strip at the bottom shows the last 7 days: cleared, missed, rest or excused.
+- **Fuel** (card on the Quest tab, tap **+ Food**): log calories and protein through the day.
+  - **Ways to log:** quick add, your saved foods, recent foods, the meal-plan foods, or "Copy yesterday".
+  - **Goals:** set a calorie goal ("stay under" or "reach at least") and a protein goal. Hitting each is 10 XP and counts towards the Protein, Calories and Food log achievements. A "stay under" day only counts once at least half the target is logged.
+  - **On the board:** others see only "Protein ✓ / Calories ✓", never your numbers.
 - **Vault:**
   - **Opening a box:** tap a loot box (the glowing tied cube). It bursts open and a reel spins and stops on your prize: a card pack, a frame or a title.
   - **Packs:** packs can be opened straight away or saved. Swipe across the top to tear one open, then swipe the cards away. Drag a card a little way to see the glow of the next card.
@@ -156,6 +160,16 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - Warnings rotate every 15 seconds with a glitch transition: 22 general lines, 2 per day, plus live ones about your streak, XP to the next level and the gap to the hunter nearest you on the board. The Penalty Zone has its own set.
 - Streak: consecutive cleared quests. A missed quest day resets it; rest days and excused days are skipped, and rest-day clears add to it.
 - Perfect week and month: every quest day in it cleared.
+
+**Fuel**
+
+- **Daily log row:** keyed `<hunter>_<date>_FOOD`, with body `{ food: { items: [{ id, n, k, p, q }], goal: { k, mode, p } } }`.
+  - `q` is the number of serves.
+  - `goal` is a snapshot of the hunter's goals that day, so changing goals never rewrites past days.
+  - The row syncs like a session. Deleting every item deletes the row.
+- **Goals and saved foods:** stored in `hunters.program._fuel = { k, mode: "max" | "min", p, foods: [{ id, n, k, p }] }`.
+- **Meal-plan foods:** the `STARTER` list in `index.html`.
+- **Replay:** adds 10 XP per goal hit. Food days only count from the hunter's first training session.
 
 **Cards and loot boxes**
 
