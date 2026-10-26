@@ -351,7 +351,10 @@ details.hist summary::-webkit-details-marker { display: none; }
 .wd.ok i { background: var(--glow); border-color: var(--glow); box-shadow: 0 0 6px var(--glow); }
 .wd.miss i { border-color: var(--red); transform: none; border: 0; }
 .wd.miss i::before { content: "✕"; display: block; color: var(--red); font-size: 13px; line-height: 14px; text-align: center; font-style: normal; font-weight: 700; }
-.wd.rest i, .wd.ex i, .wd.pre i { border-radius: 50%; transform: none; border-color: var(--muted); opacity: .6; }
+.wd { border: 0; background: none; padding: 2px 0; }
+.wd.rest i, .wd.pre i { border-radius: 50%; transform: none; border-color: var(--muted); opacity: .6; }
+.wd.ex i { transform: none; border: 0; width: auto; height: 14px; }
+.wd.ex i::before { content: "E"; font-style: normal; font-family: var(--font-display); font-weight: 700; font-size: 13px; line-height: 14px; color: var(--gold); }
 .wd.now i { border-color: var(--gold); }
 .days button.rest { opacity: .62; border-style: dashed; }
 .days.sched button[aria-pressed="false"] { opacity: .55; border-style: dashed; }
@@ -1616,7 +1619,7 @@ function questHTML(R) {
   if (r.cardio > 0) goals.unshift(`<li class="${cardioMeets(b, r.cardio) ? "ok" : ""}"><span>${esc(cardioGoal(S.day, kind))}</span><span>[${c.total ? Math.round(c.total) : 0}/${r.cardio} min]</span></li>`);
   const done = questDone(b, pen), isToday = S.date === todayStr(), excused = b && b.excused, rest = !pen && !isQuestDay(S.me, S.date);
   const seed = parseDate(S.date).getDate();
-  const exBtn = label => `<button class="linkbtn${S.armed === "excuse" ? " armed" : ""}" data-act="excuse">${S.armed === "excuse" ? "Tap again to confirm" : label}</button>`;
+  const exBtn = label => `<button class="linkbtn" data-act="excuse">${label}</button>`;
   let foot;
   if (excused) foot = `<div class="qfoot"><p class="note"><b>Excused.</b> Rest up. No penalty and no XP lost for this day.</p><button class="linkbtn" data-act="unexcuse">Undo</button></div>`;
   else if (done) foot = pen ? `<p class="cleared">Penalty survived<small>+75 XP. The Penalty Zone releases you. For now.</small></p>` : `<p class="cleared">Quest cleared<small>+50 XP. The Penalty Zone will have to wait.</small></p>`;
@@ -1640,9 +1643,9 @@ function weekStrip(R) {
   for (let i = 6; i >= 0; i--) {
     const d = addDays(t, -i), st = R.clr[d] ? "ok" : R.exc[d] ? "ex" : d === t ? "now" : !R.first || d < R.first ? "pre" : isQuestDay(S.me, d) ? "miss" : "rest";
     const lbl = { ok: "Cleared", ex: "Excused", now: "Today", pre: "Before you started", miss: "Missed", rest: "Rest day" }[st];
-    cells.push(`<span class="wd ${st}" title="${fmtDate(d)}: ${lbl}"><b>${parseDate(d).toLocaleDateString("en-AU", { weekday: "narrow" })}</b><i aria-label="${lbl}"></i></span>`);
+    cells.push(`<button class="wd ${st}" data-act="logfix" data-date="${d}" data-fday="${dayForDate(d)}" aria-label="${fmtDate(d)}: ${lbl}"><b>${parseDate(d).toLocaleDateString("en-AU", { weekday: "narrow" })}</b><i></i></button>`);
   }
-  return `<div class="wstrip" aria-label="Last seven days">${cells.join("")}<small>◆ cleared · ✕ missed · ○ rest or excused</small></div>`;
+  return `<div class="wstrip" aria-label="Last seven days">${cells.join("")}<small>◆ cleared · ✕ missed · E excused · ○ rest day. Tap a day to open it.</small></div>`;
 }
 function bossHTML(R) {
   const B = R.boss;
@@ -1959,7 +1962,7 @@ function renderRecords() {
     <section class="win card"><h2>Hunter</h2><p>Signed in as <b style="color:var(--fg)">${esc(nameOf(S.me))}</b>.</p>
       <div class="ex-actions"><button class="btn${S.armed === "switch" ? " armed" : ""}" data-act="switch">${S.armed === "switch" ? "Tap again to switch" : "Switch hunter"}</button></div></section>
     <section class="win card"><h2>Check my log</h2><p>Looks for numbers that are probably typos, like 1000 kg instead of 100. Fix the number and anything it unlocked by mistake (XP, achievements, records, loot) is taken back automatically.</p>
-      ${sus.length ? `<div class="sus">${sus.slice(0, 30).map(x => `<div><span><b>${esc(x.txt)}</b><small>${fmtDate(x.b.date)} · ${esc(x.why)}</small></span><button class="btn" data-act="logfix" data-date="${x.b.date}" data-day="${x.b.day}">Fix</button></div>`).join("")}</div>` : `<p class="floor ok">Nothing unusual found.</p>`}</section>
+      ${sus.length ? `<div class="sus">${sus.slice(0, 30).map(x => `<div><span><b>${esc(x.txt)}</b><small>${fmtDate(x.b.date)} · ${esc(x.why)}</small></span><button class="btn" data-act="logfix" data-date="${x.b.date}" data-fday="${x.b.day}">Fix</button></div>`).join("")}</div>` : `<p class="floor ok">Nothing unusual found.</p>`}</section>
     <section class="win card"><div class="toggle"><h2>Sound</h2><button class="btn${S.sound ? " primary" : ""}" data-act="sound">${S.sound ? "On" : "Off"}</button></div><p>System chimes for cleared quests, records, level ups and achievements.</p></section>
     <section class="win card"><h2>Export for analysis</h2><p>A spreadsheet-friendly CSV of every set, bonus exercise and cardio session you've logged. Send it to Claude for trend analysis.</p>
       <div class="ex-actions"><button class="btn primary" id="csvBtn">Export CSV</button></div></section>
@@ -2541,7 +2544,7 @@ document.addEventListener("click", e => {
     const b = session(false); if (b && b.cardio) { b.cardio.kind = t.dataset.k; dirtySession(curKey()); }
     persist(); render(); return;
   }
-  if (act === "logfix") { S.date = t.dataset.date; S.day = t.dataset.day; S.view = "log"; render(); scrollTo(0, 0); return; }
+  if (act === "logfix") { S.date = t.dataset.date; S.day = t.dataset.fday; if (WEEKEND.has(S.day) && !S.sessions[curKey()] && S.sessions[keyOf(S.me, S.date, "WK")]) S.day = "WK"; S.view = "log"; render(); scrollTo(0, 0); return; }
   if (vaultClick(t, act)) return;
   if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
   if (act === "uselast") {
@@ -2554,7 +2557,10 @@ document.addEventListener("click", e => {
   if (act === "baddset") { const b = session(true), en = b.bonus[+t.dataset.bi]; en.sets ||= []; while (en.sets.length < 3) en.sets.push({}); en.sets.push({}); render(); }
   if (act === "bremove") { const b = session(true); b.bonus.splice(+t.dataset.bi, 1); dirtySession(curKey()); render(); }
   if (act === "rest") startTimer(+t.dataset.sec, t.dataset.name);
-  if (act === "excuse") { if (S.armed !== "excuse") { arm("excuse"); refreshLive(); return; } S.armed = null; session(true).excused = true; dirtySession(curKey()); render(); }
+  if (act === "excuse") {
+    if (!confirm(`Excuse ${S.date === todayStr() ? "today" : fmtDate(S.date)}?\n\nUse this for sick or injured days. No XP is lost and the Penalty Zone won't start. You can undo it later.`)) return;
+    S.armed = null; session(true).excused = true; dirtySession(curKey()); render();
+  }
   if (act === "unexcuse") { const b = session(false); if (b) { delete b.excused; dirtySession(curKey()); } render(); }
   if (act === "switch") { if (S.armed !== "switch") { arm("switch"); renderRecords(); return; } S.armed = null; S.me = null; persist(); render(); }
   if (act === "sound") { S.sound = !S.sound; persist(); renderRecords(); if (S.sound) chime("clear"); }
