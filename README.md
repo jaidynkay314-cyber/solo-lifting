@@ -58,7 +58,8 @@ Install to the home screen:
 
 - **Quest:** today's quest, points bar, countdown, weekly boss, cardio and sets, plus anything extra (**+ Add exercise, sport or activity**). Pick the cardio machine with the buttons on the cardio card. Tap the diamond next to a set to confirm it; an empty set uses the grey numbers from last time. The strip at the bottom shows the last 7 days: cleared, missed, rest or excused.
 - **Fuel** (card on the Quest tab, tap **+ Food**): log calories and protein through the day.
-  - **Ways to log:** quick add, your saved foods, recent foods, the meal-plan foods, or "Copy yesterday".
+  - **Ways to log:** search by weight, quick add, your saved foods, recent foods, the meal-plan foods, or "Copy yesterday".
+  - **Search by weight:** about 85 built-in generic foods with values per 100 g, which work offline. **Products** searches packaged foods in the free Open Food Facts database (online, Australian products first, limited to about 10 searches a minute per phone). Pick a result, enter the grams, and it works out the calories and protein.
   - **Goals:** set a calorie goal ("stay under" or "reach at least") and a protein goal. Hitting each is 10 XP and counts towards the Protein, Calories and Food log achievements. A "stay under" day only counts once at least half the target is logged.
   - **On the board:** others see only "Protein ✓ / Calories ✓", never your numbers.
 - **Vault:**
