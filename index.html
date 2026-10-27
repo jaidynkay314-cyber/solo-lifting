@@ -727,6 +727,15 @@ body.noscroll { overflow: hidden; }
 .flog .step { display: inline-flex; align-items: center; gap: 6px; }
 .flog .btn { padding: 4px 10px; }
 .fueltick { color: #5ee39a; }
+/* ---------- warm-ups, swaps ---------- */
+.wu { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 2px 0 2px 11px; border-left: 2px solid var(--edge-dim); }
+.wu > span { flex-basis: 100%; font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 11px; color: var(--muted); }
+.wu b { color: var(--fg); font-weight: 600; white-space: nowrap; }
+.wu small { flex-basis: 100%; font-size: 11.5px; }
+.swapbox { border: 1px dashed var(--edge-dim); padding: 8px; margin-top: 4px; }
+.swapbox .sub { margin: 0 0 6px; }
+.swapped { margin: 0; font-size: 12px; color: var(--gold); }
+
 /* ---------- recipes, report ---------- */
 .rcbox { border: 1px solid #3a9a6a; background: var(--sunk); padding: 12px; }
 .rctot { margin: 6px 0; font-size: 13.5px; color: var(--muted); }
@@ -1250,7 +1259,7 @@ async function syncNow() {
 }
 function dirtySession(k) {
   const b = S.sessions[k];
-  if (b && isEmpty(b)) delete S.sessions[k]; else if (b) b.ts = Date.now();
+  if (b && isEmpty(b) && !(b.swaps && Object.keys(b.swaps).length)) delete S.sessions[k]; else if (b) b.ts = Date.now();
   S.outbox.s[k] = rnd(); S.ver++; persist(); setNet(S.net === "off" ? "off" : "ok"); pushSoon();
 }
 function dirtyHunter(id) { S.outbox.h[id] = rnd(); S.ver++; persist(); pushSoon(); }
@@ -1572,7 +1581,7 @@ function sysTarget(e, hist) {
     if (reps.some(r => r < e.lo)) {
       const p = hist[1], pw = p ? Math.max(...p.sets.slice(0, work.length).map(s => +s.w || 0)) : 0;
       if (p && pw === w && p.sets.slice(0, work.length).filter(s => (+s.w || 0) === pw).some(s => (+s.r || 0) < e.lo))
-        return { w: r05(w * .9), r: e.lo, down: true, why: `Under ${e.lo} reps two sessions running. Drop about 10% and build back up.` };
+        return { w: Math.max(inc, Math.round(w * .9 / inc) * inc), r: e.lo, down: true, why: `Under ${e.lo} reps two sessions running. Drop about 10% and build back up.` };
       return { w, r: e.lo, why: `Repeat this weight and aim for ${e.lo} on every set.` };
     }
     return { w, r: Math.min(e.hi, Math.min(...reps) + 1), why: `Same weight. Aim for one more rep on each set, up to ${e.hi}.` };
@@ -1580,6 +1589,37 @@ function sysTarget(e, hist) {
   const f = e.type, v = work.map(s => +s[f] || 0), step = f === "s" ? 5 : 1;
   if (v.length >= (e.base || 3) && v.every(x => x >= e.hi)) return { [f]: Math.max(...v) + step * 2, up: true, why: f === "s" ? "Top of the range on every set. Add 10 seconds." : "Top of the range on every set. Add 2 reps or try a harder variation." };
   return { [f]: Math.min(...v) + step, why: f === "s" ? "Add 5 seconds to each hold." : "Aim for one more rep on each set." };
+}
+/* muscle groups: what can stand in for what, and which region each works (for warm-ups) */
+const GROUPS = [
+  ["push", ["chest-press", "incline-press", "bench-press", "db-bench", "smith-bench", "pec-deck", "cable-fly", "db-fly", "pushups", "dip-machine", "dips"]],
+  ["push", ["shoulder-press", "ohp", "db-shoulder"]],
+  ["push", ["lateral-raise", "db-lat-raise"]],
+  ["push", ["pushdown", "oh-ext", "skullcrusher", "dip-machine", "dips", "diamond-pushups"]],
+  ["pull", ["lat-pulldown", "pullup", "pullups-bw"]],
+  ["pull", ["cable-row", "cs-row", "bb-row", "db-row"]],
+  ["pull", ["rear-delt", "face-pull"]],
+  ["pull", ["cable-curl", "db-curl", "hammer-curl", "preacher-curl"]],
+  ["legs", ["leg-press", "leg-press-wide", "hack-squat", "smith-squat", "squat", "goblet-squat", "db-lunge", "lunges"]],
+  ["legs", ["leg-ext", "leg-press", "hack-squat", "goblet-squat"]],
+  ["legs", ["seated-curl", "lying-curl", "rdl"]],
+  ["legs", ["hip-thrust", "bb-hip-thrust", "kickback", "glute-bridge", "leg-press-wide"]],
+  ["legs", ["abductor", "adductor"]],
+  ["legs", ["calf", "seated-calf"]],
+  ["core", ["crunch", "ab-machine", "situps", "crunches", "leg-raises", "torso-rotation"]],
+  ["core", ["back-ext", "superman", "rdl"]]
+];
+const regionOf = id => (GROUPS.find(g => g[1].includes(id)) || [CX(id) && CX(id).stat === "AGI" ? "legs" : "other"])[0];
+const swapsFor = id => [...new Set(GROUPS.filter(g => g[1].includes(id)).flatMap(g => g[1]))].filter(x => x !== id && CX(x));
+/* warm-up ramp from the working weight: a full ramp for the first exercise of each body region, one feeler set after that.
+   Based on common practice: about 50% for 8 to 10 reps, 70 to 75% for 5, 85% for 2, fewer reps as it gets heavier. */
+function warmups(w, full) {
+  if (!w || w <= 0) return [];
+  const step = w >= 20 ? 2.5 : 1, rd = v => Math.max(step, Math.round(v / step) * step);
+  const plan = !full ? (w >= 15 ? [[.6, 5]] : []) : w >= 40 ? [[.5, 8], [.7, 5], [.85, 2]] : w >= 20 ? [[.5, 10], [.75, 5]] : [[.5, 10]];
+  const out = [];
+  for (const [pc, r] of plan) { const x = rd(w * pc); if (x < w && (!out.length || x > out[out.length - 1].w)) out.push({ w: x, r }); }
+  return out;
 }
 const tgtTxt = (t, type) => type === "wr" ? (t.w ? `${t.w} kg × ${t.r}` : `${t.r} reps`) : type === "s" ? `${t.s} s` : `${t.r} reps`;
 function lastBonus(id, beforeDate) {
@@ -1873,6 +1913,7 @@ function renderLog(R) {
       <div class="field"><input id="c-kcal" data-c="kcal" inputmode="numeric" placeholder="150" value="${c.kcal ?? ""}" aria-label="Calories from the machine"><span>kcal</span></div>
     </div><p class="derived" id="derived">${derivedTxt(c, kind)}</p></article>`;
 
+  const warmed = new Set();
   for (const e of list) {
     const arr = (b && b.ex[e.id]) || [];
     const n = Math.max(e.sets, arr.length);
@@ -1882,8 +1923,24 @@ function renderLog(R) {
     const unit = e.type === "s" ? " s" : "";
     h += `<article class="win ex${exDone(b, e) ? " complete" : ""}" data-card="${esc(e.id)}">
       <div class="ex-h"><h2>${boss ? "👹 " : ""}${esc(e.name)}</h2><span class="target">${pen && !e.extra ? `<em>${e.sets}</em>` : e.sets} × ${e.lo}–${e.hi}${unit}</span></div>
+      ${b && b.swaps && b.swaps[e.id] ? `<p class="swapped">Swapped in for ${esc((CX(b.swaps[e.id]) || {}).name || b.swaps[e.id])} today</p>` : ""}
       <p class="last">${last ? `Last <strong>${last.sets.map(s => setTxt(s, e.type)).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>` : e.extra ? "Bonus exercise. Log what you did." : "New skill unlocked: start light and find your working level."}${best}</p>
       ${tg ? `<p class="sys${tg.up ? " up" : tg.down ? " down" : ""}"><span>System</span><b>${tgtTxt(tg, e.type)}</b>${tg.up ? `<i>Level up</i>` : tg.down ? `<i>Reset</i>` : ""}<small>${esc(tg.why)}</small></p>` : ""}
+      ${(() => {
+        if (e.type !== "wr") return "";
+        const reg = regionOf(e.id), full = !warmed.has(reg);
+        const ww = (tg && +tg.w) || (last ? Math.max(...last.sets.map(s => +s.w || 0)) : 0);
+        if (!last) { warmed.add(reg); return `<p class="wu"><span>Warm-up</span>New exercise: start with a weight you could lift 15 times, then build up to your working sets.</p>`; }
+        const wu = warmups(ww, full); warmed.add(reg);
+        if (!wu.length) return full ? `<p class="wu"><span>Warm-up</span>Light weight: do your first set slow and controlled.</p>` : "";
+        return `<p class="wu"><span>Warm-up${full ? "" : " · same area, one feeler set"}</span>${wu.map(x => `<b>${x.w} kg × ${x.r}</b>`).join(" → ")} → then <b>${e.sets} × ${ww} kg</b><small>About 60 s between warm-up sets. They don't count as sets or points.</small></p>`;
+      })()}
+      ${S.swapOpen === e.id && !e.extra ? `<div class="swapbox"><p class="sub">Swap for today only. ${b && b.swaps && b.swaps[e.id] ? "" : "Your plan stays the same."}</p><div class="fchips">${(() => {
+        const inPlan = new Set(list.map(x => x.id)), back = b && b.swaps && b.swaps[e.id];
+        const opts = swapsFor(e.id).filter(x => !inPlan.has(x));
+        if (back && !opts.includes(back) && !inPlan.has(back)) opts.unshift(back);
+        return opts.length ? opts.map(x => { const lf = lastFor(x, S.date, typeOf(x)); return `<button class="fchip" data-act="swapto" data-ex="${esc(e.id)}" data-to="${esc(x)}"><b>${x === back ? "↩ " : ""}${esc(CX(x).name)}</b><small>${lf ? `last ${lf.sets.map(s => setTxt(s, typeOf(x))).slice(0, 3).join(" · ")}` : "not done before"}</small></button>`; }).join("") : `<p class="sub">No close match in the library. Add one from the list at the bottom as a bonus exercise instead.</p>`;
+      })()}</div></div>` : ""}
       <div class="sets">`;
     for (let i = 0; i < n; i++) {
       const s = arr[i] || {}, ls = last && last.sets[Math.min(i, last.sets.length - 1)];
@@ -1895,6 +1952,7 @@ function renderLog(R) {
     h += `</div><div class="ex-actions">
       ${tg && e.type === "wr" && tg.w ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Fill target weights</button>` : ""}
       <button class="btn" data-act="addset" data-ex="${esc(e.id)}">+ Set</button>
+      ${e.extra ? "" : `<button class="btn" data-act="swapopen" data-ex="${esc(e.id)}" aria-pressed="${S.swapOpen === e.id}">Swap</button>`}
       <button class="btn" data-act="rest" data-name="${esc(e.name)}" data-sec="${rest}">Rest ${rest} s</button>
       ${e.extra ? `<button class="btn" data-act="remove" data-ex="${esc(e.id)}">Remove</button>` : ""}</div></article>`;
   }
@@ -3474,6 +3532,20 @@ document.addEventListener("click", e => {
     return;
   }
   if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
+  if (act === "swapopen") { S.swapOpen = S.swapOpen === id ? null : id; render(); const el = document.querySelector(`[data-card="${id}"]`); if (el) el.scrollIntoView({ block: "nearest" }); return; }
+  if (act === "swapto") {
+    const to = t.dataset.to, b = session(true), cur = b.ex[id] || [];
+    if (cur.some(x => setOk(typeOf(id), x))) { toast({ tag: "Can't swap", title: "Sets are already confirmed", text: "Undo them first, or add the other exercise from the list at the bottom." }); return; }
+    if (cur.some(x => hasVals(typeOf(id), x)) && !confirm("Clear the numbers you've typed for this exercise and swap it?")) return;
+    const pe = (b.plan.ex || []).find(x => x[0] === id); if (!pe || !CX(to)) return;
+    pe[0] = to; delete b.ex[id];
+    b.swaps ||= {}; const orig = b.swaps[id] || id; delete b.swaps[id];
+    if (to !== orig) b.swaps[to] = orig;
+    S.swapOpen = null; dirtySession(curKey()); render();
+    const el = document.querySelector(`[data-card="${to}"]`); if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    toast({ tag: "Swapped for today", title: CX(to).name });
+    return;
+  }
   if (act === "uselast") {
     const e = exList().find(x => x.id === id), tg = e && sysTarget(e, histFor(id, S.date, "wr")); if (!tg || !tg.w) return;
     const b = session(true), arr = (b.ex[id] ||= []), n = e.sets;
