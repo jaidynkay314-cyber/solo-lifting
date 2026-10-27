@@ -1098,8 +1098,8 @@ function baseAchievements() {
   cat("Cardio", "🫀", "cardioMin", 12, [[60, "First Hour"], [300, "Five Hours"], [600, "Ten Hours"], [1500, "A Day of Running"], [3000, "Fifty Hours"], [6000, "Hundred Hours"], [10000, "Ten Thousand Minutes"], [20000, "Iron Lungs"], [40000, "Perpetual Motion"]], n => `Log ${fmtN(n)} minutes of cardio`);
   cat("Distance", "🏃", "km", 1.3, [[5, "First 5K"], [10, "Ten K"], [21.1, "Half Marathon"], [42.2, "Full Marathon"], [100, "Hundred K"], [250, "Long Hauler"], [500, "Five Hundred K"], [1000, "Thousand Kilometres"], [2000, "Ultra Machine"], [4000, "Across the Continent"], [40075, "Around the World", 1]], n => n === 40075 ? "Cover 40,075 km, the distance around the Earth" : `Cover ${n} km`);
   cat("Level", "⭐", "level", L => 50 * L * (L + 1) / 170, [[5, "D-Rank Hunter"], [10, "C-Rank Hunter"], [15, "Steady Climber"], [20, "B-Rank Hunter"], [25, "Seasoned"], [30, "Elite"], [35, "A-Rank Hunter"], [40, "Rare Talent"], [45, "Near the Peak"], [50, "S-Rank Hunter"], [60, "Beyond S"], [75, "Transcendent"], [100, "Monarch"]], n => `Reach Level ${n}`, { noXp: true });
-  cat("Upper body", "💪", "upperQ", .25, [[1, "First Push"], [10, "Pressing On"], [25, "Upper Hand"], [50, "Armoured"], [100, "Titan Torso"], [200, "Atlas"], [300, "Colossus"]], n => `Clear ${plural(n, "Monday or Wednesday quest")}`);
-  cat("Leg day", "🦵", "lowerQ", .25, [[1, "Didn't Skip"], [10, "Leg Day Regular"], [25, "Leg Day Survivor"], [50, "Tree Trunks"], [100, "Quad Squad Captain"], [200, "Pillars of Iron"], [300, "Earthshaker"]], n => `Clear ${plural(n, "Tuesday or Thursday quest")}`);
+  cat("Upper body", "💪", "upperQ", .25, [[1, "First Push"], [10, "Pressing On"], [25, "Upper Hand"], [50, "Armoured"], [100, "Titan Torso"], [200, "Atlas"], [300, "Colossus"], [1000, "Lord of the Wings", 1]], n => `Clear ${plural(n, "upper body quest")} (most of the day's sets on upper body, 6 or more)`);
+  cat("Leg day", "🦵", "lowerQ", .25, [[1, "Didn't Skip"], [10, "Leg Day Regular"], [25, "Leg Day Survivor"], [50, "Tree Trunks"], [100, "Quad Squad Captain"], [200, "Pillars of Iron"], [300, "Earthshaker"], [1000, "Lord of the Thighs", 1]], n => `Clear ${plural(n, "leg day quest")} (most of the day's sets on legs, 6 or more)`);
   cat("Fridays", "🎯", "friQ", .12, [[1, "Finisher"], [10, "Friday Regular"], [25, "Thank Gym It's Friday"], [50, "Weekend Earned"], [100, "Friday Legend"]], n => `Clear ${plural(n, "Friday quest")}`);
   cat("Recovery runs", "🌅", "wkQ", .1, [[1, "Weekend Warrior"], [10, "Sunday Strider"], [25, "Rest Day Rebel"], [50, "No Days Off"], [100, "Weekend Myth"]], n => `Clear ${plural(n, "weekend quest")}`);
   cat("Records", "🏆", "prs", .3, [[1, "New Record"], [10, "Record Breaker"], [25, "PR Hunter"], [50, "Record Collector"], [100, "Hall of Records"], [250, "Unbeaten"], [500, "History Maker"]], n => `Set ${plural(n, "personal record")}`);
@@ -1495,6 +1495,17 @@ function metricVal(M, metric, st) {
 }
 
 /* Replay a hunter's history day by day: penalties, XP, levels, stats, records, achievements and feed events. */
+/* what a cleared day trained: whichever of upper body or legs got most of the confirmed sets (at least 6),
+   so custom plans count by what was actually done, not which weekday it was */
+function dayFocus(bs) {
+  let up = 0, lo = 0;
+  const add = (id, n) => { const r = regionOf(id); if (r === "push" || r === "pull" || (r === "other" && CX(id) && CX(id).stat === "STR")) up += n; else if (r === "legs") lo += n; };
+  for (const b of bs) {
+    for (const [id, arr] of Object.entries(b.ex || {})) add(id, arr.filter(s => setOk(typeOf(id), s)).length);
+    for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type !== "min") add(e.id, (e.sets || []).filter(s => setOk(L.type, s)).length); }
+  }
+  return up >= 6 && up > lo ? "upper" : lo >= 6 && lo > up ? "lower" : null;
+}
 function replay(hid) {
   const c = S.cache[hid]; if (c && c.ver === S.ver) return c.r;
   const byDate = {};
@@ -1593,8 +1604,7 @@ function replay(hid) {
       xp += Math.min(BONUS_CAP, bonusXp);
       if (done) {
         M.quests++; xp += 50;
-        if (done.day === "UA" || done.day === "UB") M.upperQ++;
-        if (done.day === "LA" || done.day === "LB") M.lowerQ++;
+        { const f = dayFocus(bs); if (f === "upper") M.upperQ++; else if (f === "lower") M.lowerQ++; }
         if (done.day === "FR") M.friQ++;
         if (WEEKEND.has(done.day)) M.wkQ++;
         if (owed) { M.penSurvived++; xp += 25; R.events.push({ d, type: "pzs" }); box("C", "pz:" + d, d); }

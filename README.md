@@ -271,6 +271,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Weekly balance** (My program): front and back figures coloured by the sets per muscle a week the plan would give if every quest day is done (`planMuscles()`), with Missing, Under 10 and Over 20 flags and a full list. Updates live while editing. Forearms, obliques and traps aren't flagged.
 
 ## v7.4 additions
+- **Upper body and leg day quests** now count by what was trained: a cleared day counts as upper body or leg day when that area got most of the confirmed sets, with at least 6 (`dayFocus()`). Custom plans and Friday catch-ups count too. Hidden 1000 tiers: Lord of the Wings (upper), Lord of the Thighs (legs).
 - **Around the World** (hidden Distance tier, Mythic): 40,075 km, shown as ??? with a hidden target until earned. Any achievement tier can be hidden by adding a third value `1` to its list entry.
 - **Lift numbers private by default.** The feed still announces records ("set a new record on Leg press") but only shows the weight to the lifter, or to everyone if that person opts in. On someone else's profile, the exercise log shows session counts, a sparkline and progress as a percentage, never weights or reps (cardio is unchanged). Toggle: Profile → Lift numbers (stored in `hunters.program._priv.nums`, default off). `showNums(id)`.
 
