@@ -1247,6 +1247,11 @@ const pending = () => Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).l
 function setNet(s) { S.net = s; const el = $("#net"); if (el) { el.dataset.s = s; el.textContent = netText(); } }
 const netText = () => !ONLINE ? "This phone only" : S.net === "ok" ? (pending() ? "Saving" : "Synced") : S.net === "busy" ? "Syncing" : "Offline, will sync";
 let pruned = false;
+/* who appears on the board: a phone-only leftover is hidden when a real hunter has the same name */
+function boardIds() {
+  const real = new Set(Object.values(S.hunters).filter(h => !h.local && !S.outbox.h[h.id]).map(h => h.name.toLowerCase()));
+  return Object.keys(S.hunters).filter(id => { const h = S.hunters[id]; return id === S.me || !((h.local || S.outbox.h[id]) && real.has((h.name || "").toLowerCase()) && Object.values(S.hunters).some(x => x.id !== id && !x.local && x.name.toLowerCase() === h.name.toLowerCase())); });
+}
 async function pull() {
   if (!ONLINE) return false;
   try {
@@ -1265,7 +1270,11 @@ async function pull() {
         pruned = true;
         const live = new Set((await ar.json()).map(x => x.id));
         if (live.size) for (const id of Object.keys(S.hunters)) {
-          if (live.has(id) || id === S.me || S.outbox.h[id] || S.hunters[id].local) continue;
+          if (live.has(id) || id === S.me) continue;
+          // not on the board: drop it if it has no sessions here (old placeholders), otherwise only if it was uploaded before
+          const has = Object.values(S.sessions).some(b => b.profile === id && !isMeta(b));
+          if (has && (S.outbox.h[id] || S.hunters[id].local)) continue;
+          delete S.outbox.h[id];
           delete S.hunters[id]; changed = true;
           for (const [k, b] of Object.entries(S.sessions)) if (b.profile === id && !S.outbox.s[k]) delete S.sessions[k];
         }
@@ -1769,7 +1778,7 @@ function warnPool(R, pen) {
   if (R.streak >= 2) pool.push(`Streak at ${R.streak}. It would be a shame if something happened to it.`);
   if (R.streak >= 5) pool.push(`${R.streak} quests in a row. The System is starting to respect you. Slightly.`);
   pool.push(`${R.lv.need - R.lv.into} XP to Level ${R.lv.L + 1}. The System is holding your rank hostage.`);
-  const rows = Object.keys(S.hunters).filter(id => id !== S.me).map(id => ({ id, xp: replay(id).xp })).sort((a, b) => b.xp - a.xp);
+  const rows = boardIds().filter(id => id !== S.me).map(id => ({ id, xp: replay(id).xp })).sort((a, b) => b.xp - a.xp);
   const ahead = rows.filter(r => r.xp > R.xp).pop(), behind = rows.find(r => r.xp <= R.xp);
   if (ahead) pool.push(`${nameOf(ahead.id)} is ${fmtN(ahead.xp - R.xp)} XP ahead of you. The System suggests closing the gap.`);
   else if (behind) pool.push(`You lead the board by ${fmtN(R.xp - behind.xp)} XP. ${nameOf(behind.id)} is coming.`);
@@ -2145,7 +2154,7 @@ const EV_TXT = {
   pull: e => ["🃏", `pulled <b style="color:${CR[e.c.r].col}">${esc(e.c.n)}</b> (${CR[e.c.r].label})`]
 };
 function renderBoard() {
-  const all = Object.keys(S.hunters).map(id => ({ id, R: replay(id) })).sort((a, b) => (b.R.xp - a.R.xp) || nameOf(a.id).localeCompare(nameOf(b.id)));
+  const all = boardIds().map(id => ({ id, R: replay(id) })).sort((a, b) => (b.R.xp - a.R.xp) || nameOf(a.id).localeCompare(nameOf(b.id)));
   let h = `<div class="list"><div class="sect">Hunter rankings<small>${all.length} hunter${all.length === 1 ? "" : "s"}</small></div><div class="rows">`;
   all.forEach(({ id, R }, i) => {
     const t = titleOf(id, R);
