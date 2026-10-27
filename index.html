@@ -762,6 +762,21 @@ body.noscroll { overflow: hidden; }
 .mmrows { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
 .mmrow { display: grid; grid-template-columns: 9.5em 1fr 2.6em; gap: 8px; align-items: center; text-align: left; background: none; border: 0; padding: 3px 0; color: var(--fg); font-size: 13px; }
 .mmrow b { text-align: right; font-family: var(--font-display); }
+
+.mmmini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 300px; margin: 0 auto; width: 100%; }
+.mmmini .mmsvg { height: auto; aspect-ratio: 200 / 460; }
+.mmmini .mmm { cursor: default; }
+.mmlegend.row { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 4px 12px; }
+.mmlegend.row span { display: inline-flex; align-items: center; gap: 5px; }
+.mmlegend.row i { width: 11px; height: 11px; }
+.balance { display: flex; flex-direction: column; gap: 8px; }
+.balance .toggle .sub { margin: 0; }
+.bal { margin: 0; font-size: 13.5px; padding: 6px 9px; border-left: 2px solid var(--edge-dim); background: var(--sunk); }
+.bal b { display: block; font-family: var(--font-display); letter-spacing: .12em; text-transform: uppercase; font-size: 11.5px; }
+.bal.bad { border-color: var(--red); } .bal.bad b { color: var(--red); }
+.bal.warn { border-color: #2a96dc; } .bal.warn b { color: #4cc3ff; }
+.bal.hi { border-color: var(--gold); } .bal.hi b { color: var(--gold); }
+.bal.ok { border-color: #5ee39a; } .bal.ok b { color: #5ee39a; }
 @media (max-width: 360px) { .mmwrap { grid-template-columns: minmax(0, 1fr) 104px; } }
 
 /* ---------- warm-ups, swaps ---------- */
@@ -2039,6 +2054,7 @@ function renderProgram() {
       <p>Changes apply from today. Quests you've already logged keep the plan they were done with. ${S.schemaOld ? "<b>Run supabase-update-v4.sql</b> so your program syncs between phones." : ""}</p></section>
     <section class="win card"><h2>Quest days</h2><p>Pick the days you commit to. Miss one and you're sent to the Penalty Zone. Every other day is optional: reach ${TARGET("UA")} points and it still counts as cleared. Changes apply from today.</p>
       <div class="days sched" role="group" aria-label="Quest days">${DAYS.map(d => `<button data-act="sched" data-d="${d}" aria-pressed="${schedFor(S.me, todayStr()).includes(d)}"><b>${PROGRAM[d].short}</b><small>${schedFor(S.me, todayStr()).includes(d) ? "Quest" : "Rest"}</small></button>`).join("")}</div></section>
+    ${balanceHTML(S.me)}
     <div class="days" role="group" aria-label="Day to edit">${DAYS.map(d => `<button data-pday="${d}" aria-pressed="${d === day}"><b>${PROGRAM[d].short}</b><small>${esc(progDay(S.me, d).label)}</small></button>`).join("")}</div>
     <section class="win card">
       <div class="pgrid">
@@ -3118,13 +3134,16 @@ function weekReport(hid, mon) {
   const fd = days.map(d => fuelDay(hid, d)).filter(f => f.items.length), c = fuelCfg(hid);
   const kAvg = fd.length ? Math.round(sumBy(fd, f => f.k) / fd.length) : null, pAvg = fd.length ? Math.round(sumBy(fd, f => f.p) / fd.length) : null;
   const active = bs.length > 0 || fd.length > 0;
+  const mv = muscleWeek(hid, mon, sun).v, mk = Object.keys(MUSCLES).filter(k => !MINOR.has(k));
+  const behind = mk.filter(k => mv[k] < 5).sort((a, b) => mv[a] - mv[b]), growN = Object.keys(MUSCLES).filter(k => mv[k] >= 10).length;
   let focus;
   if (qd.length && clr.length < qd.length) focus = `Clear all ${qd.length} quest days this week. Last week was ${clr.length} of ${qd.length}.`;
   else if (c.k && fd.length < 5) focus = `Log your food on at least 5 days. Last week was ${fd.length}.`;
   else if (c.p && pAvg != null && pAvg < c.p * .9) focus = `Protein averaged ${pAvg} g. Aim for ${c.p} g a day.`;
   else if (c.k && (c.mode || "max") === "max" && kAvg != null && kAvg > c.k * 1.05) focus = `Calories averaged ${kAvg.toLocaleString("en-AU")}, over your ${c.k.toLocaleString("en-AU")} goal. Plan the big days into the weekly budget.`;
+  else if (behind.length && sets > 0) focus = muscleTip(hid, behind[0], mv[behind[0]]);
   else focus = prs.length ? "Every quest cleared and records falling. Keep the pressure on." : "Solid week. Follow the System targets and push one more rep.";
-  return { mon, sun, qd: qd.length, clr: clr.length, extraClr, pts, sets, prs, boxes, side, fdays: fd.length, kAvg, pAvg, k: c.k, p: c.p, active, focus };
+  return { behind: behind.slice(0, 3), mv, growN, mon, sun, qd: qd.length, clr: clr.length, extraClr, pts, sets, prs, boxes, side, fdays: fd.length, kAvg, pAvg, k: c.k, p: c.p, active, focus };
 }
 function reportHTML(R) {
   if (S.date !== todayStr() || !S.me) return "";
@@ -3138,6 +3157,7 @@ function reportHTML(R) {
     <div class="nums">${st(`${w.clr}/${w.qd}`, w.extraClr ? `quest days, +${w.extraClr} extra` : "quest days cleared")}${st(w.sets, "sets")}${st(w.pts.toLocaleString("en-AU"), "quest points")}${st(w.prs.length, w.prs.length === 1 ? "record" : "records")}</div>
     ${w.prs.length ? `<p class="sub">🏆 ${w.prs.slice(0, 3).map(esc).join(" · ")}${w.prs.length > 3 ? ` and ${w.prs.length - 3} more` : ""}</p>` : ""}
     <p class="sub">${w.fdays ? `🍽️ ${w.fdays} day${w.fdays === 1 ? "" : "s"} logged · avg ${w.kAvg.toLocaleString("en-AU")} kcal${w.k ? ` (goal ${w.k.toLocaleString("en-AU")})` : ""} · ${w.pAvg} g protein${w.p ? ` (goal ${w.p})` : ""}` : "🍽️ No food logged"}<br>🗺️ ${w.side} side quest${w.side === 1 ? "" : "s"} · 📦 ${w.boxes} loot box${w.boxes === 1 ? "" : "es"} earned<span id="repW"></span></p>
+    ${w.sets ? `<p class="sub">💪 ${w.growN} muscle${w.growN === 1 ? "" : "s"} in the 10 to 20 set growth zone${w.behind.length ? ` · behind: ${w.behind.map(k => `${esc(MUSCLES[k])} ${r05(w.mv[k])}`).join(", ")}` : ""} · <button class="linkbtn" data-act="repmm">Muscle map</button></p>` : ""}
     <p class="repfocus"><span>This week</span>${esc(w.focus)}</p></section>`;
 }
 /* weight line from the private body log on this phone; skipped quietly when locked or empty */
@@ -3654,7 +3674,7 @@ function mmRange() {
 function mmFace(list, v, side) {
   const half = list.map(([m, d]) => `<path class="mmm${MM.sel === m ? " sel" : ""}${v[m] >= 10 ? " hot" : ""}" data-m="${m}" fill="${mColor(v[m])}" d="${d}"/>`).join("");
   const id = "mm" + side;
-  return `<svg class="mmsvg" viewBox="0 0 200 460" role="img" aria-label="${side === "f" ? "Front" : "Back"} of the body, muscles coloured by sets this week">
+  return `<svg class="mmsvg" viewBox="0 0 200 460" role="img" aria-label="${side.endsWith("f") ? "Front" : "Back"} of the body, muscles coloured by sets">
     <defs><clipPath id="${id}c"><rect width="99.4" height="460"/></clipPath>
       <radialGradient id="${id}g" cx=".42" cy=".28" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient>
       <clipPath id="${id}s"><path d="${MFIG.sil}"/><path d="${MFIG.sil}" transform="translate(200 0) scale(-1 1)"/><path d="${MFIG.head}"/></clipPath></defs>
@@ -3695,6 +3715,48 @@ function muscleMapHTML(hid) {
     ${info}
     <details class="mmall"><summary>All muscles · sets ${MM.week === "last" ? "last week" : "this week"}</summary><div class="mmrows">${rows}</div>
       <p class="sub">Each confirmed set counts 1 for the main muscle and 0.5 for muscles worked indirectly. Warm-ups don't count. The marker is 10 sets, the start of the growth zone.${W.unmapped.length ? ` Not mapped yet: ${W.unmapped.map(id => esc((CX(id) || {}).name || id)).join(", ")}.` : ""}</p></details></section>`;
+}
+/* weekly sets per muscle a program would give if every quest day was done as planned */
+function planMuscles(hid, days = schedFor(hid, todayStr())) {
+  const v = Object.fromEntries(Object.keys(MUSCLES).map(k => [k, 0])), unmapped = new Set();
+  for (const d of days) for (const [id, n] of progDay(hid, d).ex) {
+    const map = MMAP[id]; if (!map) { unmapped.add(id); continue; }
+    for (const [m, f] of map) v[m] += n * f;
+  }
+  return { v, unmapped: [...unmapped] };
+}
+/* where in someone's plan a muscle gets direct work: [{ day, id }] */
+function planHits(hid, m) {
+  const out = [];
+  for (const d of schedFor(hid, todayStr())) for (const [id] of progDay(hid, d).ex) if ((MMAP[id] || []).some(([mm, f]) => mm === m && f === 1)) out.push({ day: d, id });
+  return out;
+}
+function muscleTip(hid, m, n) {
+  const hits = planHits(hid, m);
+  if (hits.length) { const h = hits[hits.length - 1]; return `${MUSCLES[m]} got ${r05(n)} set${r05(n) === 1 ? "" : "s"}. Add a set of ${shortName(h.id).toLowerCase()} on ${PROGRAM[h.day].short}${hits.length > 1 ? ", or spread one across the other days that hit it" : ""}.`; }
+  const opt = Object.entries(MMAP).find(([id, l]) => CX(id) && l.some(([mm, f]) => mm === m && f === 1));
+  return `${MUSCLES[m]} got ${r05(n)} set${r05(n) === 1 ? "" : "s"} and nothing in your plan trains it directly.${opt ? ` Try ${CX(opt[0]).name.toLowerCase()} as a bonus or add it in My program.` : ""}`;
+}
+function mmMini(v, pre) {
+  // the two views side by side, coloured by planned sets (no turning)
+  const keep = MM.sel; MM.sel = null;
+  const out = `<div class="mmmini">${mmFace(MFIG.front, v, pre + "f")}${mmFace(MFIG.back, v, pre + "b")}</div>`;
+  MM.sel = keep; return out;
+}
+function balanceHTML(hid) {
+  const days = schedFor(hid, todayStr()), P2 = planMuscles(hid, days), v = P2.v, keys = Object.keys(MUSCLES);
+  const none = keys.filter(k => v[k] === 0 && !MINOR.has(k)), low = keys.filter(k => v[k] > 0 && v[k] < 10 && !MINOR.has(k)), high = keys.filter(k => v[k] > 20);
+  const list = ks => ks.map(k => `${esc(MUSCLES[k])} ${r05(v[k])}`).join(" · ");
+  return `<section class="win card balance"><div class="toggle"><h2>Weekly balance</h2><span class="sub">${days.length} quest day${days.length === 1 ? "" : "s"}</span></div>
+    <p class="sub">Sets per muscle each week if you do every quest day as planned. Updates as you edit.</p>
+    ${mmMini(v, "pb")}
+    <div class="mmlegend row">${MZ.map(z => `<span><i style="background:${z[2]}"></i>${z[1]}</span>`).join("")}</div>
+    ${none.length ? `<p class="bal bad"><b>Missing</b>${list(none)}</p>` : ""}
+    ${low.length ? `<p class="bal warn"><b>Under 10 sets</b>${list(low)}</p>` : ""}
+    ${high.length ? `<p class="bal hi"><b>Over 20 sets</b>${list(high)} · plenty, watch recovery</p>` : ""}
+    ${!none.length && !low.length && !high.length ? `<p class="bal ok"><b>Balanced</b>Every major muscle gets 10 to 20 sets a week.</p>` : ""}
+    <details class="mmall"><summary>All muscles · planned sets a week</summary><div class="mmrows">${keys.slice().sort((a, b) => v[b] - v[a]).map(k => `<div class="mmrow"><span>${esc(MUSCLES[k])}</span><span class="mmbar"><i style="width:${Math.min(100, v[k] / 20 * 100).toFixed(1)}%;background:${mColor(v[k])}"></i><span style="left:50%"></span></span><b>${r05(v[k])}</b></div>`).join("")}</div>
+      <p class="sub">Counts 1 per set for an exercise's main muscle and 0.5 for muscles it works indirectly. Rest days aren't counted. Forearms, obliques and traps aren't flagged.${P2.unmapped.length ? ` Not mapped: ${P2.unmapped.map(id => esc((CX(id) || {}).name || id)).join(", ")}.` : ""}</p></details></section>`;
 }
 function mmRedraw() { const c = $("#mmCard"); if (c && MM.hid) c.outerHTML = muscleMapHTML(MM.hid); mmBind(); }
 /* turntable: cos of the angle squeezes the figure to a side profile; past 90 degrees the back shows */
@@ -3777,6 +3839,7 @@ document.addEventListener("click", e => {
   if (foodClick(t, act)) return;
   if (mmClick(t, act)) return;
   if (bodyClick(t, act)) return;
+  if (act === "repmm") { MM.week = "last"; MM.sel = null; S.view = "profile"; S.viewing = null; render(); setTimeout(() => { const c = $("#mmCard"); if (c) c.scrollIntoView({ block: "start" }); }, 50); return; }
   if (act === "repok") { try { localStorage.setItem(repKey(S.me, addDays(mondayOf(todayStr()), -7)), "1"); } catch (e) {} const rc = $("#repCard"); if (rc) rc.remove(); return; }
   if (act === "sqadd") {
     const id = t.dataset.id, b = session(true), L = CX(id); if (!L) return;

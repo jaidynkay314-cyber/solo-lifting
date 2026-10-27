@@ -266,6 +266,12 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
   - Zones: 0 not trained, 1 to 4 light, 5 to 9 building, 10 to 20 growth zone (the common 10 to 20 sets per muscle per week guideline), 20+ high volume.
   - Figure paths are in `MFIG` (left half, mirrored), viewBox 200 x 460.
 
+## v7.3 additions
+- **Monday report, muscles:** a line with how many muscles reached the 10 to 20 set growth zone last week, the major muscles under 5 sets, and a link to the muscle map on last week. When quests and food are on track, the week's focus becomes the biggest muscle gap, pointing to a day in your plan that already trains it (`muscleTip()`), or suggesting an exercise if nothing does.
+- **Weekly balance** (My program): front and back figures coloured by the sets per muscle a week the plan would give if every quest day is done (`planMuscles()`), with Missing, Under 10 and Over 20 flags and a full list. Updates live while editing. Forearms, obliques and traps aren't flagged.
+
 ## To revisit
 - **Muscle map colours:** the zone colours (dim blue, blue, cyan) may be too close together. Review after a few weeks of real data and add more contrast if needed (colours are in `MZ` and `mColor()`).
+- **Encrypted body log backup:** wanted later, needs more thought first.
+- **Record flash / broadcasting lifts:** on the consider pile. Some people don't want their numbers shown to everyone. Note the activity feed already shows records with numbers (`pr` events), so a privacy option may be needed there too.
 - **Recovery check:** on hold until the smart rings arrive, so its inputs match what the rings measure.
