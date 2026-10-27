@@ -727,6 +727,36 @@ body.noscroll { overflow: hidden; }
 .flog .step { display: inline-flex; align-items: center; gap: 6px; }
 .flog .btn { padding: 4px 10px; }
 .fueltick { color: #5ee39a; }
+/* ---------- side quest, charts, body log ---------- */
+.side { display: flex; flex-direction: column; gap: 7px; border-color: #b98a3a; box-shadow: 0 0 20px rgb(255 200 97 / .14); }
+.side::before, .side::after { border-color: var(--gold); }
+.side .tag { color: var(--gold); }
+.side > b { font-family: var(--font-display); font-size: 19px; letter-spacing: .03em; }
+.side > small { color: var(--muted); font-size: 12.5px; }
+.side .xp i { background: linear-gradient(90deg, #a87a1c, var(--gold)); box-shadow: 0 0 10px var(--gold); }
+.side.done > b { color: var(--gold); }
+.side.done > b::after { content: " ✓"; }
+.lchart { margin: 6px 0 8px; }
+.lchart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.lchart text { fill: var(--muted); font-size: 10px; font-family: var(--font-body); }
+.lchart line { stroke: var(--edge-dim); stroke-width: 1; }
+.lchart figcaption { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.lchart figcaption i { display: inline-block; width: 10px; height: 3px; margin-right: 5px; vertical-align: middle; }
+.bnote { margin: 0; font-size: 13px; color: var(--muted); border: 1px solid var(--edge-dim); background: var(--sunk); padding: 9px 11px; }
+.bnote b { color: #5ee39a; }
+.bmeas summary { cursor: pointer; color: var(--glow); font-size: 13px; margin: 6px 0; }
+.btn.file { position: relative; cursor: pointer; }
+.bgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.bph { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 0; display: flex; flex-direction: column; text-align: center; overflow: hidden; }
+.bph img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; background: #08111f; }
+.bph span { font-size: 11px; color: var(--muted); padding: 3px 0; }
+.bph.sel { border-color: var(--glow); box-shadow: 0 0 10px rgb(var(--glow-rgb) / .5); }
+.bcmp { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.bcmp figure { margin: 0; }
+.bcmp img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; border: 1px solid var(--edge-dim); }
+.bcmp figcaption { font-size: 12px; color: var(--muted); text-align: center; padding-top: 3px; }
+#bpose { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 7px 10px; }
+
 .fsearch { display: flex; gap: 8px; margin-bottom: 8px; }
 .fsearch input { flex: 1; min-width: 0; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 10px 11px; font-size: 16px; }
 .fresl { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
@@ -766,6 +796,10 @@ body.noscroll { overflow: hidden; }
 <div class="pov fuelov" id="foodOv" hidden role="dialog" aria-modal="true" aria-label="Food log">
   <div class="vtop"><button class="btn" data-act="fclose" aria-label="Close">✕</button><div class="vttl" id="foodT"></div><span style="width:40px"></span></div>
   <div class="fbody" id="foodBody"></div>
+</div>
+<div class="pov fuelov" id="bodyOv" hidden role="dialog" aria-modal="true" aria-label="Body log">
+  <div class="vtop"><button class="btn" data-act="bclose" aria-label="Close">✕</button><div class="vttl">Body · private</div><span style="width:40px"></span></div>
+  <div class="fbody" id="bodyBody"></div>
 </div>
 <div class="cdet" id="cardDet" hidden role="dialog" aria-modal="true" aria-label="Card">
   <button class="btn cdx" data-act="cdclose" aria-label="Close">✕</button>
@@ -941,6 +975,7 @@ function baseAchievements() {
   cat("Protein", "🍗", "proteinDays", .7, [[1, "Protein Starter"], [7, "Protein Week"], [30, "Protein Month"], [100, "Built Different"], [250, "Protein Sovereign"]], n => `Hit your protein goal on ${plural(n, "day")}`);
   cat("Calories", "🥗", "kcalDays", .6, [[1, "On Target"], [7, "Dialled In"], [30, "A Month on Point"], [100, "Precision Eater"], [250, "Calorie Monk"]], n => `Hit your calorie goal on ${plural(n, "day")}`);
   cat("Food log", "📒", "fuelDays", .8, [[1, "First Bite"], [7, "A Week of Logs"], [30, "Habit Fed"], [100, "Hundred Days Fed"], [365, "A Year on the Scales"]], n => `Log your food on ${plural(n, "day")}`);
+  cat("Side quests", "🗺️", "sideQ", .6, [[1, "Side Tracked"], [10, "Errand Runner"], [30, "Quest Giver's Favourite"], [100, "Completionist"], [365, "Never Bored"]], n => `Complete ${plural(n, "daily side quest")}`);
   cat("Comebacks", "🔄", "comebacks", .02, [[1, "The Comeback"], [5, "Never Down for Long"], [10, "Unkillable"]], n => `Clear a quest after a week or more away, ${n === 1 ? "once" : n + " times"}`);
 }
 const SHORT = { "chest-press": "Chest press", "lat-pulldown": "Lat pulldown", "shoulder-press": "Shoulder press", "cable-row": "Cable row",
@@ -1281,7 +1316,7 @@ function statsOf(M) {
 }
 const newM = () => ({ days: 0, quests: 0, bestStreak: 0, penSurvived: 0, sets: 0, reps: 0, volume: 0, cardioMin: 0, km: 0, level: 1,
   upperQ: 0, lowerQ: 0, friQ: 0, wkQ: 0, prs: 0, bossWins: 0, perfectWeeks: 0, perfectMonths: 0, bonusLogs: 0, pushups: 0, core: 0,
-  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {}, proteinDays: 0, kcalDays: 0, fuelDays: 0,
+  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {}, proteinDays: 0, kcalDays: 0, fuelDays: 0, sideQ: 0,
   statSets: { STR: 0, AGI: 0, VIT: 0, END: 0 }, statMin: { STR: 0, AGI: 0, VIT: 0, END: 0 } });
 function metricVal(M, metric, st) {
   if (metric.startsWith("m:")) return M.machine[metric.slice(2)] || 0;
@@ -1381,6 +1416,7 @@ function replay(hid) {
         if (fd.items.length) M.fuelDays++;
         if (fh.p) { M.proteinDays++; xp += 10; }
         if (fh.k) { M.kcalDays++; xp += 10; } }
+      if (d <= today) { const sp = sideProgress(hid, d); if (sp.done) { M.sideQ++; xp += 25; R.events.push({ d, type: "side", txt: sp.q.t }); if (M.sideQ % 5 === 0) box("R", "sq:" + M.sideQ, d); } }
       if (dawn) M.dawn++;
       if (night) M.night++;
       xp += Math.min(BONUS_CAP, bonusXp);
@@ -1514,6 +1550,7 @@ function announce(R) {
     if (e.type === "boss") toast({ tag: "Boss defeated", title: e.txt, text: "+100 XP. The weekly boss falls.", sound: "boss" });
     if (e.type === "pzs") toast({ tag: "Penalty survived", title: "You escaped", text: "+75 XP. The Penalty Zone releases you. For now.", sound: "clear" });
     if (e.type === "clear") toast({ tag: "Quest cleared", title: e.txt, text: "+50 XP. The Penalty Zone will have to wait.", sound: "clear" });
+    if (e.type === "side") toast({ tag: "Side quest complete", title: e.txt, text: "+25 XP.", sound: "clear" });
     if (e.type === "box") toast({ tag: "Loot earned", title: BOX[e.k].name, text: "Open it in the Vault tab.", sound: "ach" });
   }
   S.seen.keys = keys;
@@ -1632,6 +1669,7 @@ function refreshLive() {
   const q = $("#quest"); if (q) { q.innerHTML = questHTML(R); tickClock(); }
   const bo = $("#bossCard"); if (bo) bo.outerHTML = bossHTML(R);
   const fc = $("#fuelCard"); if (fc) fc.outerHTML = fuelCardHTML();
+  const sc = $("#sideCard"); if (sc) sc.outerHTML = sideCardHTML();
   for (const btn of document.querySelectorAll(".days button[data-day]")) btn.classList.toggle("clear", questDone(S.sessions[keyOf(S.me, S.date, btn.dataset.day)], penHere(R)));
   const nt = $("#net"); if (nt) nt.textContent = netText();
 }
@@ -1739,7 +1777,7 @@ function renderLog(R) {
   let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
     `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}${schedFor(S.me, S.date).includes(d) ? "" : " rest"}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
   <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
-  <section class="win quest" id="quest">${questHTML(R)}</section>${bossHTML(R)}${fuelCardHTML()}`;
+  <section class="win quest" id="quest">${questHTML(R)}</section>${sideCardHTML()}${bossHTML(R)}${fuelCardHTML()}`;
 
   const c = cardioOf(b), kind = curKind(b, plan), K = KINDS[kind];
   h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(cardioGoal(S.day, kind))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
@@ -1876,6 +1914,7 @@ const EV_TXT = {
   ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week"],
   pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"],
   cos: e => ["🎁", `won the <b style="color:${TIERS[e.c.tier][1]}">${esc(e.c.name)}</b>`],
+  side: e => ["🗺️", `completed a side quest: ${esc(e.txt)}`],
   pull: e => ["🃏", `pulled <b style="color:${CR[e.c.r].col}">${esc(e.c.n)}</b> (${CR[e.c.r].label})`]
 };
 function renderBoard() {
@@ -1937,6 +1976,8 @@ function renderProfile(id) {
     </div>`;
   if (mine) {
     const opts = Object.keys(R.ach).map(k => ACHX[k]).filter(Boolean).sort((a, b) => b.rar - a.rar || a.name.localeCompare(b.name));
+    h += `<section class="win card body"><div class="toggle"><h2>Body</h2><button class="btn primary" data-act="bopen">Open</button></div>
+      <p>Weight, optional measurements and progress photos. 🔒 Kept only on this phone: never uploaded, synced or shown to anyone.</p></section>`;
     h += `<section class="win card"><div class="toggle"><h2>My program</h2><button class="btn primary" data-view="program">Edit</button></div>
       <div class="psum">${DAYS.map(d => { const p = progDay(id, d), q = schedFor(id, todayStr()).includes(d); return `<div class="${q ? "" : "restday"}"><b>${PROGRAM[d].short}</b><span>${esc(p.name)}${q ? "" : " · rest"}</span><small>${p.ex.length ? `${p.ex.length} exercises · ${planSets(p)} sets` : "Cardio only"} · ${p.cardio} min</small></div>`; }).join("")}</div></section>
       ${appearanceHTML(id, opts)}`;
@@ -1979,12 +2020,15 @@ function machineLog(id) {
     for (const b of mine) {
       const arr = ((b.ex || {})[eid] || []).filter(s => setOk(type, s)); if (!arr.length) continue;
       const top = Math.max(...arr.map(s => +s[key] || 0));
-      pts.push({ date: b.date, top, reps: type === "wr" ? arr.find(s => (+s.w || 0) === top).r : null, sets: arr });
+      pts.push({ date: b.date, top, reps: type === "wr" ? arr.find(s => (+s.w || 0) === top).r : null, sets: arr, e1: type === "wr" ? Math.round(Math.max(...arr.map(e1rm)) * 10) / 10 : null });
     }
     if (!pts.length) continue;
     const a = pts[0], z = pts[pts.length - 1], diff = z.top - a.top, u = type === "wr" ? " kg" : type === "s" ? " s" : " reps";
     const trend = pts.length > 1 ? (diff > 0 ? `<span class="pos">+${+diff.toFixed(1)}${u}</span> since ${fmtShort(a.date)}` : diff < 0 ? `${+diff.toFixed(1)}${u} since ${fmtShort(a.date)}` : `Same top since ${fmtShort(a.date)}`) : `First logged ${fmtShort(a.date)}`;
     h += `<details class="hist"><summary><span class="hn">${esc(CX(eid) ? CX(eid).name : eid)}</span>${spark(pts.map(p => p.top))}<span class="hs">Top ${type === "wr" ? `${wTxt(z.top)}${z.top ? " kg" : ""} × ${z.reps ?? "?"}` : z.top + u} · ${trend}</span></summary>
+      ${pts.length > 1 ? lineChart(type === "wr" && pts.some(p => p.top > 0)
+        ? [{ name: "Top weight", color: "#4cc3ff", pts: pts.map(p => ({ x: p.date, y: p.top })) }, { name: "Estimated 1-rep max", color: "#ffc861", pts: pts.filter(p => p.e1).map(p => ({ x: p.date, y: p.e1 })), dash: true }]
+        : [{ name: type === "s" ? "Longest hold" : "Most reps", color: "#4cc3ff", pts: pts.map(p => ({ x: p.date, y: p.top })) }], type === "wr" ? "kg" : type === "s" ? "s" : "reps") : ""}
       <div class="scroll"><table>${pts.slice(-8).reverse().map(p => `<tr><td>${fmtDate(p.date)}</td><td>${p.sets.map(s => setTxt(s, type)).join(" · ")}</td></tr>`).join("")}</table></div></details>`;
   }
   return h || `<div class="win empty">No sessions logged yet.</div>`;
@@ -2792,6 +2836,256 @@ function foodClick(t, act) {
   return false;
 }
 
+/* ================= PROGRESS CHARTS ================= */
+// a small line chart: series = [{ name, color, pts: [{ x: date, y }] }]; dates spaced by real time
+function lineChart(series, unit = "", h = 150) {
+  const all = series.flatMap(s => s.pts); if (all.length < 2) return "";
+  const W = 320, H = h, L = 34, R = 8, T = 10, B = 22;
+  const xs = all.map(p => parseDate(p.x).getTime()), x0 = Math.min(...xs), x1 = Math.max(...xs) || x0 + 1;
+  let lo = Math.min(...all.map(p => p.y)), hi = Math.max(...all.map(p => p.y)); const pad = (hi - lo) * .12 || 1; lo -= pad; hi += pad;
+  const X = d => L + (parseDate(d).getTime() - x0) / ((x1 - x0) || 1) * (W - L - R), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  const dp = hi - lo < 12 ? 1 : 0;
+  const ticks = [lo + pad, (lo + hi) / 2, hi - pad].map(v => `<text x="${L - 4}" y="${Y(v) + 4}" text-anchor="end">${+v.toFixed(dp)}</text><line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/>`).join("");
+  const lines = series.filter(s => s.pts.length).map(s => {
+    const d = s.pts.map((p, i) => `${i ? "L" : "M"}${X(p.x).toFixed(1)} ${Y(p.y).toFixed(1)}`).join(" ");
+    return `<path d="${d}" stroke="${s.color}" fill="none" stroke-width="${s.thin ? 1.5 : 2.4}" ${s.dash ? `stroke-dasharray="4 4"` : ""}/>${s.dots === false ? "" : s.pts.map(p => `<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="2.6" fill="${s.color}"/>`).join("")}`;
+  }).join("");
+  const first = all.reduce((a, p) => p.x < a ? p.x : a, all[0].x), last = all.reduce((a, p) => p.x > a ? p.x : a, all[0].x);
+  return `<figure class="lchart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(s => s.name).join(" and "))} over time">${ticks}${lines}
+    <text x="${L}" y="${H - 6}">${fmtShort(first)}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${fmtShort(last)}</text></svg>
+    <figcaption>${series.filter(s => s.pts.length).map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}${unit ? ` (${unit})` : ""}</span>`).join("")}</figcaption></figure>`;
+}
+const e1rm = s => (+s.w || 0) * (1 + (+s.r || 0) / 30); // Epley estimate of a one-rep max
+
+/* ================= DAILY SIDE QUEST ================= */
+// one per hunter per day, picked from the date; done-ness is read from what was logged, so it syncs and replays like everything else
+const SIDEQ = [
+  { id: "push", t: "Do 20 push-ups", need: 20, unit: "reps", ids: ["pushups", "diamond-pushups"], f: "r", add: "pushups" },
+  { id: "squat", t: "Do 50 bodyweight squats", need: 50, unit: "reps", ids: ["bw-squat", "jump-squats"], f: "r", add: "bw-squat" },
+  { id: "plank", t: "Hold a plank for 90 seconds in total", need: 90, unit: "s", ids: ["plank", "side-plank"], f: "s", add: "plank" },
+  { id: "burpee", t: "Do 15 burpees", need: 15, unit: "reps", ids: ["burpees"], f: "r", add: "burpees" },
+  { id: "core", t: "Do 40 sit-ups, crunches or leg raises", need: 40, unit: "reps", ids: ["situps", "crunches", "leg-raises"], f: "r", add: "situps" },
+  { id: "lunge", t: "Do 30 lunges", need: 30, unit: "reps", ids: ["lunges", "db-lunge"], f: "r", add: "lunges" },
+  { id: "walk", t: "Go for a 15-minute walk", need: 15, unit: "min", mins: ["walk", "dog-walk", "hike", "incline-walk"], add: "walk" },
+  { id: "stretch", t: "Stretch or do yoga for 10 minutes", need: 10, unit: "min", mins: ["stretch", "yoga"], add: "stretch" },
+  { id: "cardio", t: "Do 20 minutes of any cardio", need: 20, unit: "min", cardio: true },
+  { id: "extra", t: "Log 5 sets that aren't in your plan", need: 5, unit: "sets", extra: true },
+  { id: "food", t: "Log at least 3 things you eat", need: 3, unit: "items", food: true },
+  { id: "protein", t: "Hit your protein goal", need: 1, unit: "", protein: true }
+];
+function sideQuestFor(hid, date) {
+  const c = fuelCfg(hid), pool = SIDEQ.filter(q => !q.protein || c.p);
+  let h = 7; for (const ch of hid + date) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return pool[h % pool.length];
+}
+function sideProgress(hid, date, q = sideQuestFor(hid, date)) {
+  const bs = Object.values(S.sessions).filter(b => b.profile === hid && b.date === date && !isMeta(b) && !b.excused);
+  let v = 0;
+  const sets = (id, arr, type) => arr.filter(s => setOk(type, s));
+  for (const b of bs) {
+    const planIds = new Set(planFor(hid, b.day, b).ex.map(e => e[0]));
+    for (const [id, arr] of Object.entries(b.ex || {})) {
+      const type = typeOf(id), ok = sets(id, arr, type);
+      if (q.ids && q.ids.includes(id)) v += sumBy(ok, s => +s[q.f] || 0);
+      if (q.extra && !planIds.has(id)) v += ok.length;
+    }
+    for (const e of b.bonus || []) {
+      const L = CX(e.id); if (!L || !bonusLogged(e)) continue;
+      if (L.type === "min") { if ((q.mins && q.mins.includes(e.id)) || (q.cardio && L.cat === "Cardio")) v += +e.min || 0; }
+      else { const ok = sets(e.id, e.sets || [], L.type); if (q.ids && q.ids.includes(e.id)) v += sumBy(ok, s => +s[q.f] || 0); if (q.extra) v += ok.length; }
+    }
+    if (q.cardio) v += cardioOf(b).total || 0;
+  }
+  if (q.food || q.protein) { const f = fuelDay(hid, date); v = q.food ? f.items.length : fuelHits(f).p ? 1 : 0; }
+  return { q, v: Math.round(v * 10) / 10, done: v >= q.need };
+}
+function sideCardHTML() {
+  if (S.date !== todayStr()) return "";
+  const { q, v, done } = sideProgress(S.me, S.date);
+  const L = q.add && CX(q.add);
+  const btn = done ? "" : q.food || q.protein ? `<button class="btn" data-act="fopen">Open Fuel</button>` : L ? `<button class="btn" data-act="sqadd" data-id="${q.add}">+ Add ${esc(L.name.toLowerCase())}</button>` : "";
+  return `<section class="win side${done ? " done" : ""}" id="sideCard"><div class="toggle"><p class="tag">Daily side quest</p>${btn}</div>
+    <b>${esc(q.t)}</b>${q.need > 1 ? `<div class="xp"><i style="width:${Math.min(100, v / q.need * 100).toFixed(1)}%"></i></div>` : ""}
+    <small>${done ? "Complete. +25 XP, and every 5th side quest earns a Random Loot Box." : `${q.need > 1 ? `${v} / ${q.need} ${q.unit} · ` : ""}+25 XP. Resets at midnight.`}</small></section>`;
+}
+
+/* ================= BODY LOG (private: never leaves this phone) ================= */
+/* Weight, measurements and photos live in their own IndexedDB database ("solo-body") on this phone only.
+   Nothing here is added to S, the sync outbox, backups or CSV exports. With a PIN, every record is encrypted
+   with AES-GCM using a key derived from the PIN (PBKDF2, 250,000 rounds); the key is only held in memory. */
+const MEAS = [["waist", "Waist"], ["hips", "Hips"], ["chest", "Chest"], ["arm", "Arm"], ["thigh", "Thigh"]];
+const POSES = ["Front", "Side", "Back"];
+let BDB = null, BKEY = null, BODY = { hid: null, entries: [], photos: [], locked: false, view: "log", chart: "kg", range: 90, cmp: [], urls: [] };
+const idb = (store, mode, fn) => new Promise((res, rej) => { const tx = BDB.transaction(store, mode), st = tx.objectStore(store), r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); });
+async function bodyOpenDB() {
+  if (BDB) return BDB;
+  BDB = await new Promise((res, rej) => { const r = indexedDB.open("solo-body", 1); r.onupgradeneeded = () => { const db = r.result; for (const n of ["entries", "photos", "meta"]) db.createObjectStore(n, { keyPath: "id" }); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  return BDB;
+}
+const te = new TextEncoder(), td = new TextDecoder();
+const b64 = buf => { let s = ""; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 32768) s += String.fromCharCode.apply(null, a.subarray(i, i + 32768)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pin, salt) {
+  const base = await crypto.subtle.importKey("raw", te.encode(pin), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 250000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function seal(bytes) { if (!BKEY) return { plain: bytes }; const iv = crypto.getRandomValues(new Uint8Array(12)); return { iv, c: new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, BKEY, bytes)) }; }
+async function unseal(x) { if (x.plain) return x.plain; return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: x.iv }, BKEY, x.c)); }
+const sealJ = o => seal(te.encode(JSON.stringify(o)));
+const unsealJ = async x => JSON.parse(td.decode(await unseal(x)));
+async function lockMeta(hid) { return idb("meta", "readonly", st => st.get("lock:" + hid)); }
+async function bodyLoad() {
+  const hid = S.me; await bodyOpenDB();
+  const meta = await lockMeta(hid);
+  BODY.hid = hid; BODY.locked = !!meta && !BKEY;
+  if (BODY.locked) { BODY.entries = []; BODY.photos = []; return; }
+  const ents = (await idb("entries", "readonly", st => st.getAll())).filter(x => x.hid === hid);
+  BODY.entries = (await Promise.all(ents.map(async x => ({ id: x.id, ...(await unsealJ(x.m)) })))).sort((a, b) => a.date < b.date ? -1 : 1);
+  const ph = (await idb("photos", "readonly", st => st.getAll())).filter(x => x.hid === hid);
+  BODY.photos = (await Promise.all(ph.map(async x => ({ id: x.id, rec: x, ...(await unsealJ(x.m)) })))).sort((a, b) => a.date < b.date ? 1 : -1);
+}
+async function saveEntry(o) {
+  const old = BODY.entries.find(e => e.date === o.date), id = old ? old.id : "e" + rnd();
+  const rec = { id, hid: S.me, m: await sealJ(o) };
+  await idb("entries", "readwrite", st => st.put(rec));
+}
+async function addPhoto(file, pose, date) {
+  const bmp = await createImageBitmap(file), sc = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * sc); cv.height = Math.round(bmp.height * sc);
+  cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+  const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", .82));
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const rec = { id: "p" + rnd(), hid: S.me, m: await sealJ({ date, pose }), d: await seal(bytes) };
+  await idb("photos", "readwrite", st => st.put(rec));
+}
+async function photoURL(p) { const u = URL.createObjectURL(new Blob([await unseal(p.rec.d)], { type: "image/jpeg" })); BODY.urls.push(u); return u; }
+/* turning the PIN on or off re-saves every record for this hunter */
+async function rekey(newKey) {
+  const ents = BODY.entries.map(e => ({ ...e })), phs = await Promise.all(BODY.photos.map(async p => ({ id: p.id, date: p.date, pose: p.pose, bytes: await unseal(p.rec.d) })));
+  BKEY = newKey;
+  for (const e of ents) { const { id, ...o } = e; const rec = { id, hid: S.me, m: await sealJ(o) }; await idb("entries", "readwrite", st => st.put(rec)); }
+  for (const p of phs) { const rec = { id: p.id, hid: S.me, m: await sealJ({ date: p.date, pose: p.pose }), d: await seal(p.bytes) }; await idb("photos", "readwrite", st => st.put(rec)); }
+}
+async function setPin(pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), key = await deriveKey(pin, salt);
+  await rekey(key);
+  const chk = await seal(te.encode("solo-body-ok"));
+  await idb("meta", "readwrite", st => st.put({ id: "lock:" + S.me, salt, chk }));
+}
+async function unlockPin(pin) {
+  const meta = await lockMeta(S.me); if (!meta) return true;
+  const key = await deriveKey(pin, meta.salt);
+  try { await crypto.subtle.decrypt({ name: "AES-GCM", iv: meta.chk.iv }, key, meta.chk.c); BKEY = key; return true; } catch (e) { return false; }
+}
+async function removePin() { await rekey(null); await idb("meta", "readwrite", st => st.delete("lock:" + S.me)); }
+async function wipeBody() {
+  await bodyOpenDB();
+  for (const store of ["entries", "photos"]) { const all = await idb(store, "readonly", st => st.getAll()); for (const x of all) if (x.hid === S.me) await idb(store, "readwrite", st => st.delete(x.id)); }
+  await idb("meta", "readwrite", st => st.delete("lock:" + S.me)); BKEY = null;
+}
+function bodyClearURLs() { for (const u of BODY.urls) URL.revokeObjectURL(u); BODY.urls = []; }
+async function openBody() { $("#bodyOv").hidden = false; document.body.classList.add("noscroll"); BODY.view = "log"; BODY.cmp = []; await drawBody(); }
+function closeBody() { $("#bodyOv").hidden = true; document.body.classList.remove("noscroll"); bodyClearURLs(); if (S.me !== BODY.hid) BKEY = null; render(); }
+async function drawBody() {
+  const el = $("#bodyBody");
+  try { await bodyLoad(); } catch (e) { el.innerHTML = `<p class="note alert">This phone's browser won't open private storage (${esc(e.message || e)}). Private browsing mode blocks it.</p>`; return; }
+  bodyClearURLs();
+  const note = `<p class="bnote">🔒 <b>Only on this phone.</b> Never uploaded or synced, and left out of backups and exports. ${BKEY || BODY.locked ? "Encrypted with your PIN." : "Add a PIN below to encrypt it."}</p>`;
+  if (BODY.locked) {
+    el.innerHTML = `${note}<section class="fsec"><h3>Locked</h3><div class="fquick"><input id="bpin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="PIN" style="grid-column:1/-1"></div>
+      <div class="ex-actions"><button class="btn primary" data-act="bunlock">Unlock</button></div><p class="sub" id="bmsg"></p>
+      <p class="sub">Forgot it? The PIN can't be recovered. <button class="linkbtn" data-act="bwipe">Delete my body data on this phone</button></p></section>`;
+    setTimeout(() => { const p = $("#bpin"); if (p) p.focus(); }, 50); return;
+  }
+  const E = BODY.entries, last = E[E.length - 1], today = todayStr(), cur = E.find(e => e.date === today) || {};
+  const cut = BODY.range ? addDays(today, -BODY.range) : "0000";
+  const key = BODY.chart, pts = E.filter(e => e.date >= cut && e[key] != null).map(e => ({ x: e.date, y: +e[key] }));
+  const avg = key === "kg" ? pts.map((p, i) => { const w = pts.filter(q => q.x <= p.x && q.x > addDays(p.x, -7)); return { x: p.x, y: Math.round(sumBy(w, q => q.y) / w.length * 10) / 10 }; }) : [];
+  const first = pts[0], chg = first && pts.length > 1 ? Math.round((pts[pts.length - 1].y - first.y) * 10) / 10 : null;
+  const wk = E.filter(e => e.kg != null && e.date > addDays(today, -7)), pwk = E.filter(e => e.kg != null && e.date <= addDays(today, -7) && e.date > addDays(today, -14));
+  const wAvg = a => a.length ? Math.round(sumBy(a, e => e.kg) / a.length * 10) / 10 : null;
+  let h = note + `<section class="fsec"><h3>Today<small>${fmtDate(today)}</small></h3>
+    <div class="fquick"><div class="field"><input id="bkg" inputmode="decimal" value="${cur.kg ?? ""}" placeholder="${last && last.kg ? last.kg : "0.0"}" aria-label="Weight in kilograms"><span>kg</span></div><button class="btn primary" data-act="bsave">Save</button></div>
+    <details class="bmeas"${MEAS.some(([k]) => cur[k] != null) ? " open" : ""}><summary>Measurements (optional)</summary><div class="fquick">${MEAS.map(([k, n]) => `<div class="field"><input id="bm-${k}" inputmode="decimal" value="${cur[k] ?? ""}" aria-label="${n} in centimetres"><span>${n.toLowerCase()} cm</span></div>`).join("")}</div></details>
+    ${wAvg(wk) != null ? `<p class="sub">7-day average <b style="color:var(--fg)">${wAvg(wk)} kg</b>${wAvg(pwk) != null ? ` · ${wAvg(wk) - wAvg(pwk) <= 0 ? "" : "+"}${Math.round((wAvg(wk) - wAvg(pwk)) * 10) / 10} kg on the week before` : ""}. Weigh in the morning, after the toilet, before food, for the cleanest trend.</p>` : ""}</section>
+    <section class="fsec"><h3>Trend<small>${chg != null ? `${chg > 0 ? "+" : ""}${chg} ${key === "kg" ? "kg" : "cm"} over the period` : ""}</small></h3>
+      <div class="vchips">${[["kg", "Weight"], ...MEAS].filter(([k]) => k === "kg" || E.some(e => e[k] != null)).map(([k, n]) => `<button class="vchip" data-act="bchart" data-k="${k}" aria-pressed="${key === k}">${n}</button>`).join("")}
+        ${[[30, "30 days"], [90, "90 days"], [0, "All"]].map(([d, n]) => `<button class="vchip" data-act="brange" data-d="${d}" aria-pressed="${BODY.range === d}">${n}</button>`).join("")}</div>
+      ${pts.length > 1 ? lineChart([{ name: key === "kg" ? "Weight" : MEAS.find(m => m[0] === key)[1], color: "#4cc3ff", pts, thin: key === "kg" }, ...(avg.length ? [{ name: "7-day average", color: "#ffc861", pts: avg, dots: false }] : [])], key === "kg" ? "kg" : "cm", 170) : `<p class="sub">Log a couple of days to see the trend.</p>`}</section>
+    <section class="fsec"><h3>Progress photos<small>${BODY.photos.length} saved</small></h3>
+      <div class="ex-actions"><select id="bpose" aria-label="Pose">${POSES.map(p => `<option>${p}</option>`).join("")}</select>
+        <label class="btn primary file">Take photo<input type="file" accept="image/*" capture id="bcam" hidden></label>
+        <label class="btn file">Choose photo<input type="file" accept="image/*" id="bpick" hidden></label></div>
+      <p class="sub">Photos taken here aren't saved to your camera roll. Tap two photos to compare them side by side.</p>
+      ${BODY.cmp.length === 2 ? `<div class="bcmp" id="bcmp"></div>` : ""}
+      ${BODY.cmp.length ? `<div class="ex-actions"><button class="btn" data-act="bcmpclear">Clear selection</button><button class="btn" data-act="bphdel">Delete selected</button></div>` : ""}
+      <div class="bgrid" id="bgrid">${BODY.photos.map(p => `<button class="bph${BODY.cmp.includes(p.id) ? " sel" : ""}" data-act="bph" data-id="${p.id}"><img alt="" data-pid="${p.id}"><span>${fmtShort(p.date)} · ${p.pose}</span></button>`).join("")}</div></section>
+    <section class="fsec"><h3>History</h3>${E.length ? `<div class="flog">${E.slice(-14).reverse().map(e => `<div><span><b>${fmtDate(e.date)}</b><small>${e.kg != null ? e.kg + " kg" : ""}${MEAS.filter(([k]) => e[k] != null).map(([k, n]) => ` · ${n.toLowerCase()} ${e[k]} cm`).join("")}</small></span><button class="btn" data-act="bdel" data-id="${e.id}" aria-label="Delete">✕</button></div>`).join("")}</div>` : `<p class="sub">Nothing logged yet.</p>`}</section>
+    <section class="fsec"><h3>Privacy</h3>
+      ${BKEY ? `<div class="ex-actions"><button class="btn" data-act="bpinoff">Remove PIN</button><button class="btn" data-act="block">Lock now</button></div>`
+        : `<div class="fquick"><input id="bnewpin" type="password" inputmode="numeric" autocomplete="new-password" placeholder="New PIN (4+ digits)" aria-label="New PIN" style="grid-column:1/-1"></div><div class="ex-actions"><button class="btn primary" data-act="bpinon">Encrypt with a PIN</button></div>`}
+      <p class="sub">With a PIN, everything here is encrypted on the phone and locks again whenever the app closes. If you forget the PIN, the data can't be recovered.</p>
+      <p class="sub"><button class="linkbtn" data-act="bwipe">Delete all my body data on this phone</button></p></section>`;
+  el.innerHTML = h;
+  for (const img of el.querySelectorAll("img[data-pid]")) { const p = BODY.photos.find(x => x.id === img.dataset.pid); if (p) photoURL(p).then(u => { img.src = u; }); }
+  if (BODY.cmp.length === 2) {
+    const ps = BODY.cmp.map(id => BODY.photos.find(x => x.id === id)).filter(Boolean).sort((a, b) => a.date < b.date ? -1 : 1);
+    const urls = await Promise.all(ps.map(photoURL));
+    $("#bcmp").innerHTML = ps.map((p, i) => `<figure><img src="${urls[i]}" alt=""><figcaption>${fmtDate(p.date)} · ${p.pose}</figcaption></figure>`).join("");
+  }
+}
+const BACTS = new Set(["bopen", "bclose", "bunlock", "bsave", "bdel", "bchart", "brange", "bph", "bcmpclear", "bphdel", "bpinon", "bpinoff", "block", "bwipe"]);
+function bodyClick(t, act) { if (!BACTS.has(act)) return false; bodyAct(t, act).catch(e => toast({ tag: "Body log", title: "Something went wrong", text: String(e.message || e) })); return true; }
+async function bodyAct(t, act) {
+  if (act === "bopen") { openBody(); return true; }
+  if (act === "bclose") { closeBody(); return true; }
+  const msg = m => { const x = $("#bmsg"); if (x) x.textContent = m; };
+  if (act === "bunlock") { const ok = await unlockPin(($("#bpin").value || "").trim()); if (ok) drawBody(); else { msg("Wrong PIN."); buzz([40, 40, 40]); } return true; }
+  if (act === "bsave") {
+    const o = { date: todayStr() }, kg = num($("#bkg").value);
+    if (kg != null && (kg < 25 || kg > 350)) { toast({ tag: "Check that weight", title: "Between 25 and 350 kg" }); return true; }
+    if (kg != null) o.kg = Math.round(kg * 10) / 10;
+    for (const [k] of MEAS) { const v = num(($("#bm-" + k) || {}).value ?? ""); if (v != null && v > 10 && v < 300) o[k] = Math.round(v * 10) / 10; }
+    if (Object.keys(o).length < 2) { $("#bkg").focus(); return true; }
+    await saveEntry(o); toast({ tag: "Saved on this phone", title: o.kg ? `${o.kg} kg` : "Measurements saved" }); drawBody(); return true;
+  }
+  if (act === "bdel") { await idb("entries", "readwrite", st => st.delete(t.dataset.id)); drawBody(); return true; }
+  if (act === "bchart") { BODY.chart = t.dataset.k; drawBody(); return true; }
+  if (act === "brange") { BODY.range = +t.dataset.d; drawBody(); return true; }
+  if (act === "bph") {
+    const id = t.dataset.id;
+    BODY.cmp = BODY.cmp.includes(id) ? BODY.cmp.filter(x => x !== id) : [...BODY.cmp, id].slice(-2);
+    drawBody(); return true;
+  }
+  if (act === "bphdel") {
+    if (!confirm(`Delete ${BODY.cmp.length === 1 ? "the selected photo" : "both selected photos"}? This can't be undone.`)) return true;
+    for (const id of BODY.cmp) await idb("photos", "readwrite", st => st.delete(id));
+    BODY.cmp = []; drawBody(); return true;
+  }
+  if (act === "bcmpclear") { BODY.cmp = []; drawBody(); return true; }
+  if (act === "bpinon") {
+    const pin = ($("#bnewpin").value || "").trim();
+    if (!/^\d{4,12}$/.test(pin)) { toast({ tag: "PIN", title: "Use 4 to 12 digits" }); return true; }
+    if (!confirm("Encrypt your body data with this PIN?\n\nIf you forget it, the data can't be recovered.")) return true;
+    await setPin(pin); toast({ tag: "Encrypted", title: "Body data is now locked with your PIN" }); drawBody(); return true;
+  }
+  if (act === "bpinoff") { if (!confirm("Remove the PIN? Your body data will be stored unencrypted on this phone.")) return true; await removePin(); drawBody(); return true; }
+  if (act === "block") { BKEY = null; drawBody(); return true; }
+  if (act === "bwipe") { if (!confirm("Delete all your weights, measurements and photos from this phone? This can't be undone.")) return true; await wipeBody(); drawBody(); return true; }
+  return false;
+}
+document.addEventListener("change", async e => {
+  const t = e.target; if ((t.id !== "bcam" && t.id !== "bpick") || !t.files[0]) return;
+  try { await addPhoto(t.files[0], ($("#bpose") || {}).value || "Front", todayStr()); toast({ tag: "Saved on this phone", title: "Progress photo added" }); }
+  catch (err) { toast({ tag: "Photo", title: "That photo couldn't be read" }); }
+  t.value = ""; drawBody();
+});
+// with a PIN, leaving the app locks it again and clears what's on screen
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) { if (!$("#bodyOv").hidden && !BKEY && BODY.hid) drawBody(); return; }
+  if (BKEY) { BKEY = null; bodyClearURLs(); if (!$("#bodyOv").hidden) $("#bodyBody").innerHTML = ""; }
+});
+
 /* ================= EVENTS ================= */
 let armT = null;
 function arm(key) { S.armed = key; clearTimeout(armT); armT = setTimeout(() => { S.armed = null; softRender(); }, 4000); }
@@ -2822,6 +3116,14 @@ document.addEventListener("click", e => {
   if (act === "logfix") { S.date = t.dataset.date; S.day = t.dataset.fday; if (WEEKEND.has(S.day) && !S.sessions[curKey()] && S.sessions[keyOf(S.me, S.date, "WK")]) S.day = "WK"; S.view = "log"; render(); scrollTo(0, 0); return; }
   if (vaultClick(t, act)) return;
   if (foodClick(t, act)) return;
+  if (bodyClick(t, act)) return;
+  if (act === "sqadd") {
+    const id = t.dataset.id, b = session(true), L = CX(id); if (!L) return;
+    if (L.type === "min") { if (!b.bonus.some(x => x.id === id)) b.bonus.push({ id }); } else if (!b.extra.includes(id)) b.extra.push(id);
+    dirtySession(curKey()); render();
+    const el = document.querySelector(L.type === "min" ? `[data-bcard]:last-of-type` : `[data-card="${id}"]`); if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    return;
+  }
   if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
   if (act === "uselast") {
     const last = lastFor(id, S.date, "wr"); if (!last) return;

@@ -62,6 +62,9 @@ Install to the home screen:
   - **Search by weight:** about 85 built-in generic foods with values per 100 g, which work offline. **Products** searches packaged foods in the free Open Food Facts database (online, Australian products first, limited to about 10 searches a minute per phone). Pick a result, enter the grams, and it works out the calories and protein.
   - **Goals:** set a calorie goal ("stay under" or "reach at least") and a protein goal. Hitting each is 10 XP and counts towards the Protein, Calories and Food log achievements. A "stay under" day only counts once at least half the target is logged.
   - **On the board:** others see only "Protein ✓ / Calories ✓", never your numbers.
+- **Daily side quest** (Quest tab): one small task a day, such as 20 push-ups, a 15-minute walk or logging 3 foods. It's ticked off automatically from what you log. Each one is +25 XP, and every 5th earns a Random Loot Box.
+- **Progress charts:** Profile → Exercise log → open an exercise to see a chart of top weight and estimated 1-rep max (or most reps / longest hold).
+- **Body** (Profile → Body): weight, optional measurements and progress photos. **Kept only on this phone.** You can add an optional PIN to encrypt it.
 - **Vault:**
   - **Opening a box:** tap a loot box (the glowing tied cube). It bursts open and a reel spins and stops on your prize: a card pack, a frame or a title.
   - **Packs:** packs can be opened straight away or saved. Swipe across the top to tear one open, then swipe the cards away. Drag a card a little way to see the glow of the next card.
@@ -171,6 +174,25 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Goals and saved foods:** stored in `hunters.program._fuel = { k, mode: "max" | "min", p, foods: [{ id, n, k, p }] }`.
 - **Meal-plan foods:** the `STARTER` list in `index.html`.
 - **Replay:** adds 10 XP per goal hit. Food days only count from the hunter's first training session.
+
+**Side quests:** `SIDEQ` lists the tasks. `sideQuestFor(hunter, date)` picks one from a hash of the hunter and date, skipping the protein task if no protein goal is set. `sideProgress` reads that day's confirmed sets, timed activities, cardio and food log. Replay adds 25 XP per completed side quest, and every 5th adds a box `sq:<n>`.
+
+**Progress charts:** `lineChart()` draws inline SVG. The estimated 1-rep max uses the Epley formula: weight × (1 + reps / 30), taking the best set of the session.
+
+**Body log (private)**
+
+- **Where it's stored:** an IndexedDB database `solo-body` on the phone, with stores `entries`, `photos` and `meta`. Records are keyed per hunter, so two people sharing a phone stay separate.
+  - None of it touches `S`, the sync outbox, Supabase, `backupJson()` or the CSV export. Photos are resized to 1280 px JPEGs, and photos taken in the app don't go to the camera roll.
+- **With a PIN:**
+  - Every record (including dates and poses) is encrypted with AES-GCM 256.
+  - The key comes from the PIN via PBKDF2-SHA-256 with 250,000 rounds and a random salt. It's only held in memory and is dropped whenever the app goes into the background.
+  - `meta` stores the salt and an encrypted check value, never the PIN.
+  - A forgotten PIN can't be recovered. The only way back is "Delete my body data".
+- **Limits:**
+  - The data lives in the browser storage of `jaidynkay314-cyber.github.io`, so any other page published under that GitHub account could read it unencrypted. The PIN prevents this.
+  - Code pushed to this repo could also read it after you unlock.
+  - Phone-level backups (iCloud, Google) may include app storage, which is encrypted by the phone.
+  - Clearing the browser's website data, or uninstalling the home screen app, deletes it. There's no cloud copy.
 
 **Cards and loot boxes**
 
