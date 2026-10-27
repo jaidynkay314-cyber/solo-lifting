@@ -1246,6 +1246,7 @@ const api = (path, opts = {}) => fetch(`${CFG.url.replace(/\/$/, "")}/rest/v1/${
 const pending = () => Object.keys(S.outbox.s).length + Object.keys(S.outbox.h).length + Object.keys(S.outbox.x).length;
 function setNet(s) { S.net = s; const el = $("#net"); if (el) { el.dataset.s = s; el.textContent = netText(); } }
 const netText = () => !ONLINE ? "This phone only" : S.net === "ok" ? (pending() ? "Saving" : "Synced") : S.net === "busy" ? "Syncing" : "Offline, will sync";
+let pruned = false;
 async function pull() {
   if (!ONLINE) return false;
   try {
@@ -1256,6 +1257,19 @@ async function pull() {
     for (const h of await hr.json()) {
       if (!S.outbox.h[h.id]) { S.hunters[h.id] = { id: h.id, name: h.name, title: h.title || null, program: h.program || (S.hunters[h.id] && S.hunters[h.id].program) || null }; changed = true; }
       if (!maxT || h.updated_at > maxT) maxT = h.updated_at;
+    }
+    // once per app start: forget hunters that were removed from the board (and their sessions), unless they're unsent or are you
+    if (!pruned) {
+      const ar = await api("hunters?select=id");
+      if (ar.ok) {
+        pruned = true;
+        const live = new Set((await ar.json()).map(x => x.id));
+        if (live.size) for (const id of Object.keys(S.hunters)) {
+          if (live.has(id) || id === S.me || S.outbox.h[id] || S.hunters[id].local) continue;
+          delete S.hunters[id]; changed = true;
+          for (const [k, b] of Object.entries(S.sessions)) if (b.profile === id && !S.outbox.s[k]) delete S.sessions[k];
+        }
+      }
     }
     for (let from = 0; ; from += 1000) {
       const r = await api(`sessions?select=key,hunter,body,updated_at${q}&order=updated_at.asc`, { headers: { Range: `${from}-${from + 999}` } });

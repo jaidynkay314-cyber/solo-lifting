@@ -274,6 +274,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Around the World** (hidden Distance tier, Mythic): 40,075 km, shown as ??? with a hidden target until earned. Any achievement tier can be hidden by adding a third value `1` to its list entry.
 - **Lift numbers private by default.** The feed still announces records ("set a new record on Leg press") but only shows the weight to the lifter, or to everyone if that person opts in. On someone else's profile, the exercise log shows session counts, a sparkline and progress as a percentage, never weights or reps (cardio is unchanged). Toggle: Profile → Lift numbers (stored in `hunters.program._priv.nums`, default off). `showNums(id)`.
 
+## Removing a hunter from the board
+Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you or anything not yet uploaded).
+
 ## To revisit
 - **Muscle map colours:** the zone colours (dim blue, blue, cyan) may be too close together. Review after a few weeks of real data and add more contrast if needed (colours are in `MZ` and `mColor()`).
 - **Encrypted body log backup:** wanted later, needs more thought first.
