@@ -778,6 +778,27 @@ body.noscroll { overflow: hidden; }
 @keyframes glxB { 0%, 80%, 100% { clip-path: inset(55% 0 0 0); transform: translateX(2px); } 83% { clip-path: inset(30% 0 50% 0); transform: translateX(5px); } 87% { clip-path: inset(80% 0 2% 0); transform: translateX(-4px); } 91% { clip-path: inset(5% 0 75% 0); transform: translateX(3px); } }
 .ach .glx { font-size: 1.2em; }
 .hpriv { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; border: 1px solid var(--edge-dim); background: var(--panel); padding: 10px 12px; }
+/* ---------- set rewards, showcase ---------- */
+.setrew { display: flex; flex-direction: column; gap: 10px; }
+.srow { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 6px 0; border-top: 1px solid var(--edge-dim); }
+.srow .avt { font-size: 18px; color: var(--gold); }
+.sinfo { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sinfo > b { font-family: var(--font-display); letter-spacing: .03em; font-size: 16px; }
+.sinfo small { color: var(--muted); font-size: 12px; }
+.sbar { display: block; height: 5px; background: #141a26; border: 1px solid var(--edge-dim); position: relative; }
+.sbar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #7a3dff, #b46bff); }
+.sbar.m i { background: linear-gradient(90deg, #b07a1c, var(--gold)); }
+.pins { display: inline-flex; gap: 3px; margin-left: 7px; vertical-align: middle; }
+.pins .badge.sm { width: 20px; height: 20px; font-size: 11px; }
+.pinrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 2px 0 4px; }
+.pinb { display: inline-flex; align-items: center; gap: 6px; }
+.pinb small { font-size: 12px; font-weight: 600; }
+.pinpick summary { cursor: pointer; color: var(--glow); font-size: 13px; margin: 4px 0; }
+.pingrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 300px; overflow-y: auto; }
+.pinopt { display: flex; align-items: center; gap: 7px; text-align: left; border: 1px solid var(--edge-dim); background: var(--sunk); padding: 6px 7px; color: var(--fg); font-size: 12.5px; }
+.pinopt span { display: flex; flex-direction: column; min-width: 0; }
+.pinopt small { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; }
+.pinopt.on { border-color: var(--glow); box-shadow: 0 0 10px rgb(var(--glow-rgb) / .4); }
 .mmmini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 300px; margin: 0 auto; width: 100%; }
 .mmmini .mmsvg { height: auto; aspect-ratio: 200 / 460; }
 .mmmini .mmm { cursor: default; }
@@ -1808,6 +1829,9 @@ function titleOf(id, R) {
   if (t && t.startsWith("t:")) return COS[t] && cosOf(id)[t] ? { id: t, name: COS[t].name, rar: COS[t].tier, icon: "🎖️", loot: true } : null;
   return t && ACHX[t] && R.ach[t] ? ACHX[t] : null;
 }
+/* up to 3 achievements a hunter pins under their name */
+const pinsOf = (id, R) => ((lookOf(id).pins) || []).filter(a => ACHX[a] && R.ach[a]).slice(0, 3);
+const pinsHTML = (id, R, size = "sm") => { const p = pinsOf(id, R); return p.length ? `<span class="pins">${p.map(a => badge(ACHX[a], size)).join("")}</span>` : ""; };
 const rankBadge = R => `<span class="badge" style="--rc:${RAR[R.lv.L >= 50 ? 5 : R.lv.L >= 35 ? 4 : R.lv.L >= 20 ? 3 : R.lv.L >= 10 ? 2 : R.lv.L >= 5 ? 1 : 0][2]}"><b style="font-family:var(--font-display)">${R.lv.rank}</b></span>`;
 function spark(vals) {
   const W = 110, H = 34, P = 4;
@@ -2151,6 +2175,7 @@ const EV_TXT = {
   pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"],
   cos: e => ["🎁", `won the <b style="color:${TIERS[e.c.tier][1]}">${esc(e.c.name)}</b>`],
   side: e => ["🗺️", `completed a side quest: ${esc(e.txt)}`],
+  setc: e => [e.part === "f" ? "🌟" : "📚", e.part === "f" ? `completed the <b style="color:${TIERS[4][1]}">entire ${esc(e.txt)}</b> set` : `completed the <b style="color:${TIERS[3][1]}">${esc(e.txt)}</b> set`],
   pull: e => ["🃏", `pulled <b style="color:${CR[e.c.r].col}">${esc(e.c.n)}</b> (${CR[e.c.r].label})`]
 };
 function renderBoard() {
@@ -2159,7 +2184,7 @@ function renderBoard() {
   all.forEach(({ id, R }, i) => {
     const t = titleOf(id, R);
     h += `<button class="row${id === S.me ? " me" : ""}" data-profile="${esc(id)}"><span class="pos">${i + 1}</span>${avatarHTML(id, R)}
-      <span class="who"><b>${esc(nameOf(id))}</b><small style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? esc(t.name) : `Rank ${R.lv.rank} hunter`}</small></span>
+      <span class="who"><b>${esc(nameOf(id))}${pinsHTML(id, R)}</b><small style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? esc(t.name) : `Rank ${R.lv.rank} hunter`}</small></span>
       <span class="lv">Lv ${R.lv.L}<small>${fmtN(Math.max(R.xp, 0))} XP</small></span>
       <span class="meta">${todayChip(R)}<span>Streak ${R.streak}</span><span>Week ${weekClears(R)}/${weekQuestDays(id)}</span>${(() => { const h = fuelHits(fuelDay(id, todayStr())); return h.p || h.k ? `<span class="fueltick">${h.p ? "Protein ✓" : ""}${h.p && h.k ? " · " : ""}${h.k ? "Calories ✓" : ""}</span>` : ""; })()}<span>${Object.keys(R.ach).length} achievements</span></span></button>`;
   });
@@ -2168,6 +2193,7 @@ function renderBoard() {
   const cutoff = addDays(todayStr(), -14), evs = [];
   for (const { id, R } of all) for (const e of R.events) if (e.type !== "box" && e.d >= cutoff && e.d <= todayStr() && !(e.type === "ach" && e.a.mastery && e.a.rar === 0)) evs.push({ id, e });
   for (const { id } of all) for (const x of pullsOf(id)) { const c = CARDX[x.id]; if (x.d >= cutoff && CR[c.r].rank >= 3) evs.push({ id, e: { d: x.d, type: "pull", c } }); }
+  for (const { id } of all) for (const sp of setsProgress(id)) { if (sp.baseDone && sp.baseDone >= cutoff) evs.push({ id, e: { d: sp.baseDone, type: "setc", txt: sp.name, part: "t" } }); if (sp.masterDone && sp.masterDone >= cutoff) evs.push({ id, e: { d: sp.masterDone, type: "setc", txt: sp.name, part: "f" } }); }
   for (const { id } of all) for (const x of Object.values(vaultOf(id).opened || {})) { const c = COS[x.item]; if (c && c.tier >= 3 && x.d >= cutoff) evs.push({ id, e: { d: x.d, type: "cos", c } }); }
   const order = { pull: 0, cos: 0, ach: 0, lvl: 1, boss: 2, pr: 3, pzs: 4, pw: 5, pm: 5, comeback: 6, clear: 7, pz: 8 };
   evs.sort((a, b) => (b.e.d.localeCompare(a.e.d)) || (order[a.e.type] - order[b.e.type]));
@@ -2189,6 +2215,9 @@ function appearanceHTML(id, opts) {
         ${lootT.length ? `<optgroup label="Loot titles">${lootT.map(c => `<option value="${c.key}" ${cur === c.key ? "selected" : ""}>${esc(c.name)} (${TIERS[c.tier][0]})</option>`).join("")}</optgroup>` : ""}
         <optgroup label="Achievements">${opts.map(a => `<option value="${a.id}" ${cur === a.id ? "selected" : ""}>${a.icon} ${esc(a.name)} (${RAR[a.rar][0]})</option>`).join("")}</optgroup></select></label>
       <label>Frame<select id="frameSel" aria-label="Choose your frame"><option value="f:">No frame</option>${frames.map(c => `<option value="${c.key}" ${L.frame === c.id ? "selected" : ""}>${esc(c.short)} (${TIERS[c.tier][0]})</option>`).join("")}</select></label>
+      <details class="pinpick"${(L.pins || []).length ? "" : ""}><summary>Showcase: ${pinsOf(id, R).length}/3 pinned · tap to choose</summary>
+        <p class="sub">Pick up to 3 achievements to show under your name on the board.</p>
+        <div class="pingrid">${opts.map(a => { const on = (L.pins || []).includes(a.id); return `<button class="pinopt${on ? " on" : ""}" data-act="pin" data-a="${esc(a.id)}" aria-pressed="${on}">${badge(a, "sm")}<span>${esc(a.name)}<small style="color:${RAR[a.rar][2]}">${RAR[a.rar][0]}</small></span></button>`; }).join("") || `<p class="sub">Unlock some achievements first.</p>`}</div></details>
       <p class="sub">${pic ? `Picture: <b style="color:var(--fg)">${esc(pic.n)}</b> · <button class="linkbtn" data-act="equip" data-item="a:">Remove</button>` : "Picture: open any card in the Vault and tap <b>Use as picture</b>."}</p>
     </div></div></section>`;
 }
@@ -2199,6 +2228,7 @@ function renderProfile(id) {
   let h = `<div class="list">${mine ? "" : `<button class="linkbtn" data-view="board" style="align-self:flex-start">Back to board</button>`}
     <section class="win phead">${avatarHTML(id, R, "lg")}
       <h1>${esc(nameOf(id))}</h1>
+      ${(() => { const p = pinsOf(id, R); return p.length ? `<div class="pinrow">${p.map(a => `<span class="pinb">${badge(ACHX[a])}<small style="color:${RAR[ACHX[a].rar][2]}">${esc(ACHX[a].name)}</small></span>`).join("")}</div>` : ""; })()}
       <span class="ttl" style="color:${t ? RAR[t.rar][2] : "var(--muted)"}">${t ? `${esc(t.name)} · <span class="rar">${RAR[t.rar][0]}</span>` : "No title equipped"}</span>
       <span class="sub">Level <b style="color:var(--fg)">${R.lv.L}</b> · Rank <b style="color:var(--gold)">${R.lv.rank}</b> · ${fmtN(Math.max(R.xp, 0))} XP${R.inPz ? ` · <span class="st pz">Penalty Zone</span>` : ""}</span>
     </section>
@@ -2435,6 +2465,24 @@ const TITLES = [
 const COS = {};
 for (const [id, name, tier, grad, fx = "", cursed = 0] of FRAMES) COS["f:" + id] = { key: "f:" + id, kind: "f", id, name: name + " Frame", short: name, tier, grad, fx, cursed: !!cursed };
 for (const [id, name, tier, cursed = 0] of TITLES) COS["t:" + id] = { key: "t:" + id, kind: "t", id, name, tier, cursed: !!cursed };
+/* set completion: every Common to Full Art card in a set earns its title; the whole set (Secrets, the Glitched card and
+   alt arts too) earns its frame. These never come out of loot boxes. Future sets get a generic pair until named here. */
+const SETREW = {
+  BG: ["Beastmaster of the Gate", "Gatekeeper", "conic-gradient(from var(--fa),#1f6b3a,#9dffb8,#0b2a18,#4cc37a,#1f6b3a)"],
+  IR: ["Relic Keeper", "Forged Iron", "conic-gradient(from var(--fa),#5a5f6a,#ffb35a,#2a2d33,#e8ecf2,#5a5f6a)"],
+  EC: ["Elemental Adept", "Elemental Storm", "conic-gradient(from var(--fa),#ff5a2a,#ffe36a,#4cc3ff,#6affc8,#b46bff,#ff5a2a)"],
+  WH: ["Armoury Master", "Hunter's Steel", "conic-gradient(from var(--fa),#c9d6e8,#4c6a8f,#f2f6ff,#1a2433,#c9d6e8)"],
+  CN: ["Star Charter", "Starlight", "conic-gradient(from var(--fa),#ffd66e,#0b0f2e,#fff3c4,#2a3a8a,#ffd66e)"]
+};
+const setRew = code => { const x = (window.SL_CARDS || { sets: [] }).sets.find(z => z.code === code) || { short: code }; return SETREW[code] || [`${x.short} Collector`, `${x.short} Master`, "conic-gradient(from var(--fa),#4cc3ff,#0a1a33,#b46bff,#4cc3ff)"]; };
+function setRewardsInit() {
+  for (const st of (window.SL_CARDS || { sets: [] }).sets) {
+    const [tn, fn, grad] = setRew(st.code), k = st.code.toLowerCase();
+    COS["t:set-" + k] = { key: "t:set-" + k, kind: "t", id: "set-" + k, name: tn, tier: 3, reward: st.code, cursed: false };
+    COS["f:set-" + k] = { key: "f:set-" + k, kind: "f", id: "set-" + k, name: fn + " Frame", short: fn, tier: 4, grad, fx: "spin glow", reward: st.code, cursed: false };
+  }
+}
+setRewardsInit();
 function itemInfo(item) {
   if (item.startsWith("p:")) { const P = PACK[item.slice(2)]; return { kind: "p", t: item.slice(2), name: P.name, tier: P.tier, note: P.note }; }
   const c = COS[item]; return c ? { ...c, note: c.kind === "f" ? "Frame for your picture on the board" : "Title shown under your name" } : { kind: "?", name: item, tier: 0, note: "" };
@@ -2455,7 +2503,20 @@ function packsOf(hid) {
   for (const [bid, x] of Object.entries(vaultOf(hid).opened || {})) (x.packs || []).forEach((p, i) => { if (!p.torn) out.push({ bid, i, t: p.t, cards: p.cards, d: x.d }); });
   return out.sort((a, b) => a.d < b.d ? -1 : 1);
 }
-function cosOf(hid) { const o = {}; for (const x of Object.values(vaultOf(hid).opened || {})) if (x.item && COS[x.item]) o[x.item] ||= x.d; return o; }
+function cosOf(hid) {
+  const o = {}; for (const x of Object.values(vaultOf(hid).opened || {})) if (x.item && COS[x.item]) o[x.item] ||= x.d;
+  for (const sp of setsProgress(hid)) { if (sp.baseDone) o["t:set-" + sp.k] ||= sp.baseDone; if (sp.masterDone) o["f:set-" + sp.k] ||= sp.masterDone; }
+  return o;
+}
+/* per set: cards needed, cards owned and the day each part was completed (the day its last missing card was pulled) */
+function setsProgress(hid) {
+  const first = {}; for (const { id, d } of pullsOf(hid)) if (!first[id] || d < first[id]) first[id] = d;
+  return CSETS.map(st => {
+    const all = CARDS.filter(c => c.set === st.code), base = all.filter(c => !c.alt && "CURHF".includes(c.r));
+    const done = list => list.length && list.every(c => first[c.id]) ? list.map(c => first[c.id]).sort().pop() : null;
+    return { code: st.code, k: st.code.toLowerCase(), name: st.name, short: st.short, base: base.length, baseHave: base.filter(c => first[c.id]).length, all: all.length, allHave: all.filter(c => first[c.id]).length, baseDone: done(base), masterDone: done(all) };
+  });
+}
 const lookOf = hid => ((S.hunters[hid] && S.hunters[hid].program) || {})._look || {};
 function cardBonus(hid) {
   const st = { STR: 0, AGI: 0, VIT: 0, END: 0 }; let xp = 0;
@@ -2494,13 +2555,13 @@ function rollLoot(k, v) {
   let tier = +roll(B.odds.map((w, i) => [String(i), w]));
   if ((v.pity.b || 0) >= 24 && tier < 3) tier = 3;
   v.pity.b = tier >= 3 ? 0 : (v.pity.b || 0) + 1;
-  const cos = Object.values(COS).filter(c => c.tier === tier && !own[c.key] && (!c.cursed || B.cursed));
+  const cos = Object.values(COS).filter(c => !c.reward && c.tier === tier && !own[c.key] && (!c.cursed || B.cursed));
   if (cos.length && Math.random() < (B.cursed ? .45 : .35)) return cos[Math.floor(Math.random() * cos.length)].key;
   return "p:" + packForTier(tier, B.cursed);
 }
 function decoy(k) {
   const B = BOX[k], tier = +roll(B.odds.map((w, i) => [String(i), w]));
-  const cos = Object.values(COS).filter(c => c.tier === tier && (!c.cursed || B.cursed));
+  const cos = Object.values(COS).filter(c => !c.reward && c.tier === tier && (!c.cursed || B.cursed));
   return cos.length && Math.random() < .4 ? cos[Math.floor(Math.random() * cos.length)].key : "p:" + packForTier(tier, B.cursed);
 }
 /* the prize (and any pack's cards) is rolled and saved the moment the box opens: closing the app never loses or rerolls it */
@@ -2591,9 +2652,17 @@ function renderVault() {
     ${packs.length ? `<section class="win card"><p class="tag">Packs</p><h1 class="title" style="font-size:24px">${packs.length} pack${packs.length === 1 ? "" : "s"} to open</h1>
       <div class="boxes">${Object.keys(PACK).filter(t => np(t)).map(t => `<button class="boxbtn" data-act="popen" data-t="${t}" aria-label="Open a ${PACK[t].name}, ${np(t)} waiting">${packHTML(t, true)}<b>${np(t)}</b><span>${PACK[t].name}</span></button>`).join("")}</div></section>` : ""}
     <section class="win card"><div class="toggle"><h2>Frames and titles</h2><span class="sub"><b style="color:var(--fg)">${Object.keys(cos).length}</b> / ${Object.keys(COS).length}</span></div>
+      <p class="sub">Loot box frames and titles, plus set rewards for completing card sets.</p>
       ${Object.keys(cos).length ? `<div class="cosgrid">${Object.values(COS).filter(c => cos[c.key]).sort((a, b) => a.kind.localeCompare(b.kind) || b.tier - a.tier).map(c =>
         `<button class="cos" data-act="equip" data-item="${c.key}" style="--tc:${TIERS[c.tier][1]}">${itemIcon(c)}<span>${esc(c.kind === "f" ? c.short : c.name)}<small>${(c.kind === "f" ? lookOf(S.me).frame === c.id : S.hunters[S.me].title === c.key) ? "Equipped" : "Tap to equip"}</small></span></button>`).join("")}</div>` : `<p class="sub">None yet. They come out of loot boxes.</p>`}
-      <p class="sub">Still to find: ${TIERS.map((t, i) => { const n = Object.values(COS).filter(c => c.tier === i && !cos[c.key]).length; return n ? `<b style="color:${t[1]}">${n} ${t[0]}</b>` : ""; }).filter(Boolean).join(" · ") || "nothing, you have them all"}.</p></section>
+      <p class="sub">Still to find: ${TIERS.map((t, i) => { const n = Object.values(COS).filter(c => !c.reward && c.tier === i && !cos[c.key]).length; return n ? `<b style="color:${t[1]}">${n} ${t[0]}</b>` : ""; }).filter(Boolean).join(" · ") || "nothing, you have them all"}.</p></section>
+    <section class="win card setrew"><div class="toggle"><h2>Set rewards</h2><span class="sub">never in loot boxes</span></div>
+      <p class="sub">Collect every Common to Full Art card in a set for its title. Collect the whole set, Secrets, the Glitched card and alt arts included, for its animated frame.</p>
+      ${setsProgress(S.me).map(sp => { const [tn, fn, grad] = setRew(sp.code); return `<div class="srow">
+        <span class="av sm spin glow" style="--frb:${grad}"><span class="avi"><span class="avt">${sp.masterDone ? "★" : "?"}</span></span></span>
+        <span class="sinfo"><b>${esc(sp.name)}</b>
+          <span class="sbar"><i style="width:${(sp.baseHave / sp.base * 100).toFixed(1)}%"></i></span><small>${sp.baseDone ? `✓ Title: <b style="color:${TIERS[3][1]}">${esc(tn)}</b>` : `Title ${sp.baseHave}/${sp.base}: ${esc(tn)}`}</small>
+          <span class="sbar m"><i style="width:${(sp.allHave / sp.all * 100).toFixed(1)}%"></i></span><small>${sp.masterDone ? `✓ Frame: <b style="color:${TIERS[4][1]}">${esc(fn)}</b>` : `Frame ${sp.allHave}/${sp.all}: ${esc(fn)}`}</small></span></div>`; }).join("")}</section>
     <section class="win card"><div class="toggle"><h2>Collection</h2><span class="sub"><b style="color:var(--fg)">${got}</b> / ${CARDS.length}</span></div>
       <p>Each card adds a stat bonus the first time you collect it${cb.total ? `: <b style="color:var(--gold)">${["STR", "AGI", "VIT", "END"].filter(k => cb.st[k]).map(k => `+${cb.st[k]} ${k}`).join(" · ")}</b>` : ""}. Bonuses show on your profile but don't count towards stat achievements.${cb.xp ? ` Glitched cards add <b style="color:#2affea">+${cb.xp}% XP</b>.` : ""}</p></section>`;
   const groups = [...CSETS.map(x => x.code), "G"];
@@ -3889,6 +3958,14 @@ document.addEventListener("click", e => {
   if (mmClick(t, act)) return;
   if (bodyClick(t, act)) return;
   if (act === "privnums") { const h = S.hunters[S.me]; h.program ||= {}; const on = !((h.program._priv || {}).nums); h.program._priv = { ...(h.program._priv || {}), nums: on }; dirtyHunter(S.me); render(); toast({ tag: "Lift numbers", title: on ? "Shown to the group" : "Private" }); return; }
+  if (act === "pin") {
+    const h = S.hunters[S.me], a = t.dataset.a; h.program ||= {}; const L = { ...(h.program._look || {}) }, p = (L.pins || []).filter(x => ACHX[x]);
+    if (p.includes(a)) L.pins = p.filter(x => x !== a);
+    else { if (p.length >= 3) { toast({ tag: "Showcase", title: "3 pinned already", text: "Unpin one first." }); return; } L.pins = [...p, a]; }
+    h.program._look = L; dirtyHunter(S.me); render();
+    const d = document.querySelector(".pinpick"); if (d) { d.open = true; }
+    return;
+  }
   if (act === "repmm") { MM.week = "last"; MM.sel = null; S.view = "profile"; S.viewing = null; render(); setTimeout(() => { const c = $("#mmCard"); if (c) c.scrollIntoView({ block: "start" }); }, 50); return; }
   if (act === "repok") { try { localStorage.setItem(repKey(S.me, addDays(mondayOf(todayStr()), -7)), "1"); } catch (e) {} const rc = $("#repCard"); if (rc) rc.remove(); return; }
   if (act === "sqadd") {

@@ -274,6 +274,10 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Around the World** (hidden Distance tier, Mythic): 40,075 km, shown as ??? with a hidden target until earned. Any achievement tier can be hidden by adding a third value `1` to its list entry.
 - **Lift numbers private by default.** The feed still announces records ("set a new record on Leg press") but only shows the weight to the lifter, or to everyone if that person opts in. On someone else's profile, the exercise log shows session counts, a sparkline and progress as a percentage, never weights or reps (cardio is unchanged). Toggle: Profile → Lift numbers (stored in `hunters.program._priv.nums`, default off). `showNums(id)`.
 
+## v8.0 additions
+- **Set rewards** (Vault → Set rewards): every Common to Full Art card in a set (alt arts not needed) earns that set's title (Epic); the whole set, including Secrets, its Glitched card and alt arts, earns its animated frame (Legendary). Titles and frames: Beasts = Beastmaster of the Gate / Gatekeeper, Relics = Relic Keeper / Forged Iron, Cores = Elemental Adept / Elemental Storm, Weapons = Armoury Master / Hunter's Steel, Constellations = Star Charter / Starlight. New sets get "<short> Collector" / "<short> Master" until added to `SETREW`. Rewards are derived from the collection (`setsProgress()`, merged into `cosOf()`), never roll from loot boxes, and completions show in the feed.
+- **Badge showcase** (Profile → Appearance → Showcase): pin up to 3 unlocked achievements; they show next to your name on the board and under it on your profile. Stored in `program._look.pins`.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
