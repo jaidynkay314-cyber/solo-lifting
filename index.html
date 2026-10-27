@@ -755,6 +755,13 @@ body.noscroll { overflow: hidden; }
 .bcmp figure { margin: 0; }
 .bcmp img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; border: 1px solid var(--edge-dim); }
 .bcmp figcaption { font-size: 12px; color: var(--muted); text-align: center; padding-top: 3px; }
+
+.bweek { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bweek th { text-align: left; font-family: var(--font-display); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 11px; color: var(--muted); padding: 4px 8px 6px 0; white-space: nowrap; }
+.bweek td { vertical-align: top; padding: 6px 10px 6px 0; border-top: 1px solid var(--edge-dim); white-space: nowrap; }
+.bweek td small { display: block; color: var(--muted); font-size: 11px; }
+.bweek td small.dn { color: #5ee39a; }
+.bweek td small.up { color: var(--gold); }
 #bpose { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 7px 10px; }
 
 .fsearch { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -2069,7 +2076,7 @@ function renderRecords() {
     <section class="win card"><h2>Check my log</h2><p>Looks for numbers that are probably typos, like 1000 kg instead of 100. Fix the number and anything it unlocked by mistake (XP, achievements, records, loot) is taken back automatically.</p>
       ${sus.length ? `<div class="sus">${sus.slice(0, 30).map(x => `<div><span><b>${esc(x.txt)}</b><small>${fmtDate(x.b.date)} · ${esc(x.why)}</small></span><button class="btn" data-act="logfix" data-date="${x.b.date}" data-fday="${x.b.day}">Fix</button></div>`).join("")}</div>` : `<p class="floor ok">Nothing unusual found.</p>`}</section>
     <section class="win card"><div class="toggle"><h2>Sound</h2><button class="btn${S.sound ? " primary" : ""}" data-act="sound">${S.sound ? "On" : "Off"}</button></div><p>System chimes for cleared quests, records, level ups and achievements.</p></section>
-    <section class="win card"><h2>Export for analysis</h2><p>A spreadsheet-friendly CSV of every set, bonus exercise and cardio session you've logged. Send it to Claude for trend analysis.</p>
+    <section class="win card"><h2>Export for analysis</h2><p>A spreadsheet-friendly CSV of every set, bonus exercise and cardio session you've logged, plus a daily calorie and protein row. Send it to Claude for trend analysis. Weight and measurements are exported separately from the Body screen.</p>
       <div class="ex-actions"><button class="btn primary" id="csvBtn">Export CSV</button></div></section>
     <section class="win card"><h2>Backup</h2><p>${n} session${n === 1 ? "" : "s"} logged by you. A backup saves everything stored on this phone to a .json file.</p>
       <div class="ex-actions"><button class="btn primary" id="exportBtn">Export backup</button><button class="btn" id="copyBtn">Copy as text</button>
@@ -2986,6 +2993,74 @@ async function wipeBody() {
   for (const store of ["entries", "photos"]) { const all = await idb(store, "readonly", st => st.getAll()); for (const x of all) if (x.hid === S.me) await idb(store, "readwrite", st => st.delete(x.id)); }
   await idb("meta", "readwrite", st => st.delete("lock:" + S.me)); BKEY = null;
 }
+/* ---- progress: food, training and body side by side (worked out on this phone) ---- */
+const foodDates = hid => Object.values(S.sessions).filter(b => b.profile === hid && b.food && (b.food.items || []).length).map(b => b.date).sort();
+function dayTrain(hid, d) {
+  const bs = Object.values(S.sessions).filter(b => b.profile === hid && b.date === d && !isMeta(b));
+  return { pts: sumBy(bs, b => pointsOf(b).total), ex: bs.some(b => b.excused) };
+}
+function progressDays() {
+  const R = replay(S.me), E = BODY.entries, byD = Object.fromEntries(E.map(e => [e.date, e]));
+  const starts = [E[0] && E[0].date, foodDates(S.me)[0], R.first].filter(Boolean).sort();
+  if (!starts.length) return [];
+  const out = [], today = todayStr();
+  for (let d = starts[0]; d <= today; d = addDays(d, 1)) {
+    const e = byD[d] || {}, f = fuelDay(S.me, d), t = dayTrain(S.me, d);
+    const w = E.filter(x => x.kg != null && x.date <= d && x.date > addDays(d, -7));
+    out.push({ date: d, kg: e.kg ?? null, kg7: w.length ? Math.round(sumBy(w, x => x.kg) / w.length * 10) / 10 : null, meas: Object.fromEntries(MEAS.map(([k]) => [k, e[k] ?? null])),
+      food: f.items.length > 0, k: f.k, p: f.p, goal: f.goal, hit: fuelHits(f), pts: t.pts, cleared: !!R.clr[d], excused: !!R.exc[d] || t.ex });
+  }
+  return out;
+}
+function progressWeeks(days) {
+  const W = {};
+  for (const x of days) (W[mondayOf(x.date)] ||= []).push(x);
+  const ws = Object.keys(W).sort(), out = [];
+  ws.forEach((m, i) => {
+    const a = W[m], fd = a.filter(x => x.food), kd = a.filter(x => x.kg != null), wd = a.filter(x => x.meas.waist != null);
+    out.push({ mon: m, days: a.length, foodDays: fd.length, k: fd.length ? Math.round(sumBy(fd, x => x.k) / fd.length) : null, p: fd.length ? Math.round(sumBy(fd, x => x.p) / fd.length) : null,
+      kg: kd.length ? Math.round(sumBy(kd, x => x.kg) / kd.length * 10) / 10 : null, waist: wd.length ? wd[wd.length - 1].meas.waist : null,
+      train: a.filter(x => x.pts > 0).length, cleared: a.filter(x => x.cleared).length, pts: sumBy(a, x => x.pts) });
+  });
+  out.forEach((w, i) => { const p = out.slice(0, i).reverse().find(x => x.kg != null); w.dkg = w.kg != null && p ? Math.round((w.kg - p.kg) * 10) / 10 : null;
+    const pw = out.slice(0, i).reverse().find(x => x.waist != null); w.dwaist = w.waist != null && pw ? Math.round((w.waist - pw.waist) * 10) / 10 : null; });
+  return out;
+}
+const sgn = v => v == null ? "" : `${v > 0 ? "+" : ""}${v}`;
+function weeksHTML() {
+  const W = progressWeeks(progressDays()).slice(-12).reverse();
+  if (!W.length) return `<section class="fsec"><h3>Weekly progress</h3><p class="sub">Log food, training or a weigh-in to start filling this in.</p></section>`;
+  return `<section class="fsec"><h3>Weekly progress<small>Mon to Sun</small></h3>
+    <div class="scroll"><table class="bweek"><thead><tr><th>Week</th><th>Avg kcal</th><th>Avg protein</th><th>Avg weight</th><th>Waist</th><th>Trained</th></tr></thead><tbody>
+    ${W.map(w => `<tr><td>${fmtShort(w.mon)}${w.days < 7 ? `<small>${w.days} of 7 days</small>` : ""}</td>
+      <td>${w.k != null ? w.k.toLocaleString("en-AU") : "–"}${w.k != null ? `<small>${w.foodDays} day${w.foodDays === 1 ? "" : "s"} logged</small>` : ""}</td>
+      <td>${w.p != null ? w.p + " g" : "–"}</td>
+      <td>${w.kg != null ? w.kg + " kg" : "–"}${w.dkg != null ? `<small class="${w.dkg <= 0 ? "dn" : "up"}">${sgn(w.dkg)} kg</small>` : ""}</td>
+      <td>${w.waist != null ? w.waist + " cm" : "–"}${w.dwaist != null ? `<small class="${w.dwaist <= 0 ? "dn" : "up"}">${sgn(w.dwaist)} cm</small>` : ""}</td>
+      <td>${w.train} day${w.train === 1 ? "" : "s"}<small>${w.cleared} cleared · ${w.pts} pts</small></td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="sub">Calorie and protein averages only count days with food logged. Weight is the average of that week's weigh-ins, and waist is the latest measurement that week. Judge the trend over 3 to 4 weeks, not one.</p></section>`;
+}
+function progressCsv() {
+  const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const head = ["date", "weekday", "weight_kg", "weight_7day_avg_kg", ...MEAS.map(([k]) => k + "_cm"), "food_logged", "kcal", "protein_g", "kcal_goal", "kcal_goal_mode", "protein_goal", "kcal_goal_hit", "protein_goal_hit", "quest_points", "quest_cleared", "excused"];
+  const rows = [head];
+  for (const x of progressDays()) {
+    const g = x.goal || {};
+    rows.push([x.date, parseDate(x.date).toLocaleDateString("en-AU", { weekday: "short" }), x.kg, x.kg7, ...MEAS.map(([k]) => x.meas[k]), x.food ? "yes" : "no", x.food ? x.k : "", x.food ? x.p : "",
+      g.k || "", g.k ? (g.mode === "min" ? "at_least" : "stay_under") : "", g.p || "", x.food && g.k ? (x.hit.k ? "yes" : "no") : "", x.food && g.p ? (x.hit.p ? "yes" : "no") : "", x.pts, x.cleared ? "yes" : "no", x.excused ? "yes" : "no"]);
+  }
+  return rows.map(r => r.map(q).join(",")).join("\n");
+}
+/* the file is handed to the phone's own share/save sheet; the app never sends it anywhere */
+async function progressExport() {
+  const text = progressCsv(), name = `solo-lifting-progress-${nameOf(S.me).toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${todayStr()}.csv`;
+  try {
+    const file = new File([text], name, { type: "text/csv" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  save(name, text, "text/csv");
+}
 function bodyClearURLs() { for (const u of BODY.urls) URL.revokeObjectURL(u); BODY.urls = []; }
 async function openBody() { $("#bodyOv").hidden = false; document.body.classList.add("noscroll"); BODY.view = "log"; BODY.cmp = []; await drawBody(); }
 function closeBody() { $("#bodyOv").hidden = true; document.body.classList.remove("noscroll"); bodyClearURLs(); if (S.me !== BODY.hid) BKEY = null; render(); }
@@ -2993,7 +3068,7 @@ async function drawBody() {
   const el = $("#bodyBody");
   try { await bodyLoad(); } catch (e) { el.innerHTML = `<p class="note alert">This phone's browser won't open private storage (${esc(e.message || e)}). Private browsing mode blocks it.</p>`; return; }
   bodyClearURLs();
-  const note = `<p class="bnote">🔒 <b>Only on this phone.</b> Never uploaded or synced, and left out of backups and exports. ${BKEY || BODY.locked ? "Encrypted with your PIN." : "Add a PIN below to encrypt it."}</p>`;
+  const note = `<p class="bnote">🔒 <b>Only on this phone.</b> Never uploaded or synced, and left out of backups and the training CSV. ${BKEY || BODY.locked ? "Encrypted with your PIN." : "Add a PIN below to encrypt it."}</p>`;
   if (BODY.locked) {
     el.innerHTML = `${note}<section class="fsec"><h3>Locked</h3><div class="fquick"><input id="bpin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="PIN" style="grid-column:1/-1"></div>
       <div class="ex-actions"><button class="btn primary" data-act="bunlock">Unlock</button></div><p class="sub" id="bmsg"></p>
@@ -3015,6 +3090,7 @@ async function drawBody() {
       <div class="vchips">${[["kg", "Weight"], ...MEAS].filter(([k]) => k === "kg" || E.some(e => e[k] != null)).map(([k, n]) => `<button class="vchip" data-act="bchart" data-k="${k}" aria-pressed="${key === k}">${n}</button>`).join("")}
         ${[[30, "30 days"], [90, "90 days"], [0, "All"]].map(([d, n]) => `<button class="vchip" data-act="brange" data-d="${d}" aria-pressed="${BODY.range === d}">${n}</button>`).join("")}</div>
       ${pts.length > 1 ? lineChart([{ name: key === "kg" ? "Weight" : MEAS.find(m => m[0] === key)[1], color: "#4cc3ff", pts, thin: key === "kg" }, ...(avg.length ? [{ name: "7-day average", color: "#ffc861", pts: avg, dots: false }] : [])], key === "kg" ? "kg" : "cm", 170) : `<p class="sub">Log a couple of days to see the trend.</p>`}</section>
+    ${weeksHTML()}
     <section class="fsec"><h3>Progress photos<small>${BODY.photos.length} saved</small></h3>
       <div class="ex-actions"><select id="bpose" aria-label="Pose">${POSES.map(p => `<option>${p}</option>`).join("")}</select>
         <label class="btn primary file">Take photo<input type="file" accept="image/*" capture id="bcam" hidden></label>
@@ -3024,6 +3100,9 @@ async function drawBody() {
       ${BODY.cmp.length ? `<div class="ex-actions"><button class="btn" data-act="bcmpclear">Clear selection</button><button class="btn" data-act="bphdel">Delete selected</button></div>` : ""}
       <div class="bgrid" id="bgrid">${BODY.photos.map(p => `<button class="bph${BODY.cmp.includes(p.id) ? " sel" : ""}" data-act="bph" data-id="${p.id}"><img alt="" data-pid="${p.id}"><span>${fmtShort(p.date)} · ${p.pose}</span></button>`).join("")}</div></section>
     <section class="fsec"><h3>History</h3>${E.length ? `<div class="flog">${E.slice(-14).reverse().map(e => `<div><span><b>${fmtDate(e.date)}</b><small>${e.kg != null ? e.kg + " kg" : ""}${MEAS.filter(([k]) => e[k] != null).map(([k, n]) => ` · ${n.toLowerCase()} ${e[k]} cm`).join("")}</small></span><button class="btn" data-act="bdel" data-id="${e.id}" aria-label="Delete">✕</button></div>`).join("")}</div>` : `<p class="sub">Nothing logged yet.</p>`}</section>
+    <section class="fsec"><h3>Progress export</h3>
+      <p class="sub">A spreadsheet of every day: weight, measurements, calories, protein and quest points. Photos are never included. It's made on this phone and opens your phone's save or share sheet, so it only goes where you send it. Once saved, it's a normal unencrypted file.</p>
+      <div class="ex-actions"><button class="btn primary" data-act="bexport">Export progress CSV</button></div></section>
     <section class="fsec"><h3>Privacy</h3>
       ${BKEY ? `<div class="ex-actions"><button class="btn" data-act="bpinoff">Remove PIN</button><button class="btn" data-act="block">Lock now</button></div>`
         : `<div class="fquick"><input id="bnewpin" type="password" inputmode="numeric" autocomplete="new-password" placeholder="New PIN (4+ digits)" aria-label="New PIN" style="grid-column:1/-1"></div><div class="ex-actions"><button class="btn primary" data-act="bpinon">Encrypt with a PIN</button></div>`}
@@ -3037,7 +3116,7 @@ async function drawBody() {
     $("#bcmp").innerHTML = ps.map((p, i) => `<figure><img src="${urls[i]}" alt=""><figcaption>${fmtDate(p.date)} · ${p.pose}</figcaption></figure>`).join("");
   }
 }
-const BACTS = new Set(["bopen", "bclose", "bunlock", "bsave", "bdel", "bchart", "brange", "bph", "bcmpclear", "bphdel", "bpinon", "bpinoff", "block", "bwipe"]);
+const BACTS = new Set(["bopen", "bclose", "bunlock", "bsave", "bdel", "bchart", "brange", "bph", "bcmpclear", "bphdel", "bpinon", "bpinoff", "block", "bwipe", "bexport"]);
 function bodyClick(t, act) { if (!BACTS.has(act)) return false; bodyAct(t, act).catch(e => toast({ tag: "Body log", title: "Something went wrong", text: String(e.message || e) })); return true; }
 async function bodyAct(t, act) {
   if (act === "bopen") { openBody(); return true; }
@@ -3074,6 +3153,7 @@ async function bodyAct(t, act) {
   }
   if (act === "bpinoff") { if (!confirm("Remove the PIN? Your body data will be stored unencrypted on this phone.")) return true; await removePin(); drawBody(); return true; }
   if (act === "block") { BKEY = null; drawBody(); return true; }
+  if (act === "bexport") { await progressExport(); return true; }
   if (act === "bwipe") { if (!confirm("Delete all your weights, measurements and photos from this phone? This can't be undone.")) return true; await wipeBody(); drawBody(); return true; }
   return false;
 }
@@ -3335,7 +3415,7 @@ $("#timerStop").onclick = () => { clearInterval(tInt); $("#timer").hidden = true
 const backupJson = () => JSON.stringify({ app: "lift-log", version: 6, exported: new Date().toISOString(), hunters: S.hunters, custom: S.custom, sessions: S.sessions }, null, 1);
 function csvText() {
   const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal"];
+  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal", "protein_g", "kcal_goal", "protein_goal", "kcal_goal_hit", "protein_goal_hit"];
   const rows = [head];
   const R = replay(S.me), who = nameOf(S.me);
   const mine = Object.values(S.sessions).filter(b => b.profile === S.me && !isMeta(b)).sort((a, b) => a.date < b.date ? -1 : 1);
@@ -3356,6 +3436,11 @@ function csvText() {
     }
     if (b.excused && !hasTraining({ ...b, excused: false })) row({ ...base, type: "excused" });
   }
+  for (const d of foodDates(S.me)) {
+    const f = fuelDay(S.me, d), h = fuelHits(f), g = f.goal || {};
+    row({ type: "food", person: who, date: d, item: `${f.items.length} item${f.items.length === 1 ? "" : "s"} logged`, kcal: f.k, protein_g: f.p, kcal_goal: g.k || "", protein_goal: g.p || "", kcal_goal_hit: g.k ? (h.k ? "yes" : "no") : "", protein_goal_hit: g.p ? (h.p ? "yes" : "no") : "" });
+  }
+  rows.splice(1, rows.length - 1, ...rows.slice(1).sort((a, b) => a[2] < b[2] ? -1 : a[2] > b[2] ? 1 : 0));
   return rows.map(r => r.map(q).join(",")).join("\n");
 }
 function save(name, text, type) {
