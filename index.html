@@ -1044,9 +1044,9 @@ const plural = (n, w) => `${fmtN(n)} ${w}${n === 1 ? "" : "s"}`;
 let ACH = [], ACHX = {}, ACH_CATS = [], achSig = null;
 function cat(name, icon, metric, est, list, desc, opts = {}) {
   ACH_CATS.push({ name, icon, metric, mastery: !!opts.mastery, secret: !!opts.secret });
-  for (const [n, title] of list) {
+  for (const [n, title, hidden] of list) {
     const rar = rarityFor(typeof est === "function" ? est(n) : n / est);
-    const a = { id: `${metric}:${n}`, cat: name, name: title, desc: desc(n), icon, metric, n, rar, xp: opts.noXp ? 0 : RAR[rar][3], mastery: !!opts.mastery };
+    const a = { id: `${metric}:${n}`, cat: name, name: title, desc: desc(n), icon, metric, n, rar, xp: opts.noXp ? 0 : RAR[rar][3], mastery: !!opts.mastery, hidden: !!hidden };
     ACH.push(a); ACHX[a.id] = a;
   }
 }
@@ -1059,7 +1059,7 @@ function baseAchievements() {
   cat("Reps", "🔁", "reps", 130, [[100, "Rep Rookie"], [1000, "Thousand Reps"], [5000, "Rep Grinder"], [10000, "Ten Thousand Reps"], [25000, "Rep Machine"], [50000, "Rep Factory"], [100000, "Hundred Thousand"], [250000, "Rep Overlord"], [500000, "Half a Million"], [1000000, "The Millionaire"]], n => `Complete ${plural(n, "rep")}`);
   cat("Tonnage", "🪨", "volume", 3000, [[1000, "One Tonne"], [5000, "Five Tonnes"], [10000, "Ten Tonnes"], [25000, "Truckload"], [50000, "Fifty Tonnes"], [100000, "Hundred Tonnes"], [250000, "Freight Train"], [500000, "Cargo Ship"], [1000000, "Thousand Tonnes"], [2500000, "Mountain Mover"]], n => `Lift ${fmtN(n / 1000)} tonne${n === 1000 ? "" : "s"} in total (weight x reps)`);
   cat("Cardio", "🫀", "cardioMin", 12, [[60, "First Hour"], [300, "Five Hours"], [600, "Ten Hours"], [1500, "A Day of Running"], [3000, "Fifty Hours"], [6000, "Hundred Hours"], [10000, "Ten Thousand Minutes"], [20000, "Iron Lungs"], [40000, "Perpetual Motion"]], n => `Log ${fmtN(n)} minutes of cardio`);
-  cat("Distance", "🏃", "km", 1.3, [[5, "First 5K"], [10, "Ten K"], [21.1, "Half Marathon"], [42.2, "Full Marathon"], [100, "Hundred K"], [250, "Long Hauler"], [500, "Five Hundred K"], [1000, "Thousand Kilometres"], [2000, "Ultra Machine"], [4000, "Across the Continent"]], n => `Cover ${n} km`);
+  cat("Distance", "🏃", "km", 1.3, [[5, "First 5K"], [10, "Ten K"], [21.1, "Half Marathon"], [42.2, "Full Marathon"], [100, "Hundred K"], [250, "Long Hauler"], [500, "Five Hundred K"], [1000, "Thousand Kilometres"], [2000, "Ultra Machine"], [4000, "Across the Continent"], [40075, "Around the World", 1]], n => n === 40075 ? "Cover 40,075 km, the distance around the Earth" : `Cover ${n} km`);
   cat("Level", "⭐", "level", L => 50 * L * (L + 1) / 170, [[5, "D-Rank Hunter"], [10, "C-Rank Hunter"], [15, "Steady Climber"], [20, "B-Rank Hunter"], [25, "Seasoned"], [30, "Elite"], [35, "A-Rank Hunter"], [40, "Rare Talent"], [45, "Near the Peak"], [50, "S-Rank Hunter"], [60, "Beyond S"], [75, "Transcendent"], [100, "Monarch"]], n => `Reach Level ${n}`, { noXp: true });
   cat("Upper body", "💪", "upperQ", .25, [[1, "First Push"], [10, "Pressing On"], [25, "Upper Hand"], [50, "Armoured"], [100, "Titan Torso"], [200, "Atlas"], [300, "Colossus"]], n => `Clear ${plural(n, "Monday or Wednesday quest")}`);
   cat("Leg day", "🦵", "lowerQ", .25, [[1, "Didn't Skip"], [10, "Leg Day Regular"], [25, "Leg Day Survivor"], [50, "Tree Trunks"], [100, "Quad Squad Captain"], [200, "Pillars of Iron"], [300, "Earthshaker"]], n => `Clear ${plural(n, "Tuesday or Thursday quest")}`);
@@ -2196,8 +2196,8 @@ function renderProfile(id) {
     const pct = next ? Math.max(0, Math.min(100, (val - prev) / (next.n - prev) * 100)) : 100;
     if (c.secret && !got.length) return `<details class="cat"><summary><span class="badge sm" style="--rc:#556">❔</span><span class="cn">???</span><span class="cc">0/${items.length}</span><span class="nx">A secret achievement. It's how it all began.</span></summary></details>`;
     return `<details class="cat"><summary>${lockBadge(got.length ? got[got.length - 1] : items[0], "sm", !got.length)}<span class="cn">${esc(c.name)}</span><span class="cc">${got.length}/${items.length}</span>
-      <span class="nx">${next ? `Next: ${esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${fmtN(next.n)}` : "Complete"}</span></summary>
-      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${lockBadge(a, "", !R.ach[a.id])}<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>
+      <span class="nx">${next ? `Next: ${next.hidden ? "???" : esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${next.hidden ? "???" : fmtN(next.n)}` : "Complete"}</span></summary>
+      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${lockBadge(a, "", !R.ach[a.id])}<span><b>${a.hidden && !R.ach[a.id] ? "???" : esc(a.name)}</b><small>${a.hidden && !R.ach[a.id] ? "A hidden quest at the end of the road. Keep going." : esc(a.desc)}</small></span>
         <span class="when"><span class="rar" style="color:${RAR[a.rar][2]}">${RAR[a.rar][0]}</span><br>${R.ach[a.id] ? fmtShort(R.ach[a.id]) : a.xp ? `+${a.xp} XP` : ""}</span></div>`).join("")}</div></details>`;
   };
   for (const c of ACH_CATS.filter(c => !c.mastery)) h += catBlock(c);
