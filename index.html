@@ -763,6 +763,7 @@ body.noscroll { overflow: hidden; }
 .mmrow { display: grid; grid-template-columns: 9.5em 1fr 2.6em; gap: 8px; align-items: center; text-align: left; background: none; border: 0; padding: 3px 0; color: var(--fg); font-size: 13px; }
 .mmrow b { text-align: right; font-family: var(--font-display); }
 
+.hpriv { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; border: 1px solid var(--edge-dim); background: var(--panel); padding: 10px 12px; }
 .mmmini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 300px; margin: 0 auto; width: 100%; }
 .mmmini .mmsvg { height: auto; aspect-ratio: 200 / 460; }
 .mmmini .mmm { cursor: default; }
@@ -1484,13 +1485,13 @@ function replay(hid) {
           const top = Math.max(...f.map(s => +s.w || 0));
           if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: label }); box("B", "boss:" + w, d); }
           if (top > 0) {
-            if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg` }); }
+            if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg`, ex: label }); }
             if (R.best[id] == null || top > R.best[id]) R.best[id] = top;
           }
         } else {
           const top = Math.max(...f.map(s => +(type === "r" ? s.r : s.s) || 0)), unit = type === "r" ? "reps" : "s";
           if (top > 0) {
-            if (R.bestReps[id] != null && top > R.bestReps[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} ${unit}` }); }
+            if (R.bestReps[id] != null && top > R.bestReps[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} ${unit}`, ex: label }); }
             if (R.bestReps[id] == null || top > R.bestReps[id]) R.bestReps[id] = top;
           }
         }
@@ -2104,9 +2105,11 @@ function todayChip(R) {
 }
 function weekClears(R) { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 7; i++) if (R.clr[addDays(ws, i)]) n++; return n; }
 const weekQuestDays = id => { const ws = mondayOf(todayStr()); let n = 0; for (let i = 0; i < 7; i++) if (isQuestDay(id, addDays(ws, i))) n++; return n; };
+/* lift numbers are private by default: others see that a record happened, not the weight. Each person can opt in. */
+const showNums = id => id === S.me || !!(((S.hunters[id] || {}).program || {})._priv || {}).nums;
 const EV_TXT = {
   clear: e => ["⚔️", `cleared ${esc(e.txt)}`], pzs: () => ["💀", "survived the Penalty Zone"], pz: () => ["🩸", "was sent to the Penalty Zone"],
-  pr: e => ["🏆", `set a record: ${esc(e.txt)}`], boss: e => ["👹", `defeated the weekly boss: ${esc(e.txt)}`], lvl: e => ["⭐", `reached Level ${e.L}`],
+  pr: (e, id) => ["🏆", `set a new record${e.ex ? ` on ${esc(e.ex)}` : ""}${showNums(id) || !e.ex ? `: ${esc(e.ex ? e.txt.slice(e.ex.length + 2) : e.txt)}` : ""}`], boss: e => ["👹", `defeated the weekly boss: ${esc(e.txt)}`], lvl: e => ["⭐", `reached Level ${e.L}`],
   ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week"],
   pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"],
   cos: e => ["🎁", `won the <b style="color:${TIERS[e.c.tier][1]}">${esc(e.c.name)}</b>`],
@@ -2132,7 +2135,7 @@ function renderBoard() {
   const order = { pull: 0, cos: 0, ach: 0, lvl: 1, boss: 2, pr: 3, pzs: 4, pw: 5, pm: 5, comeback: 6, clear: 7, pz: 8 };
   evs.sort((a, b) => (b.e.d.localeCompare(a.e.d)) || (order[a.e.type] - order[b.e.type]));
   h += `<div class="sect">Activity<small>Last 2 weeks</small></div>`;
-  h += evs.length ? `<div class="feed">${evs.slice(0, 25).map(({ id, e }) => { const [ic, t] = (EV_TXT[e.type] || (() => ["•", e.type]))(e); return `<div><span class="ic">${ic}</span><span><b>${esc(nameOf(id))}</b> ${t}</span><time>${relDay(e.d)}</time></div>`; }).join("")}</div>`
+  h += evs.length ? `<div class="feed">${evs.slice(0, 25).map(({ id, e }) => { const [ic, t] = (EV_TXT[e.type] || (() => ["•", e.type]))(e, id); return `<div><span class="ic">${ic}</span><span><b>${esc(nameOf(id))}</b> ${t}</span><time>${relDay(e.d)}</time></div>`; }).join("")}</div>`
     : `<div class="win empty">Nothing yet. Clear a quest and it shows up here for everyone.</div>`;
   $("#view").innerHTML = h + `</div>`;
 }
@@ -2172,6 +2175,9 @@ function renderProfile(id) {
     </div>`;
   if (mine) {
     const opts = Object.keys(R.ach).map(k => ACHX[k]).filter(Boolean).sort((a, b) => b.rar - a.rar || a.name.localeCompare(b.name));
+    const pv = !!(((S.hunters[id] || {}).program || {})._priv || {}).nums;
+    h += `<section class="win card"><div class="toggle"><h2>Lift numbers</h2><button class="btn${pv ? " primary" : ""}" data-act="privnums" aria-pressed="${pv}">${pv ? "Shown" : "Private"}</button></div>
+      <p>${pv ? "Others can see your weights and reps in the feed and on your profile." : "Others see when you set a record and how much you've improved, but never your weights or reps."} Tap to change.</p></section>`;
     h += `<section class="win card body"><div class="toggle"><h2>Body</h2><button class="btn primary" data-act="bopen">Open</button></div>
       <p>Weight, optional measurements and progress photos. 🔒 Kept only on this phone: never uploaded, synced or shown to anyone.</p></section>`;
     h += `<section class="win card"><div class="toggle"><h2>My program</h2><button class="btn primary" data-view="program">Edit</button></div>
@@ -2199,11 +2205,12 @@ function renderProfile(id) {
   const mastGot = ACH.filter(a => a.mastery && R.ach[a.id]).length;
   h += `<details class="cat"><summary><span class="badge sm" style="--rc:${RAR[2][2]}">⚙️</span><span class="cn">Exercise mastery</span><span class="cc">${mastGot}</span><span class="nx">Initiate, Adept, Master and Grandmaster for every exercise you log</span></summary>
     <div class="achs">${mast.length ? mast.map(({ c, v }) => { const items = ACH.filter(a => a.metric === c.metric); return `<div class="ach"><span class="mrow">${items.map(a => lockBadge(a, "sm", !R.ach[a.id])).join("")}</span><span><b>${esc(c.name)}</b><small>${v} session${v === 1 ? "" : "s"} · next at ${(items.find(a => !R.ach[a.id]) || { n: "max" }).n}</small></span><span class="when"></span></div>`; }).join("") : `<div class="ach"><span></span><span><small>Log any exercise to start its mastery track.</small></span><span></span></div>`}</div></details>`;
-  h += `<div class="sect">Exercise log</div>${machineLog(id)}</div>`;
+  h += `<div class="sect">Exercise log${showNums(id) ? "" : `<small>🔒 numbers private · progress shown as a percentage</small>`}</div>${machineLog(id)}</div>`;
   $("#view").innerHTML = h;
   mmBind();
 }
 function machineLog(id) {
+  const priv = !showNums(id);
   const mine = Object.values(S.sessions).filter(b => b.profile === id && !isMeta(b) && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
   let h = "";
   const cardio = mine.filter(b => { const c = cardioOf(b); return c.total || c.dist; });
@@ -2223,6 +2230,11 @@ function machineLog(id) {
     }
     if (!pts.length) continue;
     const a = pts[0], z = pts[pts.length - 1], diff = z.top - a.top, u = type === "wr" ? " kg" : type === "s" ? " s" : " reps";
+    if (priv) {
+      const pc = a.top > 0 ? Math.round(diff / a.top * 100) : 0;
+      h += `<div class="hist hpriv"><span class="hn">${esc(CX(eid) ? CX(eid).name : eid)}</span>${spark(pts.map(p => p.top))}<span class="hs">${pts.length} session${pts.length === 1 ? "" : "s"} · ${pts.length > 1 ? (pc > 0 ? `<span class="pos">up ${pc}%</span> since ${fmtShort(a.date)}` : pc < 0 ? `down ${-pc}% since ${fmtShort(a.date)}` : `holding steady since ${fmtShort(a.date)}`) : `first logged ${fmtShort(a.date)}`}</span></div>`;
+      continue;
+    }
     const trend = pts.length > 1 ? (diff > 0 ? `<span class="pos">+${+diff.toFixed(1)}${u}</span> since ${fmtShort(a.date)}` : diff < 0 ? `${+diff.toFixed(1)}${u} since ${fmtShort(a.date)}` : `Same top since ${fmtShort(a.date)}`) : `First logged ${fmtShort(a.date)}`;
     h += `<details class="hist"><summary><span class="hn">${esc(CX(eid) ? CX(eid).name : eid)}</span>${spark(pts.map(p => p.top))}<span class="hs">Top ${type === "wr" ? `${wTxt(z.top)}${z.top ? " kg" : ""} × ${z.reps ?? "?"}` : z.top + u} · ${trend}</span></summary>
       ${pts.length > 1 ? lineChart(type === "wr" && pts.some(p => p.top > 0)
@@ -3839,6 +3851,7 @@ document.addEventListener("click", e => {
   if (foodClick(t, act)) return;
   if (mmClick(t, act)) return;
   if (bodyClick(t, act)) return;
+  if (act === "privnums") { const h = S.hunters[S.me]; h.program ||= {}; const on = !((h.program._priv || {}).nums); h.program._priv = { ...(h.program._priv || {}), nums: on }; dirtyHunter(S.me); render(); toast({ tag: "Lift numbers", title: on ? "Shown to the group" : "Private" }); return; }
   if (act === "repmm") { MM.week = "last"; MM.sel = null; S.view = "profile"; S.viewing = null; render(); setTimeout(() => { const c = $("#mmCard"); if (c) c.scrollIntoView({ block: "start" }); }, 50); return; }
   if (act === "repok") { try { localStorage.setItem(repKey(S.me, addDays(mondayOf(todayStr()), -7)), "1"); } catch (e) {} const rc = $("#repCard"); if (rc) rc.remove(); return; }
   if (act === "sqadd") {

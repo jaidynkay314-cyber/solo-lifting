@@ -270,8 +270,11 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Monday report, muscles:** a line with how many muscles reached the 10 to 20 set growth zone last week, the major muscles under 5 sets, and a link to the muscle map on last week. When quests and food are on track, the week's focus becomes the biggest muscle gap, pointing to a day in your plan that already trains it (`muscleTip()`), or suggesting an exercise if nothing does.
 - **Weekly balance** (My program): front and back figures coloured by the sets per muscle a week the plan would give if every quest day is done (`planMuscles()`), with Missing, Under 10 and Over 20 flags and a full list. Updates live while editing. Forearms, obliques and traps aren't flagged.
 
+## v7.4 additions
+- **Lift numbers private by default.** The feed still announces records ("set a new record on Leg press") but only shows the weight to the lifter, or to everyone if that person opts in. On someone else's profile, the exercise log shows session counts, a sparkline and progress as a percentage, never weights or reps (cardio is unchanged). Toggle: Profile → Lift numbers (stored in `hunters.program._priv.nums`, default off). `showNums(id)`.
+
 ## To revisit
 - **Muscle map colours:** the zone colours (dim blue, blue, cyan) may be too close together. Review after a few weeks of real data and add more contrast if needed (colours are in `MZ` and `mColor()`).
 - **Encrypted body log backup:** wanted later, needs more thought first.
-- **Record flash / broadcasting lifts:** on the consider pile. Some people don't want their numbers shown to everyone. Note the activity feed already shows records with numbers (`pr` events), so a privacy option may be needed there too.
+- **Record flash:** on the consider pile. Lift numbers are now private by default (v7.4), so any flash shown to others should follow `showNums()`.
 - **Recovery check:** on hold until the smart rings arrive, so its inputs match what the rings measure.
