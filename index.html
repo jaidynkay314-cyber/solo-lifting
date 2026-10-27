@@ -624,10 +624,12 @@ body.noscroll { overflow: hidden; }
 @keyframes rattle { 0%, 100% { transform: rotateX(-32deg) rotateY(-38deg) rotateZ(0); } 25% { transform: rotateX(-32deg) rotateY(-36deg) rotateZ(2.5deg); } 75% { transform: rotateX(-32deg) rotateY(-40deg) rotateZ(-2.5deg); } }
 .cubewrap.burstopen .ft { animation: lidoff .7s cubic-bezier(.2, .7, .3, 1) forwards; }
 .cubewrap.burstopen .cube { animation: cubegone .7s .15s ease-in forwards; }
+.cubewrap.burstopen .cf:not(.ft) { animation: facefade .55s .3s ease-in forwards; }
 .cubewrap.burstopen::before { content: ""; position: absolute; left: 30%; right: 30%; bottom: 45%; height: 260%; z-index: 3; pointer-events: none;
   background: linear-gradient(0deg, var(--rb), color-mix(in srgb, var(--rb) 30%, transparent) 60%, transparent); filter: blur(6px); animation: beam .8s ease-out forwards; transform-origin: bottom; }
 @keyframes lidoff { to { transform: rotateX(90deg) translateZ(calc(var(--s) * 2.4)) rotateZ(30deg); opacity: 0; } }
-@keyframes cubegone { to { transform: rotateX(-32deg) rotateY(-38deg) scale(.4); opacity: 0; } }
+@keyframes cubegone { to { transform: rotateX(-32deg) rotateY(-44deg) scale(.45); } }
+@keyframes facefade { to { opacity: 0; } }
 @keyframes beam { from { transform: scaleY(0); opacity: 1; } 60% { opacity: 1; } to { transform: scaleY(1); opacity: 0; } }
 .boxstage { border: 0; background: none; padding: 0; position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer; }
 .boxbtn .cubewrap { width: 100%; height: auto; aspect-ratio: 1 / 1; }
