@@ -727,6 +727,25 @@ body.noscroll { overflow: hidden; }
 .flog .step { display: inline-flex; align-items: center; gap: 6px; }
 .flog .btn { padding: 4px 10px; }
 .fueltick { color: #5ee39a; }
+/* ---------- system target, weekly budget, scanner ---------- */
+.sys { margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; border-left: 2px solid var(--glow); padding: 4px 0 4px 9px; background: linear-gradient(90deg, rgb(var(--glow-rgb) / .08), transparent); }
+.sys > span { font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 11.5px; color: var(--glow); }
+.sys b { font-family: var(--font-display); font-size: 17px; color: var(--fg); }
+.sys i { font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 1px 6px; border: 1px solid currentColor; }
+.sys.up { border-color: #5ee39a; } .sys.up i { color: #5ee39a; }
+.sys.down { border-color: var(--gold); } .sys.down i { color: var(--gold); }
+.sys small { flex-basis: 100%; color: var(--muted); font-size: 12.5px; }
+.wbud { margin-top: 4px; padding-top: 8px; border-top: 1px dashed var(--edge-dim); }
+.wbud small b { color: var(--fg); }
+.scanov { position: fixed; inset: 0; z-index: 80; background: rgb(3 6 14 / .97); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: max(12px, env(safe-area-inset-top)) 16px 16px; }
+.scanov[hidden] { display: none; }
+.scanov .vtop { width: 100%; max-width: 560px; }
+.scanov .sub, .scanov .fsearch { width: 100%; max-width: 560px; }
+.scbox { position: relative; width: 100%; max-width: 560px; aspect-ratio: 4 / 3; background: #000; border: 1px solid var(--edge-dim); overflow: hidden; }
+.scbox[hidden] { display: none; }
+.scbox video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scbox i { position: absolute; left: 12%; right: 12%; top: 32%; bottom: 32%; border: 2px solid var(--glow); box-shadow: 0 0 0 999px rgb(0 0 0 / .35), 0 0 16px rgb(var(--glow-rgb) / .6); pointer-events: none; }
+
 /* ---------- side quest, charts, body log ---------- */
 .side { display: flex; flex-direction: column; gap: 7px; border-color: #b98a3a; box-shadow: 0 0 20px rgb(255 200 97 / .14); }
 .side::before, .side::after { border-color: var(--gold); }
@@ -803,6 +822,12 @@ body.noscroll { overflow: hidden; }
 <div class="pov fuelov" id="foodOv" hidden role="dialog" aria-modal="true" aria-label="Food log">
   <div class="vtop"><button class="btn" data-act="fclose" aria-label="Close">✕</button><div class="vttl" id="foodT"></div><span style="width:40px"></span></div>
   <div class="fbody" id="foodBody"></div>
+</div>
+<div class="scanov" id="scanOv" hidden role="dialog" aria-modal="true" aria-label="Scan a barcode">
+  <div class="vtop"><button class="btn" data-act="scclose" aria-label="Close">✕</button><div class="vttl">Scan barcode</div><span style="width:40px"></span></div>
+  <div class="scbox"><video id="scVid" playsinline muted></video><i></i></div>
+  <p class="sub" id="scMsg"></p>
+  <div class="fsearch"><input id="sc-code" inputmode="numeric" maxlength="14" placeholder="Or type the barcode number" aria-label="Barcode number"><button class="btn primary" data-act="sccode">Look up</button></div>
 </div>
 <div class="pov fuelov" id="bodyOv" hidden role="dialog" aria-modal="true" aria-label="Body log">
   <div class="vtop"><button class="btn" data-act="bclose" aria-label="Close">✕</button><div class="vttl">Body · private</div><span style="width:40px"></span></div>
@@ -941,7 +966,7 @@ const fmtN = n => n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${Math.ro
 const plural = (n, w) => `${fmtN(n)} ${w}${n === 1 ? "" : "s"}`;
 let ACH = [], ACHX = {}, ACH_CATS = [], achSig = null;
 function cat(name, icon, metric, est, list, desc, opts = {}) {
-  ACH_CATS.push({ name, icon, metric, mastery: !!opts.mastery });
+  ACH_CATS.push({ name, icon, metric, mastery: !!opts.mastery, secret: !!opts.secret });
   for (const [n, title] of list) {
     const rar = rarityFor(typeof est === "function" ? est(n) : n / est);
     const a = { id: `${metric}:${n}`, cat: name, name: title, desc: desc(n), icon, metric, n, rar, xp: opts.noXp ? 0 : RAR[rar][3], mastery: !!opts.mastery };
@@ -983,6 +1008,7 @@ function baseAchievements() {
   cat("Calories", "🥗", "kcalDays", .6, [[1, "On Target"], [7, "Dialled In"], [30, "A Month on Point"], [100, "Precision Eater"], [250, "Calorie Monk"]], n => `Hit your calorie goal on ${plural(n, "day")}`);
   cat("Food log", "📒", "fuelDays", .8, [[1, "First Bite"], [7, "A Week of Logs"], [30, "Habit Fed"], [100, "Hundred Days Fed"], [365, "A Year on the Scales"]], n => `Log your food on ${plural(n, "day")}`);
   cat("Side quests", "🗺️", "sideQ", .6, [[1, "Side Tracked"], [10, "Errand Runner"], [30, "Quest Giver's Favourite"], [100, "Completionist"], [365, "Never Bored"]], n => `Complete ${plural(n, "daily side quest")}`);
+  cat("Secret", "🌀", "origQ", () => 1500, [[1, "The Original Daily Quest"]], () => "100 push-ups, 100 sit-ups, 100 squats and a 10 km run, all in one day", { secret: true });
   cat("Comebacks", "🔄", "comebacks", .02, [[1, "The Comeback"], [5, "Never Down for Long"], [10, "Unkillable"]], n => `Clear a quest after a week or more away, ${n === 1 ? "once" : n + " times"}`);
 }
 const SHORT = { "chest-press": "Chest press", "lat-pulldown": "Lat pulldown", "shoulder-press": "Shoulder press", "cable-row": "Cable row",
@@ -1323,7 +1349,7 @@ function statsOf(M) {
 }
 const newM = () => ({ days: 0, quests: 0, bestStreak: 0, penSurvived: 0, sets: 0, reps: 0, volume: 0, cardioMin: 0, km: 0, level: 1,
   upperQ: 0, lowerQ: 0, friQ: 0, wkQ: 0, prs: 0, bossWins: 0, perfectWeeks: 0, perfectMonths: 0, bonusLogs: 0, pushups: 0, core: 0,
-  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {}, proteinDays: 0, kcalDays: 0, fuelDays: 0, sideQ: 0,
+  plankSec: 0, outdoorMin: 0, dawn: 0, night: 0, anniv: 0, comebacks: 0, machine: {}, proteinDays: 0, kcalDays: 0, fuelDays: 0, sideQ: 0, origQ: 0,
   statSets: { STR: 0, AGI: 0, VIT: 0, END: 0 }, statMin: { STR: 0, AGI: 0, VIT: 0, END: 0 } });
 function metricVal(M, metric, st) {
   if (metric.startsWith("m:")) return M.machine[metric.slice(2)] || 0;
@@ -1423,6 +1449,7 @@ function replay(hid) {
         if (fd.items.length) M.fuelDays++;
         if (fh.p) { M.proteinDays++; xp += 10; }
         if (fh.k) { M.kcalDays++; xp += 10; } }
+      if (origDone(hid, d)) { M.origQ++; if (M.origQ === 1) box("B", "orig:" + d, d); }
       if (d <= today) { const sp = sideProgress(hid, d); if (sp.done) { M.sideQ++; xp += 25; R.events.push({ d, type: "side", txt: sp.q.t }); if (M.sideQ % 5 === 0) box("R", "sq:" + M.sideQ, d); } }
       if (dawn) M.dawn++;
       if (night) M.night++;
@@ -1505,6 +1532,41 @@ function lastFor(id, beforeDate, type) {
   }
   return best;
 }
+/* the last two sessions of an exercise, newest first */
+function histFor(id, beforeDate, type, n = 2) {
+  const out = [];
+  for (const b of Object.values(S.sessions)) {
+    if (b.profile !== S.me || b.date >= beforeDate) continue;
+    let arr = (b.ex || {})[id];
+    if (!arr) { const e = (b.bonus || []).find(x => x.id === id); arr = e && e.sets; }
+    const ok = (arr || []).filter(s => setOk(type, s));
+    if (ok.length) out.push({ date: b.date, sets: ok });
+  }
+  return out.sort((a, b) => a.date < b.date ? 1 : -1).slice(0, n);
+}
+/* double progression: work up the rep range at one weight, then add weight and start back at the bottom */
+function sysTarget(e, hist) {
+  const last = hist[0]; if (!last) return null;
+  const work = last.sets.slice(0, Math.max(1, e.base || 3));
+  if (e.type === "wr") {
+    const w = Math.max(...work.map(s => +s.w || 0)), atW = work.filter(s => (+s.w || 0) === w), reps = atW.map(s => +s.r || 0);
+    if (!w) return { w: "", r: Math.min(e.hi, Math.min(...reps) + 1), why: "Bodyweight last time. Aim for one more rep on each set." };
+    const inc = w < 20 ? 1 : 2.5, r05 = v => Math.round(v * 2) / 2;
+    if (work.length >= (e.base || 3) && reps.every(r => r >= e.hi))
+      return { w: r05(w + inc), r: e.lo, up: true, why: `You hit ${e.hi} on every set. Go up to the next weight (about +${inc} kg) and start back at ${e.lo} reps.` };
+    if (reps.some(r => r < e.lo)) {
+      const p = hist[1], pw = p ? Math.max(...p.sets.slice(0, work.length).map(s => +s.w || 0)) : 0;
+      if (p && pw === w && p.sets.slice(0, work.length).filter(s => (+s.w || 0) === pw).some(s => (+s.r || 0) < e.lo))
+        return { w: r05(w * .9), r: e.lo, down: true, why: `Under ${e.lo} reps two sessions running. Drop about 10% and build back up.` };
+      return { w, r: e.lo, why: `Repeat this weight and aim for ${e.lo} on every set.` };
+    }
+    return { w, r: Math.min(e.hi, Math.min(...reps) + 1), why: `Same weight. Aim for one more rep on each set, up to ${e.hi}.` };
+  }
+  const f = e.type, v = work.map(s => +s[f] || 0), step = f === "s" ? 5 : 1;
+  if (v.length >= (e.base || 3) && v.every(x => x >= e.hi)) return { [f]: Math.max(...v) + step * 2, up: true, why: f === "s" ? "Top of the range on every set. Add 10 seconds." : "Top of the range on every set. Add 2 reps or try a harder variation." };
+  return { [f]: Math.min(...v) + step, why: f === "s" ? "Add 5 seconds to each hold." : "Aim for one more rep on each set." };
+}
+const tgtTxt = (t, type) => type === "wr" ? (t.w ? `${t.w} kg × ${t.r}` : `${t.r} reps`) : type === "s" ? `${t.s} s` : `${t.r} reps`;
 function lastBonus(id, beforeDate) {
   let best = null;
   for (const b of Object.values(S.sessions)) {
@@ -1799,24 +1861,24 @@ function renderLog(R) {
   for (const e of list) {
     const arr = (b && b.ex[e.id]) || [];
     const n = Math.max(e.sets, arr.length);
-    const last = lastFor(e.id, S.date, e.type);
-    const key = e.type === "wr" ? "r" : e.type;
-    const up = last && last.sets.length >= e.base && last.sets.slice(0, e.base).every(s => (s[key] || 0) >= e.hi);
+    const hist = histFor(e.id, S.date, e.type), last = hist[0] || null, tg = sysTarget(e, hist);
     const boss = R.boss && R.boss.id === e.id && !R.boss.won;
     const best = e.type === "wr" ? (R.best[e.id] ? ` <span>Best ${R.best[e.id]} kg</span>` : "") : (R.bestReps[e.id] ? ` <span>Best ${R.bestReps[e.id]}${e.type === "s" ? " s" : " reps"}</span>` : "");
     const unit = e.type === "s" ? " s" : "";
     h += `<article class="win ex${exDone(b, e) ? " complete" : ""}" data-card="${esc(e.id)}">
       <div class="ex-h"><h2>${boss ? "👹 " : ""}${esc(e.name)}</h2><span class="target">${pen && !e.extra ? `<em>${e.sets}</em>` : e.sets} × ${e.lo}–${e.hi}${unit}</span></div>
-      <p class="last">${last ? `Last <strong>${last.sets.map(s => setTxt(s, e.type)).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>${up ? `<span class="chip">${e.type === "wr" ? "Up a plate" : "Push further"}</span>` : ""}` : e.extra ? "Bonus exercise. Log what you did." : "New skill unlocked: start light and find your working level."}${best}</p>
+      <p class="last">${last ? `Last <strong>${last.sets.map(s => setTxt(s, e.type)).join(" · ")}</strong> <span>${fmtShort(last.date)}</span>` : e.extra ? "Bonus exercise. Log what you did." : "New skill unlocked: start light and find your working level."}${best}</p>
+      ${tg ? `<p class="sys${tg.up ? " up" : tg.down ? " down" : ""}"><span>System</span><b>${tgtTxt(tg, e.type)}</b>${tg.up ? `<i>Level up</i>` : tg.down ? `<i>Reset</i>` : ""}<small>${esc(tg.why)}</small></p>` : ""}
       <div class="sets">`;
     for (let i = 0; i < n; i++) {
       const s = arr[i] || {}, ls = last && last.sets[Math.min(i, last.sets.length - 1)];
+      // grey numbers follow the System target, so tapping the diamond on an empty set logs the target
       h += setRow(`data-ex="${esc(e.id)}" data-i="${i}"`, esc(e.id), i, s, e.type,
-        { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi, s: ls && ls.s != null ? ls.s : e.lo }, pen && !e.extra && i === e.sets - 1);
+        tg ? { w: tg.w ?? (ls && ls.w != null ? +ls.w : ""), r: tg.r ?? e.hi, s: tg.s ?? e.lo } : { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi, s: ls && ls.s != null ? ls.s : e.lo }, pen && !e.extra && i === e.sets - 1);
     }
     const rest = e.lo >= 12 || e.type !== "wr" ? 60 : 90;
     h += `</div><div class="ex-actions">
-      ${last && e.type === "wr" ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Use last weights</button>` : ""}
+      ${tg && e.type === "wr" && tg.w ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Fill target weights</button>` : ""}
       <button class="btn" data-act="addset" data-ex="${esc(e.id)}">+ Set</button>
       <button class="btn" data-act="rest" data-name="${esc(e.name)}" data-sec="${rest}">Rest ${rest} s</button>
       ${e.extra ? `<button class="btn" data-act="remove" data-ex="${esc(e.id)}">Remove</button>` : ""}</div></article>`;
@@ -1833,7 +1895,8 @@ function renderLog(R) {
         ${L.cat === "Cardio" ? `<div class="field"><input id="bk-${bi}" data-bi="${bi}" data-bf="km" inputmode="decimal" placeholder="0.0" value="${e.km ?? ""}" aria-label="Distance in kilometres"><span>km</span></div>` : ""}</div>`;
     } else {
       const sets = e.sets || [];
-      h += `<div class="sets">${Array.from({ length: Math.max(3, sets.length) }, (_, j) => setRow(`data-bi="${bi}" data-j="${j}"`, `b${bi}`, j, sets[j] || {}, L.type, {})).join("")}</div>`;
+      const lf = lastFor(e.id, S.date, L.type);
+      h += `${lf ? `<p class="last">Last <strong>${lf.sets.map(s => setTxt(s, L.type)).join(" · ")}</strong> <span>${fmtShort(lf.date)}</span></p>` : ""}<div class="sets">${Array.from({ length: Math.max(3, sets.length) }, (_, j) => { const ls = lf && lf.sets[Math.min(j, lf.sets.length - 1)]; return setRow(`data-bi="${bi}" data-j="${j}"`, `b${bi}`, j, sets[j] || {}, L.type, ls ? { w: ls.w ?? "", r: ls.r ?? "", s: ls.s ?? "" } : {}); }).join("")}</div>`;
     }
     h += `<div class="ex-actions">${L.type !== "min" ? `<button class="btn" data-act="baddset" data-bi="${bi}">+ Set</button>` : ""}<button class="btn" data-act="bremove" data-bi="${bi}">Remove</button></div></article>`;
   });
@@ -1998,6 +2061,7 @@ function renderProfile(id) {
     const got = items.filter(a => R.ach[a.id]), next = items.find(a => !R.ach[a.id]);
     const val = metricVal(M, c.metric, stv), prev = got.length ? got[got.length - 1].n : 0;
     const pct = next ? Math.max(0, Math.min(100, (val - prev) / (next.n - prev) * 100)) : 100;
+    if (c.secret && !got.length) return `<details class="cat"><summary><span class="badge sm" style="--rc:#556">❔</span><span class="cn">???</span><span class="cc">0/${items.length}</span><span class="nx">A secret achievement. It's how it all began.</span></summary></details>`;
     return `<details class="cat"><summary>${lockBadge(got.length ? got[got.length - 1] : items[0], "sm", !got.length)}<span class="cn">${esc(c.name)}</span><span class="cc">${got.length}/${items.length}</span>
       <span class="nx">${next ? `Next: ${esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${fmtN(next.n)}` : "Complete"}</span></summary>
       <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${lockBadge(a, "", !R.ach[a.id])}<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>
@@ -2670,15 +2734,30 @@ const GENERIC = [
   ["Beer, full strength", 40, .3, 375, "1 stubby"], ["Wine", 80, .1, 150, "1 glass"], ["Pizza, supreme", 250, 11, 120, "1 slice"], ["Sushi roll", 150, 5, 120, "1 hand roll"]
 ].map(([n, k, p, g, u], i) => ({ id: "g" + i, n, k100: k, p100: p, g, u }));
 let FS = { q: "", off: null, busy: false, pick: null }; // food search state
-async function searchProducts(q) {
-  // Open Food Facts: free product database. Searches Australian products first, then worldwide if few come back.
-  const fields = "code,product_name,product_name_en,brands,nutriments,serving_quantity";
-  const pick = d => (d.products || d.hits || []).map(x => {
+const OFF_FIELDS = "code,product_name,product_name_en,brands,nutriments,serving_quantity";
+const offPick = d => (d.products || d.hits || []).map(x => {
     const nu = x.nutriments || {}, k = nu["energy-kcal_100g"] ?? (nu.energy_100g != null ? nu.energy_100g / 4.184 : null);
     const nm = typeof x.product_name === "string" ? x.product_name : (x.product_name && (x.product_name.en || Object.values(x.product_name)[0])) || x.product_name_en || "";
     const br = Array.isArray(x.brands) ? x.brands[0] : x.brands && String(x.brands).split(",")[0];
     return k == null ? null : { id: "o" + x.code, n: [nm, br].filter(Boolean).join(" · ").slice(0, 60), k100: Math.round(k), p100: Math.round((nu.proteins_100g || 0) * 10) / 10, g: Math.round(+x.serving_quantity) || 100, u: x.serving_quantity ? "1 serve" : "" };
   }).filter(x => x && x.n);
+async function offFetch(url) {
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+  try { return await fetch(url, { signal: ctl.signal, headers: { Accept: "application/json" } }); } finally { clearTimeout(tm); }
+}
+/* one product by barcode: null when Open Food Facts doesn't have it (or has no calories for it) */
+async function productByCode(code) {
+  let r;
+  try { r = await offFetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=${OFF_FIELDS}`); }
+  catch (e) { throw new Error(e.name === "AbortError" ? "timed out" : "blocked"); }
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error("error " + r.status);
+  const d = await r.json(); if (!d.product) return null;
+  return offPick({ products: [{ ...d.product, code }] })[0] || null;
+}
+async function searchProducts(q) {
+  // Open Food Facts: free product database. Searches Australian products first, then worldwide if few come back.
+  const fields = OFF_FIELDS, pick = offPick;
   // try the newer search service first, then the classic one; stop at the first that answers
   const enc = encodeURIComponent(q), tries = [
     `https://search.openfoodfacts.org/search?q=${enc}&page_size=24&langs=en&fields=${fields}`,
@@ -2688,8 +2767,7 @@ async function searchProducts(q) {
   let out = null, why = [];
   for (const url of tries) {
     try {
-      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
-      const r = await fetch(url, { signal: ctl.signal, headers: { Accept: "application/json" } }); clearTimeout(tm);
+      const r = await offFetch(url);
       if (!r.ok) { why.push(`${new URL(url).host} ${r.status}`); continue; }
       out = pick(await r.json()); break;
     } catch (e) { why.push(`${new URL(url).host} ${e.name === "AbortError" ? "timed out" : "blocked"}`); }
@@ -2738,10 +2816,33 @@ function fuelBars(f, c, compact) {
   };
   return bar("Calories", f.k, c.k, " kcal", c.mode || "max") + bar("Protein", f.p, c.p, " g", "min");
 }
+/* weekly budget: 7 x the daily "stay under" goal, Monday to Sunday. Days not logged count as on target. */
+function weekBudget(hid, date) {
+  const c = fuelCfg(hid); if (!c.k || (c.mode || "max") !== "max") return null;
+  const mon = mondayOf(date), total = c.k * 7;
+  let used = 0, unlogged = 0, today = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(mon, i); if (d > date) break;
+    const f = fuelDay(hid, d), gk = (f.goal && f.goal.k) || c.k;
+    if (d === date) { today = f.k; continue; }
+    if (f.items.length) used += f.k; else { used += gk; unlogged++; }
+  }
+  const daysLeft = 7 - Math.round((parseDate(date) - parseDate(mon)) / 864e5), left = total - used;
+  return { total, used: used + today, left: left - today, daysLeft, perDay: Math.round(left / daysLeft), unlogged, today, k: c.k };
+}
+function budgetHTML(wb) {
+  if (!wb) return "";
+  const kc = n => Math.round(n).toLocaleString("en-AU");
+  const pct = Math.min(100, wb.used / wb.total * 100), over = wb.left < 0;
+  const per = wb.perDay, diff = per - wb.k;
+  return `<div class="fbar wbud${over ? " over" : ""}"><div class="frow"><span>This week</span><b>${kc(wb.used)}<small> / ${kc(wb.total)} kcal</small></b></div>
+    <div class="xp"><i style="width:${pct.toFixed(1)}%"></i></div>
+    <small>${over ? `${kc(-wb.left)} kcal over for the week.` : `${kc(wb.left)} kcal left after today${wb.daysLeft > 1 ? ` · today and the ${wb.daysLeft - 1} day${wb.daysLeft === 2 ? "" : "s"} after it can average <b>${kc(per)}</b>${Math.abs(diff) >= 25 ? ` (${diff > 0 ? "+" : ""}${kc(diff)} on your daily goal)` : ""}` : ""}.`}${wb.unlogged ? ` ${wb.unlogged} unlogged day${wb.unlogged === 1 ? "" : "s"} counted as on target.` : ""}</small></div>`;
+}
 function fuelCardHTML() {
   const date = S.date, f = fuelDay(S.me, date), c = fuelCfg(S.me), g = f.goal || (c.k || c.p ? c : null);
   return `<section class="win fuel" id="fuelCard"><div class="toggle"><p class="tag">Fuel${date === todayStr() ? "" : " · " + fmtShort(date)}</p><button class="btn primary" data-act="fopen">+ Food</button></div>
-    ${g ? fuelBars(f, g, false) : `<p class="sub">Track calories and protein through the day. Tap <b>+ Food</b> to set your goals and log your first meal.</p>`}
+    ${g ? fuelBars(f, g, false) + budgetHTML(weekBudget(S.me, date)) : `<p class="sub">Track calories and protein through the day. Tap <b>+ Food</b> to set your goals and log your first meal.</p>`}
     ${f.items.length ? `<p class="sub">${f.items.length} item${f.items.length === 1 ? "" : "s"} logged · ${fuelHits(f, g).p ? "protein goal hit ✓" : "keep going"}</p>` : ""}</section>`;
 }
 function renderFood() {
@@ -2751,9 +2852,9 @@ function renderFood() {
   const chip = (x, src) => `<button class="fchip" data-act="fadd" data-src="${src}" data-id="${esc(x.id)}"><b>${esc(x.n)}</b><small>${x.k} kcal · ${x.p} g</small></button>`;
   const yday = fuelDay(S.me, addDays(FD, -1));
   $("#foodBody").innerHTML = `
-    <div class="fsum">${fuelBars(f, c.k || c.p ? c : {}, false)}</div>
+    <div class="fsum">${fuelBars(f, c.k || c.p ? c : {}, false)}${budgetHTML(weekBudget(S.me, FD))}</div>
     <section class="fsec"><h3>Search by weight<small>generic foods, or packaged products online</small></h3>
-      <div class="fsearch"><input id="fs-q" maxlength="50" placeholder="e.g. chicken breast, rice, Chobani" value="${esc(FS.q)}" aria-label="Search foods" autocomplete="off"><button class="btn" data-act="fsoff">Products</button></div>
+      <div class="fsearch"><input id="fs-q" maxlength="50" placeholder="e.g. chicken breast, rice, Chobani" value="${esc(FS.q)}" aria-label="Search foods" autocomplete="off"><button class="btn" data-act="fsoff">Products</button><button class="btn" data-act="fscan" aria-label="Scan a barcode">Scan</button></div>
       <div id="fsRes">${foodResults()}</div></section>
     <section class="fsec"><h3>Quick add</h3>
       <div class="fquick"><input id="fq-n" maxlength="40" placeholder="What was it? (optional)" aria-label="Food name">
@@ -2804,6 +2905,9 @@ function foodClick(t, act) {
   }
   if (act === "fspick") { FS.pick = GENERIC.find(x => x.id === t.dataset.id) || ((FS.off && FS.off.list) || []).find(x => x.id === t.dataset.id); FS.g = FS.pick ? FS.pick.g : null; fsDraw(); const g = $("#fs-g"); if (g) { g.focus(); g.select(); } return true; }
   if (act === "fsback") { FS.pick = null; fsDraw(); return true; }
+  if (act === "fscan") { openScan(); return true; }
+  if (act === "scclose") { closeScan(); return true; }
+  if (act === "sccode") { const v = (($("#sc-code") || {}).value || "").replace(/\D/g, ""); if (v.length >= 8) scanFound(v); else toast({ tag: "Barcode", title: "Type the 8 to 14 digits under the bars" }); return true; }
   if (act === "fsadd" && FS.pick) {
     const x = FS.pick, g = num($("#fs-g").value);
     if (!g || g <= 0 || g > 3000) { toast({ tag: "Check the weight", title: "Grams between 1 and 3000" }); return true; }
@@ -2845,6 +2949,45 @@ function foodClick(t, act) {
   }
   return false;
 }
+
+/* ================= BARCODE SCANNING ================= */
+// Uses the phone's built-in barcode reader (Chrome on Android). The camera picture never leaves the phone;
+// only the number read from the barcode is looked up on Open Food Facts.
+let SCAN = null;
+async function openScan() {
+  closeScan();
+  const ov = $("#scanOv"); ov.hidden = false; $(".scbox").hidden = false; $("#sc-code").value = "";
+  const msg = m => { $("#scMsg").innerHTML = m; };
+  SCAN = { stream: null, timer: null, done: false };
+  if (!("BarcodeDetector" in window)) { msg("This browser can't read barcodes with the camera. Type the numbers under the bars instead."); $(".scbox").hidden = true; return; }
+  let det;
+  try { const fm = await BarcodeDetector.getSupportedFormats(); det = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"].filter(f => fm.includes(f)) }); }
+  catch (e) { msg("The barcode reader isn't available on this phone. Type the numbers instead."); $(".scbox").hidden = true; return; }
+  try { SCAN.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: false }); }
+  catch (e) { msg(e.name === "NotAllowedError" ? "Camera permission was declined. Allow the camera for this site in Chrome, or type the numbers instead." : "The camera couldn't start. Type the numbers instead."); $(".scbox").hidden = true; return; }
+  if (!SCAN) return closeScan();
+  $(".scbox").hidden = false; const v = $("#scVid"); v.srcObject = SCAN.stream; await v.play().catch(() => {});
+  msg("Line the barcode up inside the box.");
+  const tick = async () => {
+    if (!SCAN || SCAN.done) return;
+    try { const r = await det.detect(v); const c = r.find(x => /^\d{8,14}$/.test(x.rawValue)); if (c) { scanFound(c.rawValue); return; } } catch (e) {}
+    SCAN.timer = setTimeout(tick, 200);
+  };
+  tick();
+}
+function stopCam() { if (SCAN) { clearTimeout(SCAN.timer); if (SCAN.stream) for (const t of SCAN.stream.getTracks()) t.stop(); SCAN.stream = null; } const v = $("#scVid"); if (v) v.srcObject = null; }
+function closeScan() { stopCam(); SCAN = null; const ov = $("#scanOv"); if (ov) ov.hidden = true; }
+async function scanFound(code) {
+  if (SCAN) SCAN.done = true; stopCam(); buzz(30);
+  $("#scMsg").innerHTML = `Barcode <b>${esc(code)}</b>. Looking it up…`;
+  try {
+    const x = await productByCode(code);
+    if (!x) { $("#scMsg").innerHTML = `Barcode <b>${esc(code)}</b> isn't in the product database (or has no calories listed). Search by name, or use Quick add with the label's numbers.`; return; }
+    closeScan(); FS.off = { list: [x] }; FS.pick = x; FS.g = x.g; fsDraw();
+    const g = $("#fs-g"); if (g) { g.scrollIntoView({ block: "center" }); g.focus(); g.select(); }
+  } catch (e) { $("#scMsg").innerHTML = `Couldn't reach the product database (${esc(e.message || "network")}). Try again in a minute.`; }
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden && SCAN) closeScan(); });
 
 /* ================= PROGRESS CHARTS ================= */
 // a small line chart: series = [{ name, color, pts: [{ x: date, y }] }]; dates spaced by real time
@@ -2909,6 +3052,21 @@ function sideProgress(hid, date, q = sideQuestFor(hid, date)) {
   if (q.food || q.protein) { const f = fuelDay(hid, date); v = q.food ? f.items.length : fuelHits(f).p ? 1 : 0; }
   return { q, v: Math.round(v * 10) / 10, done: v >= q.need };
 }
+/* the daily quest from the first chapter: 100 push-ups, 100 sit-ups, 100 squats, 10 km run, same day */
+const ORIG = [["pushups", ["pushups", "diamond-pushups"], 100], ["situps", ["situps", "crunches"], 100], ["squats", ["bw-squat", "jump-squats"], 100]];
+function origProgress(hid, date) {
+  const o = {};
+  for (const [k, ids] of ORIG) o[k] = sideProgress(hid, date, { ids, f: "r", need: 1e9 }).v;
+  let km = 0;
+  for (const b of Object.values(S.sessions)) {
+    if (b.profile !== hid || b.date !== date || isMeta(b) || b.excused) continue;
+    const c = cardioOf(b); if (kindOf(c.kind) === "run") km += +c.dist || 0;
+    for (const e of b.bonus || []) if (["run", "jog"].includes(e.id) && bonusLogged(e)) km += +e.km || 0;
+  }
+  o.km = Math.round(km * 10) / 10;
+  return o;
+}
+const origDone = (hid, date) => { const o = origProgress(hid, date); return o.pushups >= 100 && o.situps >= 100 && o.squats >= 100 && o.km >= 10; };
 function sideCardHTML() {
   if (S.date !== todayStr()) return "";
   const { q, v, done } = sideProgress(S.me, S.date);
@@ -3209,9 +3367,9 @@ document.addEventListener("click", e => {
   }
   if (act === "addset") { const b = session(true); const arr = (b.ex[id] ||= []); const n = Math.max(exList().find(x => x.id === id).sets, arr.length); while (arr.length < n) arr.push({}); arr.push({}); render(); }
   if (act === "uselast") {
-    const last = lastFor(id, S.date, "wr"); if (!last) return;
-    const b = session(true), arr = (b.ex[id] ||= []), n = exList().find(x => x.id === id).sets;
-    for (let k = 0; k < n; k++) { const s = last.sets[Math.min(k, last.sets.length - 1)]; arr[k] = arr[k] || {}; if (arr[k].w == null) { arr[k].w = s.w; arr[k].ok = false; } }
+    const e = exList().find(x => x.id === id), tg = e && sysTarget(e, histFor(id, S.date, "wr")); if (!tg || !tg.w) return;
+    const b = session(true), arr = (b.ex[id] ||= []), n = e.sets;
+    for (let k = 0; k < n; k++) { arr[k] = arr[k] || {}; if (arr[k].w == null) { arr[k].w = tg.w; arr[k].ok = false; } }
     dirtySession(curKey()); render();
   }
   if (act === "remove") { const b = session(true); b.extra = b.extra.filter(x => x !== id); delete b.ex[id]; dirtySession(curKey()); render(); }
