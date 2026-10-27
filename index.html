@@ -763,6 +763,20 @@ body.noscroll { overflow: hidden; }
 .mmrow { display: grid; grid-template-columns: 9.5em 1fr 2.6em; gap: 8px; align-items: center; text-align: left; background: none; border: 0; padding: 3px 0; color: var(--fg); font-size: 13px; }
 .mmrow b { text-align: right; font-family: var(--font-display); }
 
+/* ---------- glitch text for hidden quests ---------- */
+.glx { position: relative; display: inline-block; color: #e9f4ff; font-weight: 700; letter-spacing: .06em; text-shadow: 1px 0 rgb(255 60 110 / .7), -1px 0 rgb(60 220 255 / .7); }
+.glx::before, .glx::after { content: attr(data-t); position: absolute; inset: 0; pointer-events: none; }
+.glx::before { color: #ff4f8b; transform: translateX(-2px); clip-path: inset(0 0 60% 0); opacity: .85; }
+.glx::after { color: #45e0ff; transform: translateX(2px); clip-path: inset(55% 0 0 0); opacity: .85; }
+@media (prefers-reduced-motion: no-preference) {
+  .glx { animation: glxJit 2.6s steps(1) infinite; }
+  .glx::before { animation: glxA 2.6s steps(1) infinite; }
+  .glx::after { animation: glxB 1.9s steps(1) infinite; }
+}
+@keyframes glxJit { 0%, 86%, 100% { transform: none; } 88% { transform: translate(1px, -1px) skewX(-8deg); } 90% { transform: translate(-2px, 1px); } 92% { transform: translate(1px, 0) skewX(6deg); } 94% { transform: none; opacity: .6; } 96% { opacity: 1; } }
+@keyframes glxA { 0%, 84%, 100% { clip-path: inset(0 0 60% 0); transform: translateX(-2px); } 86% { clip-path: inset(10% 0 70% 0); transform: translateX(-5px); } 89% { clip-path: inset(45% 0 30% 0); transform: translateX(4px); } 92% { clip-path: inset(70% 0 5% 0); transform: translateX(-3px); } 95% { clip-path: inset(20% 0 55% 0); transform: translateX(2px); } }
+@keyframes glxB { 0%, 80%, 100% { clip-path: inset(55% 0 0 0); transform: translateX(2px); } 83% { clip-path: inset(30% 0 50% 0); transform: translateX(5px); } 87% { clip-path: inset(80% 0 2% 0); transform: translateX(-4px); } 91% { clip-path: inset(5% 0 75% 0); transform: translateX(3px); } }
+.ach .glx { font-size: 1.2em; }
 .hpriv { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; border: 1px solid var(--edge-dim); background: var(--panel); padding: 10px 12px; }
 .mmmini { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 300px; margin: 0 auto; width: 100%; }
 .mmmini .mmsvg { height: auto; aspect-ratio: 200 / 460; }
@@ -2194,10 +2208,10 @@ function renderProfile(id) {
     const got = items.filter(a => R.ach[a.id]), next = items.find(a => !R.ach[a.id]);
     const val = metricVal(M, c.metric, stv), prev = got.length ? got[got.length - 1].n : 0;
     const pct = next ? Math.max(0, Math.min(100, (val - prev) / (next.n - prev) * 100)) : 100;
-    if (c.secret && !got.length) return `<details class="cat"><summary><span class="badge sm" style="--rc:#556">❔</span><span class="cn">???</span><span class="cc">0/${items.length}</span><span class="nx">A secret achievement. It's how it all began.</span></summary></details>`;
+    if (c.secret && !got.length) return `<details class="cat"><summary><span class="badge sm" style="--rc:#556">❔</span><span class="cn"><span class="glx" data-t="???">???</span></span><span class="cc">0/${items.length}</span><span class="nx">A secret achievement. It's how it all began.</span></summary></details>`;
     return `<details class="cat"><summary>${lockBadge(got.length ? got[got.length - 1] : items[0], "sm", !got.length)}<span class="cn">${esc(c.name)}</span><span class="cc">${got.length}/${items.length}</span>
-      <span class="nx">${next ? `Next: ${next.hidden ? "???" : esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${next.hidden ? "???" : fmtN(next.n)}` : "Complete"}</span></summary>
-      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${lockBadge(a, "", !R.ach[a.id])}<span><b>${a.hidden && !R.ach[a.id] ? "???" : esc(a.name)}</b><small>${a.hidden && !R.ach[a.id] ? "A hidden quest at the end of the road. Keep going." : esc(a.desc)}</small></span>
+      <span class="nx">${next ? `Next: ${next.hidden ? `<span class="glx" data-t="???">???</span>` : esc(next.name)} <span class="meter"><i style="width:${pct.toFixed(0)}%"></i></span> ${fmtN(Math.floor(val * 10) / 10)}/${next.hidden ? `<span class="glx" data-t="???">???</span>` : fmtN(next.n)}` : "Complete"}</span></summary>
+      <div class="achs">${items.map(a => `<div class="ach${R.ach[a.id] ? "" : " lock"}">${lockBadge(a, "", !R.ach[a.id])}<span><b>${a.hidden && !R.ach[a.id] ? `<span class="glx" data-t="???">???</span>` : esc(a.name)}</b><small>${a.hidden && !R.ach[a.id] ? "A hidden quest at the end of the road. Keep going." : esc(a.desc)}</small></span>
         <span class="when"><span class="rar" style="color:${RAR[a.rar][2]}">${RAR[a.rar][0]}</span><br>${R.ach[a.id] ? fmtShort(R.ach[a.id]) : a.xp ? `+${a.xp} XP` : ""}</span></div>`).join("")}</div></details>`;
   };
   for (const c of ACH_CATS.filter(c => !c.mastery)) h += catBlock(c);
