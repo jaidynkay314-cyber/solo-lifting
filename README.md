@@ -265,3 +265,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
   - Counting: every confirmed working set counts 1 for an exercise's main muscle and 0.5 for muscles worked indirectly (`MMAP`). Warm-ups don't count. Custom exercises aren't mapped and are listed as such.
   - Zones: 0 not trained, 1 to 4 light, 5 to 9 building, 10 to 20 growth zone (the common 10 to 20 sets per muscle per week guideline), 20+ high volume.
   - Figure paths are in `MFIG` (left half, mirrored), viewBox 200 x 460.
+
+## To revisit
+- **Muscle map colours:** the zone colours (dim blue, blue, cyan) may be too close together. Review after a few weeks of real data and add more contrast if needed (colours are in `MZ` and `mColor()`).
+- **Recovery check:** on hold until the smart rings arrive, so its inputs match what the rings measure.
