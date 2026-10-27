@@ -1,5 +1,5 @@
 // Solo Lifting offline worker. Bump VERSION whenever any file changes so phones pick up the update.
-const VERSION = "solo-lifting-v6.6";
+const VERSION = "solo-lifting-v6.7";
 const SHELL = ["./", "./index.html", "./config.js", "./cards/cards.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-512-maskable.png"];
 
 self.addEventListener("install", e => {
