@@ -727,6 +727,43 @@ body.noscroll { overflow: hidden; }
 .flog .step { display: inline-flex; align-items: center; gap: 6px; }
 .flog .btn { padding: 4px 10px; }
 .fueltick { color: #5ee39a; }
+/* ---------- muscle map ---------- */
+.mmcard { display: flex; flex-direction: column; gap: 10px; }
+.mmcard .toggle { flex-wrap: wrap; gap: 8px; }
+.mmwrap { display: grid; grid-template-columns: minmax(0, 1fr) 128px; gap: 10px; align-items: center; }
+.mmstage { touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; padding: 4px 0; }
+.mmstage:active { cursor: grabbing; }
+.mmspin { position: relative; aspect-ratio: 200 / 460; max-height: 430px; margin: 0 auto; will-change: transform; }
+.mmface { position: absolute; inset: 0; }
+.mmface[hidden] { display: none; }
+.mmsvg { width: 100%; height: 100%; display: block; overflow: visible; }
+.mmsil { fill: #222937; }
+.mmline { fill: none; stroke: #3b4559; stroke-width: .8; }
+.mmhead { stroke: #3b4559; stroke-width: .8; }
+.mmshadow { fill: rgb(var(--glow-rgb) / .12); }
+.mmm { stroke: #0a0e17; stroke-width: .7; stroke-linejoin: round; transition: fill .4s, opacity .2s; cursor: pointer; }
+.mmm.hot { filter: drop-shadow(0 0 2.5px rgb(76 195 255 / .75)); }
+.mmm.sel { stroke: #fff; stroke-width: 1.4; }
+.mmside { display: flex; flex-direction: column; gap: 10px; }
+.mmside .btn { padding: 8px 6px; font-size: 13px; }
+.mmlegend { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
+.mmlegend span { display: grid; grid-template-columns: 14px 1fr; column-gap: 7px; line-height: 1.15; }
+.mmlegend i { width: 14px; height: 14px; grid-row: span 2; border: 1px solid #0a0e17; }
+.mmlegend small { font-size: 11px; opacity: .8; }
+.mminfo { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 10px 11px; display: flex; flex-direction: column; gap: 6px; }
+.mminfo .sub { margin: 0; }
+.mminfo .toggle b { font-family: var(--font-display); font-size: 19px; letter-spacing: .03em; }
+.mminfo .btn { padding: 3px 9px; }
+.mmhint { font-size: 12px; opacity: .8; }
+.mmbar { position: relative; display: block; height: 7px; background: #141a26; border: 1px solid var(--edge-dim); }
+.mmbar i { position: absolute; left: 0; top: 0; bottom: 0; transition: width .4s; }
+.mmbar span { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--muted); opacity: .7; }
+.mmall summary { cursor: pointer; color: var(--glow); font-size: 13px; }
+.mmrows { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.mmrow { display: grid; grid-template-columns: 9.5em 1fr 2.6em; gap: 8px; align-items: center; text-align: left; background: none; border: 0; padding: 3px 0; color: var(--fg); font-size: 13px; }
+.mmrow b { text-align: right; font-family: var(--font-display); }
+@media (max-width: 360px) { .mmwrap { grid-template-columns: minmax(0, 1fr) 104px; } }
+
 /* ---------- warm-ups, swaps ---------- */
 .wu { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 2px 0 2px 11px; border-left: 2px solid var(--edge-dim); }
 .wu > span { flex-basis: 100%; font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 11px; color: var(--muted); }
@@ -2127,6 +2164,7 @@ function renderProfile(id) {
   } else {
     h += `<section class="win card"><h2>${esc(nameOf(id))}'s program</h2><div class="psum">${DAYS.map(d => { const p = progDay(id, d); return `<div><b>${PROGRAM[d].short}</b><span>${esc(p.name)}</span><small>${p.ex.map(e => esc(shortName(e[0]))).join(", ") || "Cardio only"}</small></div>`; }).join("")}</div></section>`;
   }
+  h += muscleMapHTML(id);
   h += `<div class="sect">Achievements<small>${unlocked} / ${ACH.length}</small></div>`;
   const stv = statsOf(M);
   const catBlock = c => {
@@ -2147,6 +2185,7 @@ function renderProfile(id) {
     <div class="achs">${mast.length ? mast.map(({ c, v }) => { const items = ACH.filter(a => a.metric === c.metric); return `<div class="ach"><span class="mrow">${items.map(a => lockBadge(a, "sm", !R.ach[a.id])).join("")}</span><span><b>${esc(c.name)}</b><small>${v} session${v === 1 ? "" : "s"} · next at ${(items.find(a => !R.ach[a.id]) || { n: "max" }).n}</small></span><span class="when"></span></div>`; }).join("") : `<div class="ach"><span></span><span><small>Log any exercise to start its mastery track.</small></span><span></span></div>`}</div></details>`;
   h += `<div class="sect">Exercise log</div>${machineLog(id)}</div>`;
   $("#view").innerHTML = h;
+  mmBind();
 }
 function machineLog(id) {
   const mine = Object.values(S.sessions).filter(b => b.profile === id && !isMeta(b) && !isEmpty(b)).sort((a, b) => a.date < b.date ? -1 : 1);
@@ -3492,6 +3531,220 @@ document.addEventListener("visibilitychange", () => {
   if (BKEY) { BKEY = null; bodyClearURLs(); if (!$("#bodyOv").hidden) $("#bodyBody").innerHTML = ""; }
 });
 
+/* Muscle figure: left half paths (viewer's left, x <= 100), mirrored for the right. viewBox 0 0 200 460. */
+const MFIG = {
+  // body outline, left half, from the chin down and back up the midline
+  sil: "M100 56 L91 57 Q90 68 86 73 Q75 79 63 81 Q49 84 46 100 Q45 116 49 130 Q46 150 48 172 Q47 200 53 236 Q53 250 55 260 Q56 276 63 279 Q69 278 68 263 Q66 251 65 240 Q69 210 66 180 Q68 160 67 141 L71 140 Q71 170 75 200 Q73 216 66 232 Q57 270 61 320 Q63 341 67 352 Q61 380 67 410 Q69 424 69 432 Q62 444 71 449 L89 449 Q92 441 88 432 Q87 420 88 410 Q94 380 90 357 Q93 347 94 340 Q98 300 98 263 L100 262 Z",
+  head: "M100 6 C88 6 80 16 80 30 C80 42 85 51 91 56 L100 59 L109 56 C115 51 120 42 120 30 C120 16 112 6 100 6 Z",
+  front: [
+    ["traps", "M91 62 Q88 71 80 76 Q70 80 63 81 Q72 85 78 85 Q87 81 92 73 Z"],
+    ["sideDelt", "M63 82 Q50 85 47 101 Q46 117 52 130 Q55 113 58 100 Q60 90 66 83 Z"],
+    ["frontDelt", "M66 83 Q60 91 58 101 Q55 115 53 131 Q63 124 68 110 Q72 96 76 87 Q71 84 66 83 Z"],
+    ["chest", "M77 87 Q71 98 69 112 Q68 127 76 135 Q87 140 98 135 L98 89 Q87 85 77 87 Z"],
+    ["biceps", "M54 134 Q50 150 51 166 Q55 176 62 174 Q66 158 66 141 Q61 133 54 134 Z"],
+    ["forearms", "M51 178 Q50 205 55 237 L63 239 Q68 210 65 180 Q58 174 51 178 Z"],
+    ["obliques", "M75 140 Q72 162 74 190 Q76 212 84 227 L86 207 Q84 176 85 143 Q80 140 75 140 Z"],
+    ["abs", "M87 140 L98 140 L98 159 L87 159 Q86 150 87 140 Z"],
+    ["abs", "M87 162 L98 162 L98 182 L87 182 Q86 172 87 162 Z"],
+    ["abs", "M87 185 L98 185 L98 205 L87 205 Q86 195 87 185 Z"],
+    ["abs", "M87 208 L98 208 L98 240 Q92 236 88 228 Q86 218 87 208 Z"],
+    ["abductors", "M67 232 Q62 242 63 254 Q69 256 74 248 Q73 238 67 232 Z"],
+    ["quads", "M64 256 Q57 284 60 318 Q63 337 71 344 Q71 300 75 262 Q70 256 64 256 Z"],
+    ["quads", "M77 250 Q71 290 73 336 Q78 345 84 337 Q88 297 86 254 Q81 249 77 250 Z"],
+    ["quads", "M87 300 Q83 324 85 343 Q92 347 94 334 Q94 315 89 300 Z"],
+    ["adductors", "M88 257 Q95 262 98 270 L97 300 Q93 296 89 299 Q88 277 87 259 Z"],
+    ["calves", "M70 360 Q66 386 70 412 L75 412 Q77 388 77 362 Z"],
+    ["calves", "M84 359 Q92 378 89 404 Q84 401 82 388 Q81 372 84 359 Z"]
+  ],
+  back: [
+    ["traps", "M100 60 L91 62 Q88 71 80 76 Q70 80 63 81 Q77 88 87 104 Q93 118 100 152 Z"],
+    ["sideDelt", "M58 84 Q48 89 46 102 Q46 112 49 120 Q51 104 58 92 Z"],
+    ["rearDelt", "M63 82 Q51 88 50 104 Q51 117 55 125 Q61 108 74 95 Q70 86 63 82 Z"],
+    ["upperBack", "M75 97 Q65 108 67 124 Q77 129 89 122 Q91 108 85 99 Q80 96 75 97 Z"],
+    ["lats", "M67 127 Q65 151 72 178 Q80 196 91 205 L96 190 Q91 160 90 126 Q78 131 67 127 Z"],
+    ["lowerBack", "M93 158 Q89 190 90 223 L98 225 L98 160 Z"],
+    ["triceps", "M54 127 Q48 146 51 168 Q56 176 62 172 Q66 152 64 132 Q60 126 54 127 Z"],
+    ["forearms", "M51 178 Q50 205 55 237 L63 239 Q68 210 65 180 Q58 174 51 178 Z"],
+    ["abductors", "M70 213 Q62 222 66 238 Q77 228 91 226 Q85 213 70 213 Z"],
+    ["glutes", "M68 232 Q62 250 69 271 Q84 283 98 277 L98 236 Q86 228 68 232 Z"],
+    ["hamstrings", "M65 282 Q63 316 69 342 L79 344 Q79 312 81 285 Q72 280 65 282 Z"],
+    ["hamstrings", "M83 287 Q83 316 82 344 L91 344 Q95 314 93 283 Q88 284 83 287 Z"],
+    ["adductors", "M95 280 Q98 290 98 300 L96 320 Q94 300 94 282 Z"],
+    ["calves", "M69 356 Q63 380 71 405 Q78 405 80 385 Q80 366 76 356 Z"],
+    ["calves", "M80 356 Q90 370 88 401 Q82 405 80 386 Z"]
+  ]
+};
+
+/* ================= MUSCLE MAP ================= */
+/* Weekly hard sets per muscle: every confirmed working set counts 1 for the muscles an exercise mainly works and 0.5 for
+   the ones it works indirectly. Warm-ups never count. The 10 to 20 sets a week zone is the common guideline for growth. */
+const MUSCLES = {
+  chest: "Chest", frontDelt: "Front delts", sideDelt: "Side delts", rearDelt: "Rear delts", traps: "Traps",
+  lats: "Lats", upperBack: "Upper back", lowerBack: "Lower back", biceps: "Biceps", triceps: "Triceps", forearms: "Forearms",
+  abs: "Abs", obliques: "Obliques", quads: "Quads", hamstrings: "Hamstrings", glutes: "Glutes",
+  abductors: "Outer hips (abductors)", adductors: "Inner thighs (adductors)", calves: "Calves"
+};
+const MINOR = new Set(["forearms", "obliques", "traps"]);
+/* exercise -> [[muscle, 1 | 0.5], ...] */
+const MMAP = (() => {
+  const m = {}, set = (ids, list) => { for (const id of ids) m[id] = list; };
+  set(["chest-press", "bench-press", "db-bench", "smith-bench", "incline-press", "pushups"], [["chest", 1], ["frontDelt", .5], ["triceps", .5]]);
+  set(["pec-deck", "cable-fly", "db-fly"], [["chest", 1], ["frontDelt", .5]]);
+  set(["diamond-pushups"], [["triceps", 1], ["chest", .5], ["frontDelt", .5]]);
+  set(["dips", "dip-machine"], [["triceps", 1], ["chest", .5], ["frontDelt", .5]]);
+  set(["shoulder-press", "ohp", "db-shoulder"], [["frontDelt", 1], ["sideDelt", .5], ["triceps", .5]]);
+  set(["lateral-raise", "db-lat-raise"], [["sideDelt", 1]]);
+  set(["rear-delt", "face-pull"], [["rearDelt", 1], ["upperBack", .5]]);
+  set(["lat-pulldown", "pullup", "pullups-bw"], [["lats", 1], ["biceps", .5], ["upperBack", .5]]);
+  set(["cable-row", "cs-row", "bb-row", "db-row"], [["upperBack", 1], ["lats", .5], ["rearDelt", .5], ["biceps", .5]]);
+  set(["shrugs"], [["traps", 1]]);
+  set(["cable-curl", "db-curl", "preacher-curl"], [["biceps", 1], ["forearms", .5]]);
+  set(["hammer-curl"], [["biceps", 1], ["forearms", 1]]);
+  set(["pushdown", "oh-ext", "skullcrusher"], [["triceps", 1]]);
+  set(["leg-press", "hack-squat", "smith-squat", "squat", "goblet-squat"], [["quads", 1], ["glutes", .5], ["adductors", .5]]);
+  set(["leg-press-wide"], [["glutes", 1], ["quads", .5], ["adductors", .5], ["hamstrings", .5]]);
+  set(["bw-squat", "jump-squats", "wall-sit", "box-jumps", "step-ups"], [["quads", 1], ["glutes", .5]]);
+  set(["lunges", "db-lunge"], [["quads", 1], ["glutes", .5], ["adductors", .5]]);
+  set(["leg-ext"], [["quads", 1]]);
+  set(["seated-curl", "lying-curl"], [["hamstrings", 1]]);
+  set(["rdl"], [["hamstrings", 1], ["glutes", .5], ["lowerBack", .5]]);
+  set(["deadlift"], [["glutes", 1], ["hamstrings", 1], ["lowerBack", .5], ["quads", .5], ["traps", .5]]);
+  set(["hip-thrust", "bb-hip-thrust", "glute-bridge"], [["glutes", 1], ["hamstrings", .5]]);
+  set(["kickback"], [["glutes", 1]]);
+  set(["kb-swing"], [["glutes", 1], ["hamstrings", .5], ["lowerBack", .5]]);
+  set(["abductor"], [["abductors", 1]]);
+  set(["adductor"], [["adductors", 1]]);
+  set(["calf", "seated-calf"], [["calves", 1]]);
+  set(["crunch", "ab-machine", "situps", "crunches", "leg-raises", "plank"], [["abs", 1]]);
+  set(["side-plank"], [["obliques", 1], ["abs", .5]]);
+  set(["torso-rotation"], [["obliques", 1], ["abs", .5]]);
+  set(["mountain-climbers", "burpees"], [["abs", .5]]);
+  set(["back-ext", "superman"], [["lowerBack", 1], ["glutes", .5], ["hamstrings", .5]]);
+  return m;
+})();
+function muscleWeek(hid, from, to) {
+  const v = Object.fromEntries(Object.keys(MUSCLES).map(k => [k, 0])), by = {}, unmapped = new Set();
+  const add = (id, n) => {
+    if (!n) return;
+    const map = MMAP[id]; if (!map) { unmapped.add(id); return; }
+    for (const [m, f] of map) { v[m] += n * f; (by[m] ||= {}); by[m][id] = (by[m][id] || 0) + n * f; }
+  };
+  for (const b of Object.values(S.sessions)) {
+    if (b.profile !== hid || b.date < from || b.date > to || isMeta(b) || b.excused) continue;
+    for (const [id, arr] of Object.entries(b.ex || {})) add(id, arr.filter(s => setOk(typeOf(id), s)).length);
+    for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type !== "min") add(e.id, (e.sets || []).filter(s => setOk(L.type, s)).length); }
+  }
+  return { v, by, unmapped: [...unmapped] };
+}
+const MZ = [[0, "Not trained", "#3a4250"], [.1, "Light", "#2e6c93"], [5, "Building", "#2a96dc"], [10, "Growth zone", "#4cc3ff"], [20.5, "High volume", "#ffc861"]];
+const zoneOf = n => { let z = MZ[0]; for (const x of MZ) if (n >= x[0]) z = x; return z; };
+function mColor(n) {
+  if (n <= 0) return MZ[0][2];
+  if (n > 20) return MZ[4][2];
+  // ease from dim blue to bright cyan across 0 to 10 sets, then hold at cyan through the growth zone
+  const t = Math.min(1, n / 10), a = [46, 92, 128], b = [76, 195, 255];
+  return `rgb(${a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",")})`;
+}
+const r05 = n => Math.round(n * 2) / 2;
+let MM = { hid: null, week: "this", face: 0, sel: null };
+function mmRange() {
+  const t = todayStr(), mon = mondayOf(t);
+  return MM.week === "last" ? [addDays(mon, -7), addDays(mon, -1)] : [mon, t];
+}
+function mmFace(list, v, side) {
+  const half = list.map(([m, d]) => `<path class="mmm${MM.sel === m ? " sel" : ""}${v[m] >= 10 ? " hot" : ""}" data-m="${m}" fill="${mColor(v[m])}" d="${d}"/>`).join("");
+  const id = "mm" + side;
+  return `<svg class="mmsvg" viewBox="0 0 200 460" role="img" aria-label="${side === "f" ? "Front" : "Back"} of the body, muscles coloured by sets this week">
+    <defs><clipPath id="${id}c"><rect width="99.4" height="460"/></clipPath>
+      <radialGradient id="${id}g" cx=".42" cy=".28" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient>
+      <clipPath id="${id}s"><path d="${MFIG.sil}"/><path d="${MFIG.sil}" transform="translate(200 0) scale(-1 1)"/><path d="${MFIG.head}"/></clipPath></defs>
+    <ellipse cx="100" cy="452" rx="44" ry="5" class="mmshadow"/>
+    <g><path class="mmsil" d="${MFIG.sil}"/><path class="mmline" d="${MFIG.sil}" clip-path="url(#${id}c)"/>${half}</g>
+    <g transform="translate(200 0) scale(-1 1)"><path class="mmsil" d="${MFIG.sil}"/><path class="mmline" d="${MFIG.sil}" clip-path="url(#${id}c)"/>${half}</g>
+    <path class="mmsil mmhead" d="${MFIG.head}"/>
+    <rect width="200" height="460" fill="url(#${id}g)" clip-path="url(#${id}s)" pointer-events="none"/></svg>`;
+}
+function muscleMapHTML(hid) {
+  MM.hid = hid;
+  const [from, to] = mmRange(), W = muscleWeek(hid, from, to), v = W.v;
+  const keys = Object.keys(MUSCLES), hit = keys.filter(k => v[k] > 0).length, grow = keys.filter(k => v[k] >= 10).length;
+  let info;
+  if (MM.sel && MUSCLES[MM.sel]) {
+    const m = MM.sel, n = v[m], z = zoneOf(n), by = Object.entries(W.by[m] || {}).sort((a, b) => b[1] - a[1]);
+    const inPlan = new Set(DAYS.flatMap(d => progDay(hid, d).ex.map(e => e[0])));
+    const opts = Object.entries(MMAP).filter(([id, l]) => CX(id) && l.some(([mm, f]) => mm === m && f === 1)).map(([id]) => id).sort((a, b) => inPlan.has(b) - inPlan.has(a)).slice(0, 3);
+    const need = n < 10 ? Math.ceil(10 - n) : 0;
+    info = `<div class="mminfo"><div class="toggle"><b>${esc(MUSCLES[m])}</b><button class="btn" data-act="mmclear" aria-label="Back to summary">✕</button></div>
+      <div class="mmbar"><i style="width:${Math.min(100, n / 20 * 100).toFixed(1)}%;background:${mColor(n)}"></i><span style="left:50%"></span></div>
+      <p class="sub"><b style="color:${z[2] === MZ[0][2] ? "var(--fg)" : z[2]}">${r05(n)} set${r05(n) === 1 ? "" : "s"}</b> ${MM.week === "last" ? "last week" : "so far this week"} · ${z[1]}${need && MM.week === "this" ? ` · ${need} more to reach the growth zone` : ""}</p>
+      ${by.length ? `<p class="sub">${by.map(([id, x]) => `${esc(shortName(id))} ${r05(x)}`).join(" · ")}</p>` : ""}
+      ${n < 10 ? `<p class="sub">Hits it directly: ${opts.map(id => `<b>${esc(CX(id).name)}</b>${inPlan.has(id) ? " (in your plan)" : ""}`).join(", ")}</p>` : n > 20 ? `<p class="sub">Over 20 sets a week is a lot for one muscle. Fine for a block, but watch recovery.</p>` : ""}</div>`;
+  } else {
+    const major = keys.filter(k => !MINOR.has(k)).sort((a, b) => v[a] - v[b]).slice(0, 3);
+    info = `<div class="mminfo"><p class="sub"><b style="color:var(--fg)">${hit} of ${keys.length}</b> muscles trained ${MM.week === "last" ? "last week" : "so far this week"} · <b style="color:#4cc3ff">${grow}</b> in the 10 to 20 set growth zone</p>
+      <p class="sub">Least trained: ${major.map(k => `<button class="linkbtn" data-act="mmsel" data-m="${k}">${esc(MUSCLES[k])}</button> ${r05(v[k])}`).join(" · ")}</p>
+      <p class="sub mmhint">Drag the body to turn it around. Tap a muscle for detail.</p></div>`;
+  }
+  const rows = keys.slice().sort((a, b) => v[b] - v[a]).map(k => `<button class="mmrow" data-act="mmsel" data-m="${k}"><span>${esc(MUSCLES[k])}</span><span class="mmbar"><i style="width:${Math.min(100, v[k] / 20 * 100).toFixed(1)}%;background:${mColor(v[k])}"></i><span style="left:50%"></span></span><b>${r05(v[k])}</b></button>`).join("");
+  return `<section class="win card mmcard" id="mmCard"><div class="toggle"><h2>Muscle map</h2>
+      <div class="vchips"><button class="vchip" data-act="mmweek" data-w="this" aria-pressed="${MM.week === "this"}">This week</button><button class="vchip" data-act="mmweek" data-w="last" aria-pressed="${MM.week === "last"}">Last week</button></div></div>
+    <div class="mmwrap"><div class="mmstage" id="mmStage"><div class="mmspin" id="mmSpin" style="${mmStyle(MM.face)}">
+      <div class="mmface mmfront"${mmBackShown(MM.face) ? " hidden" : ""}>${mmFace(MFIG.front, v, "f")}</div><div class="mmface mmback"${mmBackShown(MM.face) ? "" : " hidden"}>${mmFace(MFIG.back, v, "b")}</div></div></div>
+      <div class="mmside"><button class="btn" data-act="mmturn">${mmBackShown(MM.face) ? "Turn to front" : "Turn to back"}</button>
+        <div class="mmlegend">${MZ.map(z => `<span><i style="background:${z[2]}"></i>${z[1]}<small>${z[0] === 0 ? "0" : z[0] === .1 ? "1–4" : z[0] === 5 ? "5–9" : z[0] === 10 ? "10–20" : "20+"}</small></span>`).join("")}</div></div></div>
+    ${info}
+    <details class="mmall"><summary>All muscles · sets ${MM.week === "last" ? "last week" : "this week"}</summary><div class="mmrows">${rows}</div>
+      <p class="sub">Each confirmed set counts 1 for the main muscle and 0.5 for muscles worked indirectly. Warm-ups don't count. The marker is 10 sets, the start of the growth zone.${W.unmapped.length ? ` Not mapped yet: ${W.unmapped.map(id => esc((CX(id) || {}).name || id)).join(", ")}.` : ""}</p></details></section>`;
+}
+function mmRedraw() { const c = $("#mmCard"); if (c && MM.hid) c.outerHTML = muscleMapHTML(MM.hid); mmBind(); }
+/* turntable: cos of the angle squeezes the figure to a side profile; past 90 degrees the back shows */
+const mmBackShown = a => Math.cos(a * Math.PI / 180) < 0;
+const mmStyle = a => { const c = Math.cos(a * Math.PI / 180); return `transform:scaleX(${Math.max(.36, Math.abs(c)).toFixed(3)})`; };
+function mmPaint(a) {
+  const sp = $("#mmSpin"); if (!sp) return;
+  sp.setAttribute("style", mmStyle(a));
+  const back = mmBackShown(a), f = sp.querySelector(".mmfront"), b = sp.querySelector(".mmback");
+  if (f) f.hidden = back; if (b) b.hidden = !back;
+  const sh = 1 - Math.abs(Math.cos(a * Math.PI / 180)); sp.style.filter = `brightness(${(1 - sh * .35).toFixed(3)})`;
+  const btn = document.querySelector('[data-act="mmturn"]'); if (btn) btn.textContent = back ? "Turn to front" : "Turn to back";
+}
+let mmAnim = 0;
+function mmTo(target, from = MM.face) {
+  cancelAnimationFrame(mmAnim);
+  if (reduced) { MM.face = target; mmPaint(target); return; }
+  const t0 = performance.now(), dur = 520;
+  const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); mmPaint(from + (target - from) * e); if (k < 1) mmAnim = requestAnimationFrame(step); else MM.face = target; };
+  MM.face = target; mmAnim = requestAnimationFrame(step);
+}
+/* drag to turn: the figure follows the finger, then settles on the front or back */
+function mmBind() {
+  const st = $("#mmStage"); if (!st || st.dataset.bound) return; st.dataset.bound = 1;
+  let x0 = null, a0 = 0, moved = 0, cur = 0;
+  st.addEventListener("pointerdown", e => { cancelAnimationFrame(mmAnim); x0 = e.clientX; a0 = MM.face; cur = a0; moved = 0; st.setPointerCapture(e.pointerId); });
+  st.addEventListener("pointermove", e => { if (x0 == null) return; const dx = e.clientX - x0; moved = Math.max(moved, Math.abs(dx)); if (moved >= 6) { cur = a0 + dx * .9; mmPaint(cur); } });
+  st.addEventListener("pointerup", e => {
+    if (x0 == null) return;
+    x0 = null;
+    if (moved < 6) {
+      const el = document.elementFromPoint(e.clientX, e.clientY), m = el && el.closest && el.closest("[data-m]");
+      if (m && m.dataset.m) { MM.sel = MM.sel === m.dataset.m ? null : m.dataset.m; buzz(10); mmRedraw(); }
+      return;
+    }
+    mmTo(Math.round(cur / 180) * 180, cur);
+  });
+  st.addEventListener("pointercancel", () => { if (x0 == null) return; x0 = null; mmTo(MM.face, cur); });
+  // first time the map is seen on this phone, a small turn hints that it moves
+  try { if (!localStorage.getItem("sl.mmhint")) { localStorage.setItem("sl.mmhint", "1"); setTimeout(() => { mmTo(MM.face + 40); setTimeout(() => mmTo(MM.face - 40), 560); }, 500); } } catch (e) {}
+}
+function mmClick(t, act) {
+  if (act === "mmturn") { mmTo(MM.face + 180); return true; }
+  if (act === "mmweek") { MM.week = t.dataset.w; mmRedraw(); return true; }
+  if (act === "mmsel") { MM.sel = t.dataset.m; const back = ["rearDelt", "lats", "upperBack", "lowerBack", "triceps", "glutes", "hamstrings"].includes(MM.sel), front = ["chest", "frontDelt", "biceps", "abs", "obliques", "quads"].includes(MM.sel);
+    const isBack = mmBackShown(MM.face); if ((back && !isBack) || (front && isBack)) MM.face += 180; mmRedraw(); const c = $("#mmCard"); if (c) c.scrollIntoView({ block: "start", behavior: "smooth" }); return true; }
+  if (act === "mmclear") { MM.sel = null; mmRedraw(); return true; }
+  return false;
+}
+
 /* ================= EVENTS ================= */
 let armT = null;
 function arm(key) { S.armed = key; clearTimeout(armT); armT = setTimeout(() => { S.armed = null; softRender(); }, 4000); }
@@ -3522,6 +3775,7 @@ document.addEventListener("click", e => {
   if (act === "logfix") { S.date = t.dataset.date; S.day = t.dataset.fday; if (WEEKEND.has(S.day) && !S.sessions[curKey()] && S.sessions[keyOf(S.me, S.date, "WK")]) S.day = "WK"; S.view = "log"; render(); scrollTo(0, 0); return; }
   if (vaultClick(t, act)) return;
   if (foodClick(t, act)) return;
+  if (mmClick(t, act)) return;
   if (bodyClick(t, act)) return;
   if (act === "repok") { try { localStorage.setItem(repKey(S.me, addDays(mondayOf(todayStr()), -7)), "1"); } catch (e) {} const rc = $("#repCard"); if (rc) rc.remove(); return; }
   if (act === "sqadd") {

@@ -259,3 +259,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Warm-up ramp** on every weighted exercise with history, worked out from the System target (or last top weight). The first exercise for each body region (push, pull, legs, core) gets a full ramp: 40 kg and up is about 50% × 8, 70% × 5, 85% × 2; 20 to 40 kg is 50% × 10, 75% × 5; under 20 kg is 50% × 10. Later exercises in a region already warmed get one feeler set at about 60% × 5 (none under 15 kg). Rounded to 2.5 kg (1 kg under 20 kg). Display only: warm-ups never count as sets, points or XP. `warmups()`, `regionOf()`, `GROUPS`.
 - **Exercise swap** (Swap on any plan exercise): lists exercises from the same muscle group (`GROUPS`), each with last time's numbers. Swapping edits that day's session plan only (`b.plan.ex`) and records `b.swaps[new] = original`; the saved program never changes. Blocked once a set is confirmed. A session holding only a swap is kept (not auto-deleted) but still counts as empty for quests and stats.
 - Deload targets round to the gym step (2.5 kg, or 1 kg under 20 kg).
+
+## v7.2 additions
+- **Muscle map** (Profile, any hunter): a front and back body built from muscles, coloured by hard sets this week (or last week). Drag sideways to turn it (turntable effect: the figure narrows to a side profile and swaps to the back past 90 degrees), or tap Turn. Tap a muscle for its sets, which exercises counted, how many more sets to reach the growth zone, and exercises that hit it directly (ones in your plan first).
+  - Counting: every confirmed working set counts 1 for an exercise's main muscle and 0.5 for muscles worked indirectly (`MMAP`). Warm-ups don't count. Custom exercises aren't mapped and are listed as such.
+  - Zones: 0 not trained, 1 to 4 light, 5 to 9 building, 10 to 20 growth zone (the common 10 to 20 sets per muscle per week guideline), 20+ high volume.
+  - Figure paths are in `MFIG` (left half, mirrored), viewBox 200 x 460.
