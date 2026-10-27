@@ -283,7 +283,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Forgiving pack tear:** the swipe can start anywhere on the opening screen, on or off the pack. It opens once the finger has swept across 55% of the pack's width anywhere from just above the pack to about 60% down it, in either direction, and the motion is mostly sideways (`bindTear()`). Listeners are removed when the pack opens or the overlay closes.
 
 ## v8.6
-- **Clearing a quest:** on a quest day, every task in the plan (sets and cardio, +1 set each and 25 min cardio in the Penalty Zone) must be done and the session must reach the points minimum (120, or 180 in the Penalty Zone). On a rest day, 120 points from anything clears it (`questDone()`). The quest card's bar now shows task progress, with the points minimum underneath; rest days still show points.
+- **Clearing a quest:** on a quest day, every task in the plan (sets and cardio, +1 set each and 25 min cardio in the Penalty Zone) must be done and the session must reach the points minimum (120, or 180 in the Penalty Zone). On a rest day, 120 points from anything clears it Applies from 28 Oct 2026; earlier days keep the old rule so history doesn't change (`questDone()`). The quest card's bar now shows task progress, with the points minimum underneath; rest days still show points.
 - **Side quests don't double dip:** sets the plan asks for and the plan's cardio minutes don't count towards side quests; sets past the plan's count, extra exercises, bonus activities and cardio beyond the plan do. Swapped-in exercises count as plan exercises. The Original Daily Quest still counts everything (`sideProgress(..., pen)`, `q.all`).
 
 ## Removing a hunter from the board

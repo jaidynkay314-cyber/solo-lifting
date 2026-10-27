@@ -1443,6 +1443,8 @@ function pointsOf(b) {
 const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length >= e.sets;
 function questDone(b, pen) {
   if (!b || !PROGRAM[b.day] || b.excused || isMeta(b)) return false;
+  // days before this rule came in keep the old rule (points or the finished plan), so nobody's history changes
+  if (b.date < "2026-10-28") { if (pointsOf(b).total >= (pen ? penTarget(b.day) : TARGET(b.day))) return true; const r0 = reqs(planFor(b.profile, b.day, b), b.day, pen); return r0.floor && r0.ex.every(e => exDone(b, e)) && cardioMeets(b, r0.cardio); }
   if (pointsOf(b).total < (pen ? penTarget(b.day) : TARGET(b.day))) return false; // the minimum for any day to count
   if (!pen && !isQuestDay(b.profile, b.date)) return true; // optional day: the points are enough
   const r = reqs(planFor(b.profile, b.day, b), b.day, pen);
