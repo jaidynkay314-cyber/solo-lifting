@@ -278,6 +278,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Set rewards** (Vault → Set rewards): every Common to Full Art card in a set (alt arts not needed) earns that set's title (Epic); the whole set, including Secrets, its Glitched card and alt arts, earns its animated frame (Legendary). Titles and frames: Beasts = Beastmaster of the Gate / Gatekeeper, Relics = Relic Keeper / Forged Iron, Cores = Elemental Adept / Elemental Storm, Weapons = Armoury Master / Hunter's Steel, Constellations = Star Charter / Starlight. New sets get "<short> Collector" / "<short> Master" until added to `SETREW`. Rewards are derived from the collection (`setsProgress()`, merged into `cosOf()`), never roll from loot boxes, and completions show in the feed.
 - **Badge showcase** (Profile → Appearance → Showcase): pin up to 3 unlocked achievements; they show next to your name on the board and under it on your profile. Stored in `program._look.pins`.
 
+## v8.1
+- **Forgiving pack tear:** the swipe can start anywhere on the opening screen, on or off the pack. It opens once the finger has swept across 55% of the pack's width anywhere from just above the pack to about 60% down it, in either direction, and the motion is mostly sideways (`bindTear()`). Listeners are removed when the pack opens or the overlay closes.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 

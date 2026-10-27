@@ -2774,6 +2774,7 @@ function startPack(ref) {
   layoutStack(); bindTear(inner.querySelector(".pack"));
 }
 function closeOpen() {
+  if (TEAR_AC) { TEAR_AC.abort(); TEAR_AC = null; } $("#packOv").style.touchAction = "";
   $("#packOv").hidden = true; document.body.classList.remove("noscroll");
   PO = null; S.ver++; render();
 }
@@ -2785,20 +2786,34 @@ function layoutStack() {
     const bk = sl.querySelector(".cback"); if (bk) bk.style.setProperty("--peek", 0);
   }
 }
+/* tearing is deliberately forgiving: start the swipe anywhere (on or off the pack), and it opens once the finger has
+   swept across most of the pack's width anywhere in its top half (or a little above it), in either direction */
+let TEAR_AC = null;
 function bindTear(pack) {
-  const glow = pack.querySelector(".tearglow");
-  let start = null, done = false;
-  const zone = e => { const r = pack.getBoundingClientRect(); return (e.clientY - r.top) / r.height < .3; };
-  pack.addEventListener("pointerdown", e => { if (done || !zone(e)) return; start = e.clientX; pack.setPointerCapture(e.pointerId); const f = $("#povIn .finger"); if (f) f.remove(); });
-  pack.addEventListener("pointermove", e => {
-    if (start == null || done) return;
-    const r = pack.getBoundingClientRect(), prog = Math.min(1, Math.abs(e.clientX - start) / (r.width * .8));
-    glow.style.width = `${prog * 100}%`;
-    if (e.clientX < start) { glow.style.left = "auto"; glow.style.right = "0"; } else { glow.style.left = "0"; glow.style.right = "auto"; }
-    if (prog >= .7) { done = true; tearOpen(pack); }
-  });
-  const end = () => { if (!done) { start = null; glow.style.transition = "width .25s"; glow.style.width = "0"; setTimeout(() => glow.style.transition = "", 260); } };
-  pack.addEventListener("pointerup", end); pack.addEventListener("pointercancel", end);
+  if (TEAR_AC) TEAR_AC.abort();
+  const glow = pack.querySelector(".tearglow"), stage = $("#packOv"), ac = TEAR_AC = new AbortController(), o = { signal: ac.signal };
+  let pid = null, lo = null, hi = null, x0 = 0, y0 = 0, done = false;
+  stage.style.touchAction = "none";
+  const band = (r, y) => y >= r.top - r.height * .3 && y <= r.top + r.height * .62;
+  const paint = r => { const a = Math.max(lo, r.left), b = Math.min(hi, r.right); if (b <= a) { glow.style.width = "0"; return; }
+    glow.style.right = "auto"; glow.style.left = `${((a - r.left) / r.width * 100).toFixed(1)}%`; glow.style.width = `${((b - a) / r.width * 100).toFixed(1)}%`; };
+  const reset = () => { pid = null; lo = hi = null; glow.style.transition = "width .25s"; glow.style.width = "0"; setTimeout(() => { glow.style.transition = ""; glow.style.left = "0"; }, 260); };
+  stage.addEventListener("pointerdown", e => {
+    if (done || pid != null || e.target.closest("button")) return;
+    pid = e.pointerId; x0 = e.clientX; y0 = e.clientY; lo = hi = null;
+    try { stage.setPointerCapture(pid); } catch (er) {}
+    const f = $("#povIn .finger"); if (f) f.remove();
+  }, o);
+  stage.addEventListener("pointermove", e => {
+    if (done || e.pointerId !== pid) return;
+    const r = pack.getBoundingClientRect(), x = e.clientX, y = e.clientY;
+    if (band(r, y)) { lo = lo == null ? x : Math.min(lo, x); hi = hi == null ? x : Math.max(hi, x); paint(r); }
+    const covered = lo == null ? 0 : (Math.min(hi, r.right) - Math.max(lo, r.left)) / r.width;
+    // mostly sideways, and across at least 55% of the pack
+    if (covered >= .55 && Math.abs(x - x0) > Math.abs(y - y0) * .8) { done = true; ac.abort(); stage.style.touchAction = ""; tearOpen(pack); }
+  }, o);
+  const end = e => { if (!done && e.pointerId === pid) reset(); };
+  stage.addEventListener("pointerup", end, o); stage.addEventListener("pointercancel", end, o);
 }
 function tearOpen(pack) {
   tearPack(PO.ref.bid, PO.ref.i); // the cards join the collection the moment the pack is torn
