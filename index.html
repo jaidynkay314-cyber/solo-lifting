@@ -1443,9 +1443,17 @@ function pointsOf(b) {
 const exDone = (b, e) => (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length >= e.sets;
 function questDone(b, pen) {
   if (!b || !PROGRAM[b.day] || b.excused || isMeta(b)) return false;
-  if (pointsOf(b).total >= (pen ? penTarget(b.day) : TARGET(b.day))) return true;
+  if (pointsOf(b).total < (pen ? penTarget(b.day) : TARGET(b.day))) return false; // the minimum for any day to count
+  if (!pen && !isQuestDay(b.profile, b.date)) return true; // optional day: the points are enough
   const r = reqs(planFor(b.profile, b.day, b), b.day, pen);
-  return r.floor && r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
+  return r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio); // quest day: every task you set as well
+}
+/* how far through the day's own tasks a session is, weighted like points (sets 10 each, cardio by the minute) */
+function taskProgress(b, r) {
+  let done = 0, total = 0;
+  for (const e of r.ex) { const n = Math.min(e.sets, (((b && b.ex) || {})[e.id] || []).filter(s => setOk(e.type, s)).length); done += n * PTS.set; total += e.sets * PTS.set; }
+  if (r.cardio > 0) { const c = cardioOf(b); done += Math.min(r.cardio, c.total || 0) * 4; total += r.cardio * 4; }
+  return total ? done / total : 0;
 }
 function bonusLogged(e) {
   const L = CX(e.id); if (!L) return false;
@@ -1598,7 +1606,7 @@ function replay(hid) {
         if (fh.p) { M.proteinDays++; xp += 10; }
         if (fh.k) { M.kcalDays++; xp += 10; } }
       if (origDone(hid, d)) { M.origQ++; if (M.origQ === 1) box("B", "orig:" + d, d); }
-      if (d <= today) { const sp = sideProgress(hid, d); if (sp.done) { M.sideQ++; xp += 25; R.events.push({ d, type: "side", txt: sp.q.t }); if (M.sideQ % 5 === 0) box("R", "sq:" + M.sideQ, d); } }
+      if (d <= today) { const sp = sideProgress(hid, d, undefined, owed); if (sp.done) { M.sideQ++; xp += 25; R.events.push({ d, type: "side", txt: sp.q.t }); if (M.sideQ % 5 === 0) box("R", "sq:" + M.sideQ, d); } }
       if (dawn) M.dawn++;
       if (night) M.night++;
       xp += Math.min(BONUS_CAP, bonusXp);
@@ -1972,19 +1980,25 @@ function questHTML(R) {
   let foot;
   if (excused) foot = `<div class="qfoot"><p class="note"><b>Excused.</b> Rest up. No penalty and no XP lost for this day.</p><button class="linkbtn" data-act="unexcuse">Undo</button></div>`;
   else if (done) foot = pen ? `<p class="cleared">Penalty survived<small>+75 XP. The Penalty Zone releases you. For now.</small></p>` : `<p class="cleared">Quest cleared<small>+50 XP. The Penalty Zone will have to wait.</small></p>`;
-  else if (rest) foot = `<p class="note"><b>Rest day.</b> Nothing is due today. Reach ${need} points anyway and it counts as a cleared quest: XP, streak and a loot box.</p>`;
+  else if (rest) foot = `<p class="note"><b>Rest day.</b> Nothing is due today. Reach ${need} points from anything (gym, sport, a long walk) and it counts as a cleared quest: XP, streak and a loot box.</p>`;
   else if (isToday) foot = `<div class="clock"><span>Time remaining</span><b id="clock">--:--:--</b></div>
       <p class="warn"><b>WARNING</b> <span id="warnTxt">${esc(warnText(R, pen))}</span></p>
       <div class="qfoot"><span></span>${exBtn("Sick or injured? Excuse today")}</div>`;
   else foot = `<div class="qfoot"><p class="note">Editing the log for ${fmtDate(S.date)}.</p>${S.date < todayStr() ? exBtn("Excuse this day") : ""}</div>`;
-  const floorNote = r.floor ? "" : `<p class="note">This plan is worth ${planPts(plan)} points, under the day's ${TARGET(S.day)}, so finishing it alone won't clear the quest. Top it up with anything else you do.</p>`;
-  const pts = `<div class="qpts${P.total >= need ? " ok" : ""}"><div class="qrow"><span>Quest points</span><b>${P.total}<small> / ${need}</small></b></div>
+  const floorNote = r.floor || rest ? "" : `<p class="note">This plan is worth ${planPts(plan)} points, under the day's ${TARGET(S.day)} minimum, so top it up with anything else you do as well as finishing it.</p>`;
+  const tp = taskProgress(b, r), tasksDone = r.ex.every(e => exDone(b, e)) && cardioMeets(b, r.cardio);
+  const ptsOk = P.total >= need;
+  const pts = rest
+    ? `<div class="qpts${ptsOk ? " ok" : ""}"><div class="qrow"><span>Quest points</span><b>${P.total}<small> / ${need}</small></b></div>
     <div class="xp"><i style="width:${Math.min(100, P.total / need * 100).toFixed(1)}%"></i></div>
-    <small>Sets ${P.sets} · Cardio ${P.cardio} · Activities ${P.act}${P.total >= need ? "" : ` · ${need - P.total} to go`}</small></div>`;
+    <small>Sets ${P.sets} · Cardio ${P.cardio} · Activities ${P.act}${ptsOk ? "" : ` · ${need - P.total} to go`}</small></div>`
+    : `<div class="qpts${tasksDone && ptsOk ? " ok" : ""}"><div class="qrow"><span>Quest progress</span><b>${Math.round(tp * 100)}<small>%</small></b></div>
+    <div class="xp"><i style="width:${(tp * 100).toFixed(1)}%"></i></div>
+    <small>${tasksDone ? "Every task done" : "Finish every task below"} · points ${P.total} / ${need} minimum ${ptsOk ? "✓" : `(${need - P.total} to go)`}</small></div>`;
   const head = pen
-    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">${need} points · or the plan with every set +1 and ${r.cardio} min cardio</span></p>`
+    ? `<p class="tag">Penalty quest</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(PZ_LINES[seed % PZ_LINES.length])}</p><p class="sub"><span class="pz-badge">Every set +1 and ${r.cardio} min cardio · at least ${need} points</span></p>`
     : `<p class="tag">${rest ? "Rest day · optional" : "Daily quest"}</p><h1 class="title">${esc(plan.name)}</h1><p class="sub">${esc(plan.focus || "")}</p>`;
-  return `${head}${pts}<p class="plan-h">Or finish your plan</p><ul class="goals">${goals.join("")}</ul>${floorNote}${foot}${weekStrip(R)}`;
+  return `${head}${pts}<p class="plan-h">${rest ? "Your plan, if you want it" : "Your tasks"}</p><ul class="goals">${goals.join("")}</ul>${floorNote}${foot}${weekStrip(R)}`;
 }
 /* the last seven days at a glance, so it's clear why the Penalty Zone is (or isn't) on */
 function weekStrip(R) {
@@ -2102,7 +2116,7 @@ function renderLog(R) {
 
   const inDay = new Set(list.map(e => e.id));
   h += `<div class="add"><select id="addEx" aria-label="Add an exercise or activity"><option value="">+ Add exercise, sport or activity</option>${catalogueOptions(x => !inDay.has(x.id), "A:")}</select></div>
-  <p class="note"><b>Quest points.</b> Every confirmed set is ${PTS.set} points, cardio 4 a minute (incline walk 3), sport, swimming, cycling or classes 4 a minute, and walks, yoga or stretching 2. Any day that reaches ${TARGET("UA")} points counts as cleared, ${penTarget("UA")} in the Penalty Zone. Finishing a plan worth ${TARGET("UA")} or more clears it too.</p>
+  <p class="note"><b>Quest points.</b> Every confirmed set is ${PTS.set} points, cardio 4 a minute (incline walk 3), sport, swimming, cycling or classes 4 a minute, and walks, yoga or stretching 2. On a quest day, finish every task you set and reach at least ${TARGET("UA")} points (${penTarget("UA")} in the Penalty Zone). On a rest day, ${TARGET("UA")} points from anything counts as a cleared quest.</p>
   <p class="note">Tap the diamond to confirm each set. Only confirmed sets count. An empty set uses the grey numbers. Each set is 10 XP, each cardio minute 2 XP, a cleared quest 50, and extra exercises up to ${BONUS_CAP} XP a day. A missed weekday drains 25 XP and sends you to the <b>Penalty Zone</b>.</p></div>`;
   $("#view").innerHTML = h;
   tickClock();
@@ -3278,7 +3292,7 @@ function weekReport(hid, mon) {
   let sets = 0; for (const b of bs) { for (const [id, arr] of Object.entries(b.ex || {})) sets += arr.filter(s => setOk(typeOf(id), s)).length; for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type !== "min") sets += (e.sets || []).filter(s => setOk(L.type, s)).length; } }
   const prs = R.events.filter(e => e.type === "pr" && e.d >= mon && e.d <= sun).map(e => e.txt);
   const boxes = R.boxes.filter(x => x.d >= mon && x.d <= sun).length;
-  const side = days.filter(d => sideProgress(hid, d).done).length;
+  const side = days.filter(d => sideProgress(hid, d, undefined, !!R.pen[d]).done).length;
   const fd = days.map(d => fuelDay(hid, d)).filter(f => f.items.length), c = fuelCfg(hid);
   const kAvg = fd.length ? Math.round(sumBy(fd, f => f.k) / fd.length) : null, pAvg = fd.length ? Math.round(sumBy(fd, f => f.p) / fd.length) : null;
   const active = bs.length > 0 || fd.length > 0;
@@ -3403,14 +3417,16 @@ function sideQuestFor(hid, date) {
   let h = 7; for (const ch of hid + date) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return pool[h % pool.length];
 }
-function sideProgress(hid, date, q = sideQuestFor(hid, date)) {
+/* side quests are on top of the day: sets and cardio your plan already asks for don't count towards them
+   (sets past the plan's count, extra exercises and bonus activities do). q.all counts everything (used by the original quest). */
+function sideProgress(hid, date, q = sideQuestFor(hid, date), pen = false) {
   const bs = Object.values(S.sessions).filter(b => b.profile === hid && b.date === date && !isMeta(b) && !b.excused);
   let v = 0;
   const sets = (id, arr, type) => arr.filter(s => setOk(type, s));
   for (const b of bs) {
-    const planIds = new Set(planFor(hid, b.day, b).ex.map(e => e[0]));
+    const plan = planFor(hid, b.day, b), need = Object.fromEntries(plan.ex.map(e => [e[0], e[1] + (pen ? 1 : 0)])), planIds = new Set(Object.keys(need));
     for (const [id, arr] of Object.entries(b.ex || {})) {
-      const type = typeOf(id), ok = sets(id, arr, type);
+      const type = typeOf(id), all = sets(id, arr, type), ok = q.all || !planIds.has(id) ? all : all.slice(need[id]);
       if (q.ids && q.ids.includes(id)) v += sumBy(ok, s => +s[q.f] || 0);
       if (q.extra && !planIds.has(id)) v += ok.length;
     }
@@ -3419,7 +3435,7 @@ function sideProgress(hid, date, q = sideQuestFor(hid, date)) {
       if (L.type === "min") { if ((q.mins && q.mins.includes(e.id)) || (q.cardio && L.cat === "Cardio")) v += +e.min || 0; }
       else { const ok = sets(e.id, e.sets || [], L.type); if (q.ids && q.ids.includes(e.id)) v += sumBy(ok, s => +s[q.f] || 0); if (q.extra) v += ok.length; }
     }
-    if (q.cardio) v += cardioOf(b).total || 0;
+    if (q.cardio) v += q.all ? cardioOf(b).total || 0 : Math.max(0, (cardioOf(b).total || 0) - (pen ? Math.max(25, plan.cardio) : plan.cardio));
   }
   if (q.food || q.protein) { const f = fuelDay(hid, date); v = q.food ? f.items.length : fuelHits(f).p ? 1 : 0; }
   return { q, v: Math.round(v * 10) / 10, done: v >= q.need };
@@ -3428,7 +3444,7 @@ function sideProgress(hid, date, q = sideQuestFor(hid, date)) {
 const ORIG = [["pushups", ["pushups", "diamond-pushups"], 100], ["situps", ["situps", "crunches"], 100], ["squats", ["bw-squat", "jump-squats"], 100]];
 function origProgress(hid, date) {
   const o = {};
-  for (const [k, ids] of ORIG) o[k] = sideProgress(hid, date, { ids, f: "r", need: 1e9 }).v;
+  for (const [k, ids] of ORIG) o[k] = sideProgress(hid, date, { ids, f: "r", need: 1e9, all: true }).v;
   let km = 0;
   for (const b of Object.values(S.sessions)) {
     if (b.profile !== hid || b.date !== date || isMeta(b) || b.excused) continue;
@@ -3441,12 +3457,12 @@ function origProgress(hid, date) {
 const origDone = (hid, date) => { const o = origProgress(hid, date); return o.pushups >= 100 && o.situps >= 100 && o.squats >= 100 && o.km >= 10; };
 function sideCardHTML() {
   if (S.date !== todayStr()) return "";
-  const { q, v, done } = sideProgress(S.me, S.date);
+  const { q, v, done } = sideProgress(S.me, S.date, undefined, !!replay(S.me).pen[S.date]);
   const L = q.add && CX(q.add);
   const btn = done ? "" : q.food || q.protein ? `<button class="btn" data-act="fopen">Open Fuel</button>` : L ? `<button class="btn" data-act="sqadd" data-id="${q.add}">+ Add ${esc(L.name.toLowerCase())}</button>` : "";
   return `<section class="win side${done ? " done" : ""}" id="sideCard"><div class="toggle"><p class="tag">Daily side quest</p>${btn}</div>
     <b>${esc(q.t)}</b>${q.need > 1 ? `<div class="xp"><i style="width:${Math.min(100, v / q.need * 100).toFixed(1)}%"></i></div>` : ""}
-    <small>${done ? "Complete. +25 XP, and every 5th side quest earns a Random Loot Box." : `${q.need > 1 ? `${v} / ${q.need} ${q.unit} · ` : ""}+25 XP. Resets at midnight.`}</small></section>`;
+    <small>${done ? "Complete. +25 XP, and every 5th side quest earns a Random Loot Box." : `${q.need > 1 ? `${v} / ${q.need} ${q.unit} · ` : ""}+25 XP. Only what you do on top of today's plan counts. Resets at midnight.`}</small></section>`;
 }
 
 /* ================= BODY LOG (private: never leaves this phone) ================= */
