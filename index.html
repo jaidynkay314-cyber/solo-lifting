@@ -1000,7 +1000,8 @@ const KINDS = {
   cross: { name: "Cross trainer", warm: "easy", main: "push", goal: "Cross trainer: easy, then push", easy: "Easy cross trainer", pace: null, rate: 4 },
   stairs: { name: "Stairs", warm: "easy", main: "climb", goal: "Stair climber: easy, then climb", easy: "Easy stairs", pace: null, rate: 4 },
   swim: { name: "Swim", warm: "easy laps", main: "swim", goal: "Swim: easy laps, then swim", easy: "Easy swim", pace: "100", rate: 4 },
-  walk: { name: "Incline walk", warm: "flat walk", main: "incline", goal: "Treadmill: flat walk, then incline", easy: "Easy walk", pace: "km", rate: 3 }
+  walk: { name: "Incline walk", warm: "flat walk", main: "incline", goal: "Treadmill: flat walk, then incline", easy: "Easy walk", pace: "km", rate: 3 },
+  sport: { name: "Sport", warm: "warm-up", main: "play", goal: "Sport: warm up, then play", easy: "Sport or social game", pace: null, rate: 4 }
 };
 const kindOf = k => KINDS[k] ? k : "run";
 const cardioGoal = (day, k) => WEEKEND.has(day) ? KINDS[kindOf(k)].easy : KINDS[kindOf(k)].goal;
@@ -2047,7 +2048,7 @@ function renderLog(R) {
 
   const c = cardioOf(b), kind = curKind(b, plan), K = KINDS[kind];
   h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(cardioGoal(S.day, kind))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
-    <div class="kinds" role="group" aria-label="Cardio machine">${Object.entries(KINDS).map(([k, x]) => `<button data-act="ckind" data-k="${k}" aria-pressed="${k === kind}">${x.name}</button>`).join("")}</div>
+    <div class="kinds" role="group" aria-label="Cardio type">${Object.entries(KINDS).map(([k, x]) => `<button data-act="ckind" data-k="${k}" aria-pressed="${k === kind}">${x.name}</button>`).join("")}</div>
     <div class="cgrid">
       <div class="field"><input id="c-walk" data-c="walk" inputmode="decimal" placeholder="5" value="${c.walk ?? ""}" aria-label="Warm-up minutes, ${esc(K.warm)}"><span>${esc(K.warm)} min</span></div>
       <div class="field"><input id="c-run" data-c="run" inputmode="decimal" placeholder="${pen ? 20 : 10}" value="${c.run ?? ""}" aria-label="Main minutes, ${esc(K.main)}"><span>${esc(K.main)} min</span></div>
@@ -2152,7 +2153,7 @@ function renderProgram() {
         <label>Short label<input id="p-label" data-pf="label" maxlength="10" value="${esc(plan.label)}"></label>
         <label class="wide">Focus line<input id="p-focus" data-pf="focus" maxlength="60" value="${esc(plan.focus || "")}"></label>
         <label>Cardio minutes<input id="p-cardio" data-pf="cardio" inputmode="numeric" value="${plan.cardio}"></label>
-        <label>Cardio machine<select id="p-kind" data-pf="kind">${Object.entries(KINDS).map(([k, x]) => `<option value="${k}" ${kindOf(plan.kind || S.ckind) === k ? "selected" : ""}>${x.name}</option>`).join("")}</select></label>
+        <label>Cardio type<select id="p-kind" data-pf="kind">${Object.entries(KINDS).map(([k, x]) => `<option value="${k}" ${kindOf(plan.kind || S.ckind) === k ? "selected" : ""}>${x.name}</option>`).join("")}</select></label>
       </div>
       <p class="${ok ? "floor ok" : "floor bad"}">${sets} sets · ${plan.cardio} min cardio · worth ${planPts(plan)} points · ${ok ? "finishing it clears the quest" : `under the ${TARGET(day)} point target, so finishing it won't clear the quest by itself`}</p>
     </section>
