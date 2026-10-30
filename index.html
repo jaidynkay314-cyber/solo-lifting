@@ -2504,7 +2504,10 @@ const SETREW = {
   IR: ["Relic Keeper", "Forged Iron", "conic-gradient(from var(--fa),#5a5f6a,#ffb35a,#2a2d33,#e8ecf2,#5a5f6a)"],
   EC: ["Elemental Adept", "Elemental Storm", "conic-gradient(from var(--fa),#ff5a2a,#ffe36a,#4cc3ff,#6affc8,#b46bff,#ff5a2a)"],
   WH: ["Armoury Master", "Hunter's Steel", "conic-gradient(from var(--fa),#c9d6e8,#4c6a8f,#f2f6ff,#1a2433,#c9d6e8)"],
-  CN: ["Star Charter", "Starlight", "conic-gradient(from var(--fa),#ffd66e,#0b0f2e,#fff3c4,#2a3a8a,#ffd66e)"]
+  CN: ["Star Charter", "Starlight", "conic-gradient(from var(--fa),#ffd66e,#0b0f2e,#fff3c4,#2a3a8a,#ffd66e)"],
+  HG: ["Guild Legend", "Guild Crest", "conic-gradient(from var(--fa),#c9a24a,#1a2a4a,#f2e2b0,#3a5a8a,#c9a24a)"],
+  SL: ["Monarch of Shadows", "Shadow Monarch", "conic-gradient(from var(--fa),#12001f,#7a3dff,#05000a,#c88bff,#12001f)"],
+  GB: ["Slayer of Gate Bosses", "Gatebreaker's Crown", "conic-gradient(from var(--fa),#ff3d00,#1a0005,#ffd36a,#5a0010,#ff3d00)"]
 };
 const setRew = code => { const x = (window.SL_CARDS || { sets: [] }).sets.find(z => z.code === code) || { short: code }; return SETREW[code] || [`${x.short} Collector`, `${x.short} Master`, "conic-gradient(from var(--fa),#4cc3ff,#0a1a33,#b46bff,#4cc3ff)"]; };
 function setRewardsInit() {
@@ -2543,7 +2546,7 @@ function cosOf(hid) {
 /* per set: cards needed, cards owned and the day each part was completed (the day its last missing card was pulled) */
 function setsProgress(hid) {
   const first = {}; for (const { id, d } of pullsOf(hid)) if (!first[id] || d < first[id]) first[id] = d;
-  return CSETS.map(st => {
+  return CSETS.filter(st => !st.partial).map(st => {
     const all = CARDS.filter(c => c.set === st.code), base = all.filter(c => !c.alt && "CURHF".includes(c.r));
     const done = list => list.length && list.every(c => first[c.id]) ? list.map(c => first[c.id]).sort().pop() : null;
     return { code: st.code, k: st.code.toLowerCase(), name: st.name, short: st.short, base: base.length, baseHave: base.filter(c => first[c.id]).length, all: all.length, allHave: all.filter(c => first[c.id]).length, baseDone: done(base), masterDone: done(all) };
@@ -2689,7 +2692,7 @@ function renderVault() {
         `<button class="cos" data-act="equip" data-item="${c.key}" style="--tc:${TIERS[c.tier][1]}">${itemIcon(c)}<span>${esc(c.kind === "f" ? c.short : c.name)}<small>${(c.kind === "f" ? lookOf(S.me).frame === c.id : S.hunters[S.me].title === c.key) ? "Equipped" : "Tap to equip"}</small></span></button>`).join("")}</div>` : `<p class="sub">None yet. They come out of loot boxes.</p>`}
       <p class="sub">Still to find: ${TIERS.map((t, i) => { const n = Object.values(COS).filter(c => !c.reward && c.tier === i && !cos[c.key]).length; return n ? `<b style="color:${t[1]}">${n} ${t[0]}</b>` : ""; }).filter(Boolean).join(" · ") || "nothing, you have them all"}.</p></section>
     <section class="win card setrew"><div class="toggle"><h2>Set rewards</h2><span class="sub">never in loot boxes</span></div>
-      <p class="sub">Collect every Common to Full Art card in a set for its title. Collect the whole set, Secrets, the Glitched card and alt arts included, for its animated frame.</p>
+      <p class="sub">${CSETS.some(x => x.partial) ? `Still being released: ${CSETS.filter(x => x.partial).map(x => esc(x.name)).join(", ")}. Its rewards unlock once the set is complete. ` : ""}Collect every Common to Full Art card in a set for its title. Collect the whole set, Secrets, the Glitched card and alt arts included, for its animated frame.</p>
       ${setsProgress(S.me).map(sp => { const [tn, fn, grad] = setRew(sp.code); return `<div class="srow">
         <span class="av sm spin glow" style="--frb:${grad}"><span class="avi"><span class="avt">${sp.masterDone ? "★" : "?"}</span></span></span>
         <span class="sinfo"><b>${esc(sp.name)}</b>

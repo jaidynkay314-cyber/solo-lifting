@@ -287,6 +287,11 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Clearing a quest:** on a quest day, every task in the plan (sets and cardio, +1 set each and 25 min cardio in the Penalty Zone) must be done and the session must reach the points minimum (120, or 180 in the Penalty Zone). On a rest day, 120 points from anything clears it Applies from 28 Oct 2026; earlier days keep the old rule so history doesn't change (`questDone()`). The quest card's bar now shows task progress, with the points minimum underneath; rest days still show points.
 - **Side quests don't double dip:** sets the plan asks for and the plan's cardio minutes don't count towards side quests; sets past the plan's count, extra exercises, bonus activities and cardio beyond the plan do. Swapped-in exercises count as plan exercises. The Original Daily Quest still counts everything (`sideProgress(..., pen)`, `q.all`).
 
+## v9.0: anime sets
+- Added **Hunters' Guild (HG)** and **Shadow Legion (SL)**, 32 cards each plus Glitched (??? E-Rank Rookie, ??? Shadow Footsoldier), and the first 6 **Gate Bosses (GB)** commons plus ??? Goblin Chieftain. Shadow Assassin has an alt art (sl019b). Collection is now 244 cards.
+- GB is marked `"partial": true` in `cards/cards.js`: it rolls in packs but its set rewards stay locked until the set is complete. Remove the flag when GB 007-032 are added.
+- New set rewards: HG Guild Legend / Guild Crest, SL Monarch of Shadows / Shadow Monarch, GB Slayer of Gate Bosses / Gatebreaker's Crown.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
