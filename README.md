@@ -301,6 +301,11 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 ## v9.3
 - Quiet rest timer. Ticking a set starts a small count-up under that exercise's sets, with a bar that fills to the recommended rest and turns blue ("Rested … ready") when it's reached. No sound, vibration or notification. Recommended rest: 2:30 for big compound lifts (`BIGLIFT`), 1:15 for other weighted exercises, 0:45 for core, 1:00 for other reps or holds. The timer lives in `RT` (kept in sessionStorage so it survives the app reloading) and disappears 10 minutes after the target. The old manual "Rest" button (with chime) is unchanged and uses the same recommended times.
 
+## v9.4: form guides
+- **Form** button on every exercise card that has a guide (all 24 exercises in the default plan). It opens a sheet with an animated figure (1 s up, squeeze, 2 s down), the working muscles lit up, the muscles it trains, where you should and shouldn't feel it, setup, the rep, focus points, common mistakes (the ones marked ▶ animate the mistake, with red marking the problem), a shoulder note on upper-body exercises, and the rest time.
+- Files: `form.js` is the figure engine (side and front views, tapered limbs, equipment, muscle glow, mistake variants, anchors for fixed hands or feet). `form-data.js` holds one entry per exercise id. Both are in the service worker's offline cache.
+- Adding a guide: add an entry to `form-data.js` with `view`, `base`/`A`/`B` joint angles (degrees from straight down; side view faces right), `eq` (equipment), and the text fields. Muscles come from `MMAP` automatically. `work/fg/sheet.html` in the build workspace renders every start and end pose for checking.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 

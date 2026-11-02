@@ -930,9 +930,49 @@ body.noscroll { overflow: hidden; }
 .restq .rbar i { position: absolute; inset: 0 auto 0 0; background: var(--glow); box-shadow: 0 0 6px var(--glow); }
 .restq b { color: var(--fg); }
 .restq.ready, .restq.ready b { color: var(--glow); }
+.btn.fbtn { border-color: var(--glow); color: var(--glow); }
+.fsheet { position: fixed; inset: 0; z-index: 80; background: rgb(2 4 10 / .72); display: flex; align-items: flex-end; justify-content: center; }
+.fpanel { width: 100%; max-width: 560px; max-height: 94%; overflow-y: auto; background: var(--bg); border: 1px solid var(--edge); border-bottom: 0; box-shadow: 0 -10px 40px rgb(var(--glow-rgb) / .18);
+  padding: 14px max(16px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 14px; }
+.fhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.fhead h2 { font-family: var(--font-display); font-size: 26px; margin: 0; line-height: 1.1; }
+.feyebrow { font-family: var(--font-display); font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--glow); font-size: 12.5px; }
+.fstage { position: relative; background: linear-gradient(180deg, #071226, #050a16); border: 1px solid var(--edge-dim); }
+.fstage svg { display: block; width: 100%; height: auto; }
+.fphase { position: absolute; left: 10px; top: 8px; font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 13px; color: var(--glow); }
+.fphase.bad { color: var(--red); }
+.flegend { position: absolute; right: 10px; top: 8px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.flegend i { width: 8px; height: 8px; border-radius: 50%; background: var(--glow); box-shadow: 0 0 6px var(--glow); }
+.flegend.bad::after { content: "· red = problem"; color: var(--red); }
+.fchips2 { display: flex; gap: 6px; flex-wrap: wrap; }
+.fchip2 { font: 600 13px var(--font-body); color: var(--muted); background: var(--sunk); border: 1px solid var(--edge-dim); padding: 6px 10px; }
+.fchip2[aria-pressed="true"] { color: var(--glow-ink); background: var(--glow); border-color: var(--glow); }
+.fchip2.bad[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #1a0306; }
+.fworks { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.fworks span { font-size: 12.5px; color: var(--muted); border: 1px solid var(--edge-dim); padding: 2px 8px; }
+.fworks span.main { color: var(--glow); border-color: var(--glow); }
+.fpanel section { display: flex; flex-direction: column; gap: 6px; }
+.fpanel h3 { font-family: var(--font-display); font-size: 15px; letter-spacing: .16em; text-transform: uppercase; color: var(--glow); margin: 0; }
+.fpanel ul, .fpanel ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 5px; }
+.fpanel li::marker { color: var(--glow); }
+.ffeel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ffeel div { background: var(--sunk); border: 1px solid var(--edge-dim); padding: 8px 10px; font-size: 14px; min-width: 0; }
+.ffeel b { display: block; font-family: var(--font-display); letter-spacing: .1em; text-transform: uppercase; font-size: 12.5px; }
+.ffeel .yes b { color: var(--glow); } .ffeel .no b { color: var(--red); }
+.fcues { display: flex; flex-direction: column; gap: 6px; }
+.fcues div { border-left: 2px solid var(--glow); padding: 2px 0 2px 10px; font-weight: 600; }
+.fmis { text-align: left; background: var(--sunk); border: 1px solid var(--edge-dim); border-left: 3px solid var(--red); padding: 9px 11px; color: var(--fg); font: inherit; display: flex; flex-direction: column; gap: 2px; }
+.fmis:disabled { opacity: 1; cursor: default; }
+.fmis b { color: var(--red); font-family: var(--font-display); font-size: 16px; letter-spacing: .04em; }
+.fmis span { font-size: 14px; color: var(--muted); } .fmis em { font-style: normal; color: var(--fg); }
+.fmis[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--red) inset; }
+.fshoulder { border: 1px solid var(--gold); background: rgb(255 200 97 / .06); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.fshoulder h3 { color: var(--gold); } .fshoulder p { margin: 0; }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
+<script src="form.js"></script>
+<script src="form-data.js"></script>
 </head>
 <body>
 <div class="vignette" aria-hidden="true"></div>
@@ -2114,6 +2154,7 @@ function renderLog(R) {
     h += `</div>${restSlot(e.id)}<div class="ex-actions">
       ${tg && e.type === "wr" && tg.w ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Fill target weights</button>` : ""}
       <button class="btn" data-act="addset" data-ex="${esc(e.id)}">+ Set</button>
+      ${formSpec(e.id) ? `<button class="btn fbtn" data-act="form" data-ex="${esc(e.id)}">Form</button>` : ""}
       ${e.extra ? "" : `<button class="btn" data-act="swapopen" data-ex="${esc(e.id)}" aria-pressed="${S.swapOpen === e.id}">Swap</button>`}
       <button class="btn" data-act="rest" data-name="${esc(e.name)}" data-sec="${rest}">Rest ${rest} s</button>
       ${e.extra ? `<button class="btn" data-act="remove" data-ex="${esc(e.id)}">Remove</button>` : ""}</div></article>`;
@@ -4024,6 +4065,7 @@ document.addEventListener("click", e => {
   if (t.dataset.pday) { S.pday = t.dataset.pday; S.creating = false; renderProgram(); return; }
   const act = t.dataset.act, id = t.dataset.ex, i = +t.dataset.i;
   if (act === "sconf") { confirmSet(t); return; }
+  if (act === "form") { openForm(t.dataset.ex); return; }
   if (act === "ckind") {
     S.ckind = t.dataset.k; S.pickKind = { key: curKey(), k: t.dataset.k };
     const b = session(false); if (b && b.cardio) { b.cardio.kind = t.dataset.k; dirtySession(curKey()); }
@@ -4248,6 +4290,49 @@ const Cracks = (() => {
     stop() { on = false; cancelAnimationFrame(raf); ctx.clearRect(0, 0, cv.width, cv.height); }
   };
 })();
+
+/* ================= FORM GUIDES (v9.4) =================
+   Data in form-data.js (window.SL_FORM), figure engine in form.js. The sheet shows an animated figure,
+   where you should feel it, setup, the rep, focus points, common mistakes (tap to see them animated) and a shoulder note. */
+const formSpec = id => (window.SL_FORM && window.SL_FORM[id] && window.SL_FORM_ENGINE) ? window.SL_FORM[id] : null;
+let FORM = null;
+function openForm(id) {
+  const spec = formSpec(id), L = CX(id); if (!spec || !L) return;
+  closeForm();
+  const work = MMAP[id] || [], anim = (spec.mistakes || []).map((m, i) => [m, i]).filter(([m]) => m[3]);
+  const ov = document.createElement("div"); ov.className = "fsheet"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", `Form: ${L.name}`);
+  const rest = restFor(id, L.type), mm = v => `${Math.floor(v / 60)}:${pad(v % 60)}`;
+  ov.innerHTML = `<div class="fpanel">
+    <div class="fhead"><div><span class="feyebrow">Form${work.length ? " · " + esc(work.filter(x => x[1] >= 1).map(x => MUSCLES[x[0]]).join(", ")) : ""}</span><h2>${esc(L.name)}</h2></div><button class="btn" data-fx="close" aria-label="Close">✕</button></div>
+    <div class="fstage"><svg viewBox="0 0 320 250" role="img" aria-label="Animated figure showing ${esc(L.name)}"></svg><span class="fphase">Lift</span><span class="flegend"><i></i>Working</span></div>
+    ${anim.length ? `<div class="fchips2" role="group" aria-label="Show"><button class="fchip2" data-fv="-1" aria-pressed="true">Good rep</button>${anim.map(([m, i]) => `<button class="fchip2 bad" data-fv="${i}" aria-pressed="false">${esc(m[0])}</button>`).join("")}</div>` : ""}
+    ${work.length ? `<p class="fworks">${work.map(([m, w]) => `<span class="${w >= 1 ? "main" : ""}">${esc(MUSCLES[m])}</span>`).join("")}</p>` : ""}
+    ${spec.feel ? `<section><h3>Where you should feel it</h3><div class="ffeel"><div class="yes"><b>Yes</b>${esc(spec.feel[0])}</div><div class="no"><b>Not here</b>${esc(spec.feel[1])}</div></div></section>` : ""}
+    <section><h3>Setup</h3><ul>${spec.setup.map(x => `<li>${esc(x)}</li>`).join("")}</ul></section>
+    <section><h3>The rep</h3><ol>${spec.rep.map(x => `<li>${esc(x)}</li>`).join("")}</ol></section>
+    <section><h3>Focus points</h3><div class="fcues">${spec.cues.map(x => `<div>${esc(x)}</div>`).join("")}</div></section>
+    ${spec.mistakes && spec.mistakes.length ? `<section><h3>Common mistakes</h3>${anim.length ? `<p class="sub">Tap one with ▶ to see it.</p>` : ""}${spec.mistakes.map((m, i) => `<button class="fmis" data-fv="${m[3] ? i : ""}" aria-pressed="false"${m[3] ? "" : " disabled"}><b>${m[3] ? "▶ " : ""}${esc(m[0])}</b><span>${esc(m[1])} <em>Fix:</em> ${esc(m[2])}</span></button>`).join("")}</section>` : ""}
+    ${spec.shoulder ? `<div class="fshoulder"><h3>Your shoulder</h3><p>${esc(spec.shoulder)}</p></div>` : ""}
+    <p class="sub">Tempo: 1 s up, a short squeeze, 2 s down. Rest about ${mm(rest)} between sets.</p></div>`;
+  document.body.appendChild(ov); document.body.classList.add("noscroll");
+  FORM = { ov, v: -1, stop: null };
+  const svg = ov.querySelector("svg"), ph = ov.querySelector(".fphase"), lg = ov.querySelector(".flegend");
+  const variant = () => FORM && FORM.v >= 0 ? spec.mistakes[FORM.v][3] : null;
+  FORM.stop = SL_FORM_ENGINE.play(svg, { ...spec, work }, variant, r => {
+    const v = FORM && FORM.v >= 0 ? spec.mistakes[FORM.v] : null;
+    ph.textContent = v ? "Mistake · " + v[0].toLowerCase() : SL_FORM_ENGINE.PHASE[r.phase]; ph.classList.toggle("bad", !!v);
+    lg.classList.toggle("bad", !!(v && v[3] && (v[3].red || v[3].ring)));
+  });
+  const setV = i => { FORM.v = FORM.v === i && i >= 0 ? -1 : i; ov.querySelectorAll("[data-fv]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.fv === FORM.v && b.dataset.fv !== ""))); };
+  ov.addEventListener("click", e => {
+    if (e.target === ov || e.target.closest('[data-fx="close"]')) return closeForm();
+    const b = e.target.closest("[data-fv]"); if (!b || b.dataset.fv === "") return;
+    setV(+b.dataset.fv); if (b.classList.contains("fmis")) ov.querySelector(".fstage").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+  ov.querySelector('[data-fx="close"]').focus();
+}
+function closeForm() { if (!FORM) return; FORM.stop && FORM.stop(); FORM.ov.remove(); FORM = null; document.body.classList.remove("noscroll"); }
+addEventListener("keydown", e => { if (e.key === "Escape" && FORM) closeForm(); });
 
 /* ================= QUIET REST TIMER (v9.3) =================
    Starts when a set is ticked, counts up on that exercise's card and turns blue at the recommended rest.
