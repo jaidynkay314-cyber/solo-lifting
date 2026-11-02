@@ -298,6 +298,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 ## v9.2
 - Install banner. Android Chrome: our own "Install Solo Lifting" banner opens the browser's install dialog (`beforeinstallprompt`). iPhone: Safari has no install API, so the banner shows Share, Add to Home Screen (or "open in Safari" from other iOS browsers). Hidden when already installed, and for 14 days after "Not now" (`solo.install` in localStorage).
 
+## v9.3
+- Quiet rest timer. Ticking a set starts a small count-up under that exercise's sets, with a bar that fills to the recommended rest and turns blue ("Rested … ready") when it's reached. No sound, vibration or notification. Recommended rest: 2:30 for big compound lifts (`BIGLIFT`), 1:15 for other weighted exercises, 0:45 for core, 1:00 for other reps or holds. The timer lives in `RT` (kept in sessionStorage so it survives the app reloading) and disappears 10 minutes after the target. The old manual "Rest" button (with chime) is unchanged and uses the same recommended times.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 

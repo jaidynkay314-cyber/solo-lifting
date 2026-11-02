@@ -924,6 +924,12 @@ body.noscroll { overflow: hidden; }
 .instgo { background: var(--glow); color: var(--glow-ink); border: 1px solid var(--glow); }
 .instgo[hidden] { display: none; }
 .instno { background: none; color: inherit; border: 1px solid var(--edge); }
+.restq { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.restq:empty { display: none; }
+.restq .rbar { flex: 1; height: 3px; background: var(--edge-dim); position: relative; overflow: hidden; }
+.restq .rbar i { position: absolute; inset: 0 auto 0 0; background: var(--glow); box-shadow: 0 0 6px var(--glow); }
+.restq b { color: var(--fg); }
+.restq.ready, .restq.ready b { color: var(--glow); }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
@@ -2104,8 +2110,8 @@ function renderLog(R) {
       h += setRow(`data-ex="${esc(e.id)}" data-i="${i}"`, esc(e.id), i, s, e.type,
         tg ? { w: tg.w ?? (ls && ls.w != null ? +ls.w : ""), r: tg.r ?? e.hi, s: tg.s ?? e.lo } : { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi, s: ls && ls.s != null ? ls.s : e.lo }, pen && !e.extra && i === e.sets - 1);
     }
-    const rest = e.lo >= 12 || e.type !== "wr" ? 60 : 90;
-    h += `</div><div class="ex-actions">
+    const rest = restFor(e.id, e.type);
+    h += `</div>${restSlot(e.id)}<div class="ex-actions">
       ${tg && e.type === "wr" && tg.w ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Fill target weights</button>` : ""}
       <button class="btn" data-act="addset" data-ex="${esc(e.id)}">+ Set</button>
       ${e.extra ? "" : `<button class="btn" data-act="swapopen" data-ex="${esc(e.id)}" aria-pressed="${S.swapOpen === e.id}">Swap</button>`}
@@ -2445,6 +2451,7 @@ function confirmSet(t) {
       render(); return;
     }
     x.ok = true;
+    if (t.dataset.bi == null) RT.start(id, type);
   }
   dirtySession(curKey()); render();
 }
@@ -4241,6 +4248,25 @@ const Cracks = (() => {
     stop() { on = false; cancelAnimationFrame(raf); ctx.clearRect(0, 0, cv.width, cv.height); }
   };
 })();
+
+/* ================= QUIET REST TIMER (v9.3) =================
+   Starts when a set is ticked, counts up on that exercise's card and turns blue at the recommended rest.
+   No sound or vibration. Big compound lifts 2:30, other weighted lifts 1:15, reps or holds 0:45 to 1:00. */
+const BIGLIFT = new Set(["chest-press", "incline-press", "shoulder-press", "lat-pulldown", "pullup", "cable-row", "cs-row", "leg-press", "leg-press-wide", "hip-thrust",
+  "bench-press", "db-bench", "ohp", "db-shoulder", "bb-row", "db-row", "squat", "goblet-squat", "deadlift", "rdl", "db-lunge", "bb-hip-thrust", "hack-squat", "smith-squat", "smith-bench", "dip-machine", "dips", "pullups-bw"]);
+function restFor(id, type) { if (type === "wr") return BIGLIFT.has(id) ? 150 : 75; return CORE.has(id) ? 45 : 60; }
+const RT = {
+  cur: (() => { try { return JSON.parse(sessionStorage.getItem("solo.rest") || "null"); } catch (e) { return null; } })(),
+  start(id, type) { this.cur = { id, at: Date.now(), sec: restFor(id, type), key: curKey() }; try { sessionStorage.setItem("solo.rest", JSON.stringify(this.cur)); } catch (e) {} },
+  html(id) {
+    const c = this.cur; if (!c || c.id !== id || c.key !== curKey()) return "";
+    const s = Math.floor((Date.now() - c.at) / 1000); if (s > c.sec + 600) return "";
+    const done = s >= c.sec, mm = v => `${Math.floor(v / 60)}:${pad(v % 60)}`;
+    return `<span>${done ? "Rested" : "Rest"} <b>${mm(s)}</b></span><span class="rbar"><i style="width:${Math.min(100, s / c.sec * 100).toFixed(1)}%"></i></span><span>${done ? "ready" : "aim " + mm(c.sec)}</span>`;
+  }
+};
+const restSlot = id => { const h = RT.html(id); return `<div class="restq${h.startsWith("<span>Rested") ? " ready" : ""}" data-rest="${esc(id)}" aria-live="off">${h}</div>`; };
+setInterval(() => { for (const el of document.querySelectorAll(".restq[data-rest]")) { const h = RT.html(el.dataset.rest); el.innerHTML = h; el.classList.toggle("ready", !!h && h.startsWith("<span>Rested")); } }, 1000);
 
 /* ================= REST TIMER ================= */
 let tEnd = 0, tInt = null, tDone = false;
