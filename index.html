@@ -2364,6 +2364,7 @@ function renderProfile(id) {
     const pv = !!(((S.hunters[id] || {}).program || {})._priv || {}).nums;
     h += `<section class="win card"><div class="toggle"><h2>Lift numbers</h2><button class="btn${pv ? " primary" : ""}" data-act="privnums" aria-pressed="${pv}">${pv ? "Shown" : "Private"}</button></div>
       <p>${pv ? "Others can see your weights and reps in the feed and on your profile." : "Others see when you set a record and how much you've improved, but never your weights or reps."} Tap to change.</p></section>`;
+    h += ouraCardHTML();
     h += `<section class="win card body"><div class="toggle"><h2>Body</h2><button class="btn primary" data-act="bopen">Open</button></div>
       <p>Weight, optional measurements and progress photos. 🔒 Kept only on this phone: never uploaded, synced or shown to anyone.</p></section>`;
     h += `<section class="win card"><div class="toggle"><h2>My program</h2><button class="btn primary" data-view="program">Edit</button></div>
@@ -4132,6 +4133,9 @@ document.addEventListener("click", e => {
   const act = t.dataset.act, id = t.dataset.ex, i = +t.dataset.i;
   if (act === "sconf") { confirmSet(t); return; }
   if (act === "form") { openForm(t.dataset.ex); return; }
+  if (act === "ouraconnect") { ouraConnect(); return; }
+  if (act === "ouraoff") { OURA.off(); render(); return; }
+  if (act === "ouratest") { OURA.test().then(render); render(); return; }
   if (act === "rate") { const i = +t.dataset.i, same = S.rate && S.rate.ex === t.dataset.ex && S.rate.i === i && S.rate.key === curKey(); S.rate = same ? null : { key: curKey(), ex: t.dataset.ex, i }; render(); return; }
   if (act === "eff") {
     const b = session(true), arr = b.ex[t.dataset.ex] || [], x = arr[+t.dataset.i], n = +t.dataset.n; if (!x) return;
@@ -4362,6 +4366,74 @@ const Cracks = (() => {
     stop() { on = false; cancelAnimationFrame(raf); ctx.clearRect(0, 0, cv.width, cv.height); }
   };
 })();
+
+/* ================= OURA (v9.6, test) =================
+   Oura's client-side OAuth flow: no server, no secret. The token comes back in the address (#access_token=...), lasts about
+   30 days, and is kept in this phone's localStorage only. Oura data is never synced to the shared board. */
+const OURA_ID = "0f7d7d54-f7b8-41cb-a9fc-e68b17d21827", OURA_REDIRECT = "https://jaidynkay314-cyber.github.io/solo-lifting/";
+const OURA_SCOPES = "daily heartrate workout session spo2Daily stress heart_health";
+const OURA = {
+  get() { try { const o = JSON.parse(localStorage.getItem("solo.oura") || "null"); return o && o.exp > Date.now() ? o : (o ? { ...o, expired: true } : null); } catch (e) { return null; } },
+  set(o) { try { localStorage.setItem("solo.oura", JSON.stringify(o)); } catch (e) {} },
+  off() { try { localStorage.removeItem("solo.oura"); } catch (e) {} },
+  last: null, busy: false,
+  async api(path, q) {
+    const o = this.get(); if (!o || o.expired) throw new Error("not connected");
+    const r = await fetch(`https://api.ouraring.com/v2/usercollection/${path}?${new URLSearchParams(q)}`, { headers: { Authorization: `Bearer ${o.token}` } });
+    if (r.status === 401) { this.set({ ...o, exp: 0 }); throw new Error("Oura login expired. Connect again."); }
+    if (r.status === 403) throw new Error("Oura refused (403). Check your Oura membership is active and the data type was approved.");
+    if (!r.ok) throw new Error("Oura said " + r.status);
+    return r.json();
+  },
+  async test() {
+    this.busy = true; this.last = null;
+    const end = addDays(todayStr(), 1), start = addDays(todayStr(), -7);
+    try {
+      const [rd, sl, ac] = await Promise.all([this.api("daily_readiness", { start_date: start, end_date: end }), this.api("daily_sleep", { start_date: start, end_date: end }), this.api("daily_activity", { start_date: start, end_date: end })]);
+      const pick = d => (d.data || []).slice(-1)[0];
+      this.last = { ok: true, at: Date.now(), readiness: pick(rd), sleep: pick(sl), activity: pick(ac), n: (rd.data || []).length };
+    } catch (e) {
+      // a CORS block shows up as a TypeError with no status: that means Oura won't talk to a browser app directly
+      this.last = { ok: false, at: Date.now(), cors: e instanceof TypeError, msg: e instanceof TypeError ? "The browser blocked the request (Oura doesn't accept calls straight from web apps). We'll need the small relay." : String(e.message || e) };
+    }
+    this.busy = false;
+    try { localStorage.setItem("solo.oura.test", JSON.stringify(this.last)); } catch (e) {}
+    return this.last;
+  }
+};
+function ouraConnect(noScope) {
+  const st = rnd().slice(0, 12); try { sessionStorage.setItem("solo.oura.state", st); sessionStorage.setItem("solo.oura.noscope", noScope ? "1" : ""); } catch (e) {}
+  const q = new URLSearchParams({ response_type: "token", client_id: OURA_ID, redirect_uri: OURA_REDIRECT, state: st });
+  if (!noScope) q.set("scope", OURA_SCOPES);
+  location.href = "https://cloud.ouraring.com/oauth/authorize?" + q;
+}
+/* coming back from Oura: #access_token=...&expires_in=...&state=... (or #error=... / ?error=...) */
+(() => {
+  const hp = new URLSearchParams(location.hash.slice(1)), qp = new URLSearchParams(location.search);
+  const err = hp.get("error") || qp.get("error"), tok = hp.get("access_token");
+  if (!tok && !err) return;
+  let st = null, tried = false; try { st = sessionStorage.getItem("solo.oura.state"); tried = sessionStorage.getItem("solo.oura.noscope") === "1"; } catch (e) {}
+  history.replaceState(null, "", location.pathname);
+  if (err) {
+    if (/scope/i.test(err + (hp.get("error_description") || qp.get("error_description") || "")) && !tried) { ouraConnect(true); return; }
+    try { localStorage.setItem("solo.oura.test", JSON.stringify({ ok: false, at: Date.now(), msg: "Oura said: " + (hp.get("error_description") || qp.get("error_description") || err) })); } catch (e) {}
+    return;
+  }
+  if (st && hp.get("state") !== st) return;
+  OURA.set({ token: tok, exp: Date.now() + (+hp.get("expires_in") || 2592000) * 1000, scope: hp.get("scope") || "", at: Date.now() });
+  setTimeout(() => { S.view = "profile"; S.viewing = null; render(); OURA.test().then(() => render()); }, 300);
+})();
+function ouraCardHTML() {
+  const o = OURA.get(); let t = OURA.last; if (!t) try { t = JSON.parse(localStorage.getItem("solo.oura.test") || "null"); } catch (e) {}
+  const days = o && !o.expired ? Math.max(0, Math.round((o.exp - Date.now()) / 864e5)) : 0;
+  let res = "";
+  if (OURA.busy) res = `<p class="sub">Testing the connection…</p>`;
+  else if (t && t.ok) res = `<p class="sub">✓ Connection works. Latest: readiness <b>${t.readiness ? t.readiness.score : "–"}</b>, sleep <b>${t.sleep ? t.sleep.score : "–"}</b>, activity <b>${t.activity ? t.activity.score : "–"}</b>${t.activity && t.activity.steps != null ? `, ${t.activity.steps.toLocaleString("en-AU")} steps` : ""}.</p>`;
+  else if (t) res = `<p class="sub" style="color:var(--red)">${esc(t.msg)}</p>`;
+  return `<section class="win card"><div class="toggle"><h2>Oura</h2>${o && !o.expired ? `<button class="btn" data-act="ouraoff">Disconnect</button>` : `<button class="btn primary" data-act="ouraconnect">Connect</button>`}</div>
+    <p>${o && !o.expired ? `Connected · login lasts ${days} more day${days === 1 ? "" : "s"}. ` : o && o.expired ? "Your Oura login expired. Connect again. " : "Test: link your Oura ring for readiness, sleep and activity. "}🔒 Oura data stays on this phone.</p>
+    ${res}${o && !o.expired ? `<div class="ex-actions"><button class="btn" data-act="ouratest">Test again</button></div>` : ""}</section>`;
+}
 
 /* ================= FORM GUIDES (v9.4) =================
    Data in form-data.js (window.SL_FORM), figure engine in form.js. The sheet shows an animated figure,
