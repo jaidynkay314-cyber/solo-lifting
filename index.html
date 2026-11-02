@@ -981,6 +981,24 @@ button.n.e1::after { background: #5ee39a; border: 0; } button.n.e2::after { back
 .maint .mbig { display: flex; align-items: baseline; gap: 8px; } .maint .mbig b { font-family: var(--font-display); font-size: 34px; color: var(--glow); } .maint .mbig span { color: var(--muted); }
 .maint .vchips { flex-wrap: wrap; overflow: visible; }
 .maint .vchip small { display: block; font-size: 11px; color: var(--muted); }
+.ostrip { border: 1px solid var(--edge-dim); background: var(--sunk); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ostrip.go { border-color: #5ee39a; } .ostrip.ok { border-color: var(--edge); } .ostrip.easy { border-color: var(--gold); } .ostrip.low { border-color: var(--red); }
+.ostrip .onums { display: flex; gap: 16px; flex-wrap: wrap; }
+.ostrip .onums span { display: flex; flex-direction: column; } .ostrip .onums b { font-family: var(--font-display); font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
+.ostrip .onums small { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.ostrip p { margin: 0; font-size: 14px; } .ostrip.go p b { color: #5ee39a; } .ostrip.easy p b { color: var(--gold); } .ostrip.low p b { color: var(--red); } .ostrip.ok p b { color: var(--glow); }
+.ofever { color: var(--gold); }
+.otiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.otile { background: var(--sunk); border: 1px solid var(--edge-dim); padding: 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.otile b { font-family: var(--font-display); font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
+.otile small { font-size: 11px; color: var(--muted); line-height: 1.2; }
+.otiles.small .otile b { font-size: 17px; }
+@media (max-width: 420px) { .otiles { grid-template-columns: repeat(2, 1fr); } }
+.spark { width: 100%; height: 22px; margin-top: 4px; }
+.ocontrib summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.ocontrib div { display: grid; grid-template-columns: 1fr 90px 30px; gap: 8px; align-items: center; font-size: 13.5px; padding: 3px 0; }
+.ocontrib i { height: 4px; background: linear-gradient(90deg, var(--glow) var(--v), var(--edge-dim) var(--v)); }
+.ocontrib b { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
@@ -2132,7 +2150,7 @@ function renderLog(R) {
   let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
     `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}${schedFor(S.me, S.date).includes(d) ? "" : " rest"}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
   <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
-  ${reportHTML(R)}<section class="win quest" id="quest">${questHTML(R)}</section>${sideCardHTML()}${bossHTML(R)}${fuelCardHTML()}`;
+  ${reportHTML(R)}${ouraStripHTML()}<section class="win quest" id="quest">${questHTML(R)}</section>${sideCardHTML()}${bossHTML(R)}${fuelCardHTML()}`;
 
   const c = cardioOf(b), kind = curKind(b, plan), K = KINDS[kind];
   h += `<article class="win ex${r.cardio > 0 && cardioMeets(b, r.cardio) ? " complete" : ""}" id="cardioCard"><div class="ex-h"><h2>${esc(cardioGoal(S.day, kind))}</h2><span class="target">${pen ? `<em>${r.cardio}</em>` : r.cardio}+ min</span></div>
@@ -2148,7 +2166,7 @@ function renderLog(R) {
   for (const e of list) {
     const arr = (b && b.ex[e.id]) || [];
     const n = Math.max(e.sets, arr.length);
-    const hist = histFor(e.id, S.date, e.type), last = hist[0] || null, tg = sysTarget(e, hist);
+    const hist = histFor(e.id, S.date, e.type), last = hist[0] || null, tg = holdForReadiness(sysTarget(e, hist), last, e.type);
     const boss = R.boss && R.boss.id === e.id && !R.boss.won;
     const best = e.type === "wr" ? (R.best[e.id] ? ` <span>Best ${R.best[e.id]} kg</span>` : "") : (R.bestReps[e.id] ? ` <span>Best ${R.bestReps[e.id]}${e.type === "s" ? " s" : " reps"}</span>` : "");
     const unit = e.type === "s" ? " s" : "";
@@ -3423,6 +3441,7 @@ function reportHTML(R) {
     ${w.prs.length ? `<p class="sub">🏆 ${w.prs.slice(0, 3).map(esc).join(" · ")}${w.prs.length > 3 ? ` and ${w.prs.length - 3} more` : ""}</p>` : ""}
     <p class="sub">${w.fdays ? `🍽️ ${w.fdays} day${w.fdays === 1 ? "" : "s"} logged · avg ${w.kAvg.toLocaleString("en-AU")} kcal${w.k ? ` (goal ${w.k.toLocaleString("en-AU")})` : ""} · ${w.pAvg} g protein${w.p ? ` (goal ${w.p})` : ""}` : "🍽️ No food logged"}<br>🗺️ ${w.side} side quest${w.side === 1 ? "" : "s"} · 📦 ${w.boxes} loot box${w.boxes === 1 ? "" : "es"} earned<span id="repW"></span></p>
     ${w.sets ? `<p class="sub">💪 ${w.growN} muscle${w.growN === 1 ? "" : "s"} in the 10 to 20 set growth zone${w.behind.length ? ` · behind: ${w.behind.map(k => `${esc(MUSCLES[k])} ${r05(w.mv[k])}`).join(", ")}` : ""} · <button class="linkbtn" data-act="repmm">Muscle map</button></p>` : ""}
+    ${(() => { const rr = OURA.get() && OURA.avg("r", w.mon, w.sun), ss = OURA.avg("s", w.mon, w.sun), hv = OURA.avg("hrv", w.mon, w.sun); return rr ? `<p class="sub">💍 Oura avg: readiness ${Math.round(rr)}${ss ? ` · sleep ${Math.round(ss)}` : ""}${hv ? ` · HRV ${Math.round(hv)} ms` : ""}</p>` : ""; })()}
     <p class="repfocus"><span>This week</span>${esc(w.focus)}</p></section>`;
 }
 /* weight line from the private body log on this phone; skipped quietly when locked or empty */
@@ -3706,6 +3725,7 @@ function maintHTML() {
   return `<section class="fsec maint"><h3>Your maintenance<small>last 4 weeks</small></h3>
     <div class="mbig"><b>${kc(m.tdee)}</b><span>kcal a day${m.pm >= 30 ? ` · ±${kc(m.pm)}` : ""}</span></div>
     <p class="sub">You averaged <b>${kc(m.intake)} kcal</b> on ${m.F} logged days while your weight trend moved <b>${m.wk > 0 ? "+" : ""}${m.wk} kg a week</b> (${m.W} weigh-ins). That puts your real burn at about ${kc(m.tdee)}.</p>
+    ${(() => { const ob = OURA.get() && OURA.avg("kcal", m.from, addDays(todayStr(), -1)); return ob ? `<p class="sub">Oura's estimate for the same period: ${kc(ob)} a day (${ob > m.tdee ? "+" : ""}${kc(ob - m.tdee)} on this). Trust the number above: it comes from your actual weight.</p>` : ""; })()}
     <p class="sub">Set a daily goal from it:</p>
     <div class="vchips">${rates.map(([rt, n]) => { const k = Math.round((m.tdee + rt * 1100) / 10) * 10; return `<button class="vchip" data-act="mgoal" data-k="${k}" data-mode="${rt > 0 ? "min" : "max"}" aria-pressed="${c.k === k}">${n}<small>${kc(k)}</small></button>`; }).join("")}</div>
     <p class="sub">${c.k ? `Your goal now: ${kc(c.k)}. ` : ""}Early numbers move around with water (creatine, salt, carbs, a big night). It settles after 3 to 4 weeks of steady logging. Unlogged days are left out, so log the big days too.</p></section>`;
@@ -4135,7 +4155,7 @@ document.addEventListener("click", e => {
   if (act === "form") { openForm(t.dataset.ex); return; }
   if (act === "ouraconnect") { ouraConnect(); return; }
   if (act === "ouraoff") { OURA.off(); render(); return; }
-  if (act === "ouratest") { OURA.test().then(render); render(); return; }
+  if (act === "ourasync") { OURA.sync(true).then(render); render(); return; }
   if (act === "rate") { const i = +t.dataset.i, same = S.rate && S.rate.ex === t.dataset.ex && S.rate.i === i && S.rate.key === curKey(); S.rate = same ? null : { key: curKey(), ex: t.dataset.ex, i }; render(); return; }
   if (act === "eff") {
     const b = session(true), arr = b.ex[t.dataset.ex] || [], x = arr[+t.dataset.i], n = +t.dataset.n; if (!x) return;
@@ -4387,22 +4407,71 @@ const OURA = {
     if (!r.ok) throw new Error("Oura said " + r.status);
     return r.json();
   },
-  async test() {
-    this.busy = true; this.last = null;
-    const end = addDays(todayStr(), 1), start = addDays(todayStr(), -7);
+  /* pull the last 35 days of every daily summary we use and keep a compact copy on this phone */
+  async sync(force) {
+    const o = this.get(); if (!o || o.expired || this.busy) return null;
+    const D = this.data();
+    if (!force && D.at && Date.now() - D.at < 30 * 60e3) return D;
+    this.busy = true; this.err = "";
+    const end = addDays(todayStr(), 1), start = addDays(todayStr(), -35), q = { start_date: start, end_date: end };
+    const get = async path => { try { return (await this.api(path, q)).data || []; } catch (e) { if (/expired|relay|refused/i.test(e.message)) throw e; return []; } };
     try {
-      const [rd, sl, ac] = await Promise.all([this.api("daily_readiness", { start_date: start, end_date: end }), this.api("daily_sleep", { start_date: start, end_date: end }), this.api("daily_activity", { start_date: start, end_date: end })]);
-      const pick = d => (d.data || []).slice(-1)[0];
-      this.last = { ok: true, at: Date.now(), readiness: pick(rd), sleep: pick(sl), activity: pick(ac), n: (rd.data || []).length };
-    } catch (e) {
-      // a CORS block shows up as a TypeError with no status: that means Oura won't talk to a browser app directly
-      this.last = { ok: false, at: Date.now(), cors: e instanceof TypeError, msg: e instanceof TypeError ? "Couldn't reach the Oura relay. Check it's deployed with Verify JWT turned off, and that you have signal." : String(e.message || e) };
-    }
+      const [rd, sl, ac, sp, st, vo, cv] = await Promise.all(["daily_readiness", "daily_sleep", "daily_activity", "sleep", "daily_stress", "vo2_max", "daily_cardiovascular_age"].map(get));
+      const days = {}, d = k => (days[k] ||= {});
+      for (const x of rd) Object.assign(d(x.day), { r: x.score, rc: x.contributors || {}, temp: x.temperature_deviation });
+      for (const x of sl) Object.assign(d(x.day), { s: x.score, sc: x.contributors || {} });
+      for (const x of ac) Object.assign(d(x.day), { a: x.score, steps: x.steps, kcal: x.total_calories, akcal: x.active_calories });
+      for (const x of sp) if (x.type === "long_sleep" || !d(x.day).hrv) Object.assign(d(x.day), { hrv: x.average_hrv, rhr: x.lowest_heart_rate, slept: x.total_sleep_duration });
+      for (const x of st) Object.assign(d(x.day), { stress: x.day_summary });
+      for (const x of vo) Object.assign(d(x.day), { vo2: x.vo2_max });
+      for (const x of cv) Object.assign(d(x.day), { cva: x.vascular_age });
+      const out = { at: Date.now(), days };
+      try { localStorage.setItem("solo.oura.data", JSON.stringify(out)); } catch (e) {}
+      this._d = out;
+    } catch (e) { this.err = String(e.message || e); }
     this.busy = false;
-    try { localStorage.setItem("solo.oura.test", JSON.stringify(this.last)); } catch (e) {}
-    return this.last;
-  }
+    return this.data();
+  },
+  _d: null,
+  data() { if (!this._d) { try { this._d = JSON.parse(localStorage.getItem("solo.oura.data") || "null"); } catch (e) {} } return this._d || { at: 0, days: {} }; },
+  day(date) { const o = this.get(); return o && !o.expired ? this.data().days[date] || null : null; },
+  /* latest values within a few days (VO2 max and cardio age update rarely) */
+  latest(key, before = todayStr()) { const D = this.data().days; return Object.keys(D).filter(k => k <= before && D[k][key] != null).sort().map(k => D[k][key]).pop(); },
+  series(key, n = 14) { const D = this.data().days, out = []; for (let i = n - 1; i >= 0; i--) { const k = addDays(todayStr(), -i); out.push(D[k] && D[k][key] != null ? D[k][key] : null); } return out; },
+  avg(key, from, to) { const D = this.data().days, v = Object.keys(D).filter(k => k >= from && k <= to && D[k][key] != null).map(k => D[k][key]); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; }
 };
+/* under 70 readiness today, an "up" suggestion becomes "hold": same weight and reps as last time */
+function holdForReadiness(tg, last, type) {
+  if (!tg || !tg.up || S.date !== todayStr()) return tg;
+  const x = OURA.day(todayStr()); if (!x || x.r == null || x.r >= 70) return tg;
+  if (type !== "wr" || !last) return { ...tg, up: false, why: `Readiness ${x.r} today: repeat last time instead of adding more. ${tg.why}` };
+  const w = Math.max(...last.sets.map(s => +s.w || 0)), r = Math.min(...last.sets.filter(s => (+s.w || 0) === w).map(s => +s.r || 0));
+  return { w, r, up: false, why: `Readiness ${x.r} today, so hold here: same weight and reps as last time. The level up waits for a better day.` };
+}
+/* how today's readiness should shape training */
+function readyAdvice(r) {
+  if (r == null) return null;
+  if (r >= 85) return { lvl: "go", t: "Primed", txt: "Good day to push for a level up." };
+  if (r >= 70) return { lvl: "ok", t: "Ready", txt: "Train as planned." };
+  if (r >= 60) return { lvl: "easy", t: "Take it steady", txt: "Train, but hold your weights today. No new increases." };
+  return { lvl: "low", t: "Recover", txt: "Go lighter or swap for a walk. Your quest still counts." };
+}
+const OURA_CONTRIB = { hrv_balance: "HRV balance", resting_heart_rate: "Resting heart rate", recovery_index: "Recovery index", previous_night: "Last night's sleep", sleep_balance: "Sleep balance", previous_day_activity: "Yesterday's activity", activity_balance: "Activity balance", body_temperature: "Body temperature" };
+function spark(vals, h = 26) {
+  const v = vals.map(x => x == null ? null : +x), pts = v.filter(x => x != null); if (pts.length < 2) return "";
+  const lo = Math.min(...pts), hi = Math.max(...pts), w = 100, st = w / (v.length - 1), y = x => h - 3 - (hi === lo ? .5 : (x - lo) / (hi - lo)) * (h - 6);
+  let d = ""; v.forEach((x, i) => { if (x != null) d += `${d && v[i - 1] != null ? "L" : "M"}${(i * st).toFixed(1)} ${y(x).toFixed(1)} `; });
+  const li = v.length - 1 - [...v].reverse().findIndex(x => x != null);
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="var(--glow)" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="${(li * st).toFixed(1)}" cy="${y(v[li]).toFixed(1)}" r="2.2" fill="var(--glow)"/></svg>`;
+}
+/* compact strip on the quest card (today only) */
+function ouraStripHTML() {
+  if (S.date !== todayStr()) return "";
+  const x = OURA.day(todayStr()); if (!x || x.r == null) return "";
+  const a = readyAdvice(x.r), fever = x.temp != null && x.temp >= .5;
+  return `<div class="ostrip ${a.lvl}"><div class="onums"><span><b>${x.r}</b><small>Readiness</small></span>${x.s != null ? `<span><b>${x.s}</b><small>Sleep</small></span>` : ""}${x.hrv != null ? `<span><b>${Math.round(x.hrv)}</b><small>HRV ms</small></span>` : ""}${x.rhr != null ? `<span><b>${Math.round(x.rhr)}</b><small>Rest HR</small></span>` : ""}</div>
+    <p><b>${a.t}.</b> ${a.txt}${fever ? ` <span class="ofever">Temperature is up ${x.temp.toFixed(1)}°: if you feel off, rest.</span>` : ""}</p></div>`;
+}
 function ouraConnect(noScope) {
   const st = rnd().slice(0, 12); try { sessionStorage.setItem("solo.oura.state", st); sessionStorage.setItem("solo.oura.noscope", noScope ? "1" : ""); } catch (e) {}
   const q = new URLSearchParams({ response_type: "token", client_id: OURA_ID, redirect_uri: OURA_REDIRECT, state: st });
@@ -4423,19 +4492,29 @@ function ouraConnect(noScope) {
   }
   if (st && hp.get("state") !== st) return;
   OURA.set({ token: tok, exp: Date.now() + (+hp.get("expires_in") || 2592000) * 1000, scope: hp.get("scope") || "", at: Date.now() });
-  setTimeout(() => { S.view = "profile"; S.viewing = null; render(); OURA.test().then(() => render()); }, 300);
+  setTimeout(() => { S.view = "profile"; S.viewing = null; render(); OURA.sync(true).then(() => render()); }, 300);
 })();
 function ouraCardHTML() {
-  const o = OURA.get(); let t = OURA.last; if (!t) try { t = JSON.parse(localStorage.getItem("solo.oura.test") || "null"); } catch (e) {}
-  const days = o && !o.expired ? Math.max(0, Math.round((o.exp - Date.now()) / 864e5)) : 0;
-  let res = "";
-  if (OURA.busy) res = `<p class="sub">Testing the connection…</p>`;
-  else if (t && t.ok) res = `<p class="sub">✓ Connection works. Latest: readiness <b>${t.readiness ? t.readiness.score : "–"}</b>, sleep <b>${t.sleep ? t.sleep.score : "–"}</b>, activity <b>${t.activity ? t.activity.score : "–"}</b>${t.activity && t.activity.steps != null ? `, ${t.activity.steps.toLocaleString("en-AU")} steps` : ""}.</p>`;
-  else if (t) res = `<p class="sub" style="color:var(--red)">${esc(t.msg)}</p>`;
-  return `<section class="win card"><div class="toggle"><h2>Oura</h2>${o && !o.expired ? `<button class="btn" data-act="ouraoff">Disconnect</button>` : `<button class="btn primary" data-act="ouraconnect">Connect</button>`}</div>
-    <p>${o && !o.expired ? `Connected · login lasts ${days} more day${days === 1 ? "" : "s"}. ` : o && o.expired ? "Your Oura login expired. Connect again. " : "Test: link your Oura ring for readiness, sleep and activity. "}🔒 Oura data stays on this phone.</p>
-    ${res}${o && !o.expired ? `<div class="ex-actions"><button class="btn" data-act="ouratest">Test again</button></div>` : ""}</section>`;
+  const o = OURA.get(), live = o && !o.expired;
+  const days = live ? Math.max(0, Math.round((o.exp - Date.now()) / 864e5)) : 0;
+  const head = `<div class="toggle"><h2>Oura</h2>${live ? `<button class="btn" data-act="ouraoff">Disconnect</button>` : `<button class="btn primary" data-act="ouraconnect">Connect</button>`}</div>`;
+  if (!live) return `<section class="win card">${head}<p>${o && o.expired ? "Your Oura login expired (they last 30 days). Tap Connect to carry on." : "Link your Oura ring to see readiness, sleep, HRV and resting heart rate on your quest card, and let the System go easier on low-readiness days."} 🔒 Oura data stays on this phone.</p></section>`;
+  const D = OURA.data(), t = OURA.day(todayStr()) || OURA.day(addDays(todayStr(), -1)) || {};
+  const tile = (v, l, sp) => `<div class="otile"><b>${v ?? "–"}</b><small>${l}</small>${sp || ""}</div>`;
+  const r7 = (k, dp = 0) => { const v = OURA.avg(k, addDays(todayStr(), -6), todayStr()); return v == null ? null : +v.toFixed(dp); };
+  const contrib = t.rc ? Object.entries(t.rc).filter(([k, v]) => v != null && OURA_CONTRIB[k]).sort((a, b) => a[1] - b[1]) : [];
+  const vo2 = OURA.latest("vo2"), cva = OURA.latest("cva"), steps = r7("steps"), burn = r7("kcal");
+  return `<section class="win card oura">${head}
+    <p class="sub">${OURA.busy ? "Syncing…" : OURA.err ? `<span style="color:var(--red)">${esc(OURA.err)}</span>` : D.at ? `Synced ${new Date(D.at).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" })}` : "Not synced yet"} · login lasts ${days} more day${days === 1 ? "" : "s"} · 🔒 stays on this phone</p>
+    <div class="otiles">${tile(t.r, "Readiness", spark(OURA.series("r")))}${tile(t.s, "Sleep", spark(OURA.series("s")))}${tile(t.hrv != null ? Math.round(t.hrv) : null, "HRV ms", spark(OURA.series("hrv")))}${tile(t.rhr != null ? Math.round(t.rhr) : null, "Resting HR", spark(OURA.series("rhr")))}</div>
+    ${contrib.length ? `<details class="ocontrib"><summary>What's driving readiness${contrib[0][1] < 70 ? `: lowest is ${esc(OURA_CONTRIB[contrib[0][0]].toLowerCase())}` : ""}</summary>${contrib.map(([k, v]) => `<div><span>${esc(OURA_CONTRIB[k])}</span><i style="--v:${v}%"></i><b>${v}</b></div>`).join("")}</details>` : ""}
+    <div class="otiles small">${tile(steps != null ? steps.toLocaleString("en-AU") : null, "Steps, 7-day avg")}${tile(burn != null ? burn.toLocaleString("en-AU") : null, "Oura total burn, 7-day avg")}${tile(vo2 != null ? Math.round(vo2) : null, "Cardio fitness (VO₂ max)")}${tile(cva != null ? cva : null, "Cardiovascular age")}</div>
+    <p class="sub">Readiness shows on your quest card each morning. Under 70, the System holds your weights instead of suggesting an increase. Oura's calorie burn is an estimate: your maintenance in the Body log is the better number.</p>
+    <div class="ex-actions"><button class="btn" data-act="ourasync">Sync now</button></div></section>`;
 }
+
+setTimeout(() => OURA.sync().then(d => { if (d && OURA.get()) render(); }), 1500);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) OURA.sync().then(d => { if (d && OURA.get() && !FORM) render(); }); });
 
 /* ================= FORM GUIDES (v9.4) =================
    Data in form-data.js (window.SL_FORM), figure engine in form.js. The sheet shows an animated figure,
