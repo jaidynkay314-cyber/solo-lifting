@@ -968,6 +968,19 @@ body.noscroll { overflow: hidden; }
 .fmis[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--red) inset; }
 .fshoulder { border: 1px solid var(--gold); background: rgb(255 200 97 / .06); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 .fshoulder h3 { color: var(--gold); } .fshoulder p { margin: 0; }
+button.n.eff { background: none; border: 0; padding: 0; font: inherit; color: inherit; font-family: var(--font-display); font-weight: 700; position: relative; min-height: 36px; cursor: pointer; }
+button.n.eff::after { content: ""; position: absolute; left: 50%; bottom: 3px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; border: 1px dashed var(--muted); }
+button.n.e1::after { background: #5ee39a; border: 0; } button.n.e2::after { background: #4cc3ff; border: 0; } button.n.e3::after { background: var(--gold); border: 0; } button.n.e4::after { background: var(--red); border: 0; }
+.erate { display: flex; flex-direction: column; gap: 6px; padding: 6px 0 4px 30px; }
+.erate > span { font-size: 13px; color: var(--muted); }
+.erate > div { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.echip { background: var(--sunk); border: 1px solid var(--edge-dim); color: var(--fg); font: inherit; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 1px; min-height: 44px; }
+.echip b { font-family: var(--font-display); font-size: 15px; } .echip small { font-size: 10.5px; color: var(--muted); text-align: center; line-height: 1.2; }
+.echip.e1 b { color: #5ee39a; } .echip.e2 b { color: #4cc3ff; } .echip.e3 b { color: var(--gold); } .echip.e4 b { color: var(--red); }
+.echip[aria-pressed="true"] { border-color: var(--glow); box-shadow: 0 0 0 1px var(--glow) inset; }
+.maint .mbig { display: flex; align-items: baseline; gap: 8px; } .maint .mbig b { font-family: var(--font-display); font-size: 34px; color: var(--glow); } .maint .mbig span { color: var(--muted); }
+.maint .vchips { flex-wrap: wrap; overflow: visible; }
+.maint .vchip small { display: block; font-size: 11px; color: var(--muted); }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
@@ -1769,8 +1782,15 @@ function sysTarget(e, hist) {
     const w = Math.max(...work.map(s => +s.w || 0)), atW = work.filter(s => (+s.w || 0) === w), reps = atW.map(s => +s.r || 0);
     if (!w) return { w: "", r: Math.min(e.hi, Math.min(...reps) + 1), why: "Bodyweight last time. Aim for one more rep on each set." };
     const inc = w < 20 ? 1 : 2.5, r05 = v => Math.round(v * 2) / 2;
+    const eff = atW.map(s => s.e || 0), rated = eff.filter(Boolean).length === atW.length && atW.length > 0;
+    const allEasy = rated && eff.every(x => x === 1), earlyFail = rated && eff.slice(0, -1).some(x => x === 4), drop = reps.length > 1 ? reps[0] - reps[reps.length - 1] : 0;
     if (work.length >= (e.base || 3) && reps.every(r => r >= e.hi))
-      return { w: r05(w + inc), r: e.lo, up: true, why: `You hit ${e.hi} on every set. Go up to the next weight (about +${inc} kg) and start back at ${e.lo} reps.` };
+      return allEasy ? { w: r05(w + inc * 2), r: e.lo, up: true, why: `Every set hit ${e.hi} and felt easy. Jump two steps (about +${inc * 2} kg) and start back at ${e.lo} reps.` }
+        : { w: r05(w + inc), r: e.lo, up: true, why: `You hit ${e.hi} on every set. Go up to the next weight (about +${inc} kg) and start back at ${e.lo} reps.` };
+    if (earlyFail || (rated && drop >= 4 && eff[0] >= 3))
+      return { w, r: Math.max(e.lo, Math.min(e.hi, reps[0] - 1)), why: `You went to failure early, so the later sets fell away (${reps.join(", ")}). Same weight: stop each set with 1 to 2 reps left, and rest the full timer.` };
+    if (allEasy && reps.every(r => r >= e.lo))
+      return { w, r: Math.min(e.hi, Math.min(...reps) + 2), why: `Felt easy. Same weight, aim for two more reps on each set, up to ${e.hi}.` };
     if (reps.some(r => r < e.lo)) {
       const p = hist[1], pw = p ? Math.max(...p.sets.slice(0, work.length).map(s => +s.w || 0)) : 0;
       if (p && pw === w && p.sets.slice(0, work.length).filter(s => (+s.w || 0) === pw).some(s => (+s.r || 0) < e.lo))
@@ -2084,15 +2104,24 @@ function bossHTML(R) {
 /* one set row; attrs carries the data-* that tell the input handler where to write */
 const setState = (type, s) => setOk(type, s) ? " done" : hasVals(type, s) ? " pend" : "";
 function paintSet(row, type, s) { if (!row) return; row.classList.toggle("done", setOk(type, s)); row.classList.toggle("pend", hasVals(type, s) && !setOk(type, s)); }
+/* effort tags (v9.5): after a set, one tap for how hard it was. Stored on the set as e: 1 easy, 2 solid, 3 hard, 4 failed. */
+const EFF = [null, ["Easy", "3+ reps left"], ["Solid", "1 to 2 left"], ["Hard", "0 to 1 left"], ["Failed", "couldn't finish"]];
+function setNum(attrs, i, s, type) {
+  if (!setOk(type, s) || !/data-ex=/.test(attrs)) return `<span class="n">${i + 1}</span>`;
+  return `<button class="n eff${s.e ? " e" + s.e : ""}" data-act="rate" ${attrs} aria-label="Set ${i + 1}: ${s.e ? EFF[s.e][0].toLowerCase() + ". Change" : "rate"} how it felt">${i + 1}</button>`;
+}
+function rateRow(id, i, cur) {
+  return `<div class="erate"><span>How was set ${i + 1}?</span><div>${[1, 2, 3, 4].map(n => `<button class="echip e${n}" data-act="eff" data-ex="${esc(id)}" data-i="${i}" data-n="${n}" aria-pressed="${cur === n}"><b>${EFF[n][0]}</b><small>${EFF[n][1]}</small></button>`).join("")}</div></div>`;
+}
 function setRow(attrs, pre, i, s, type, ph, extra) {
   const tick = `<button class="tick" data-act="sconf" ${attrs} aria-label="${setOk(type, s) ? "Undo" : "Confirm"} set ${i + 1}"></button>`;
   if (type === "r" || type === "s") {
     const f = type;
-    return `<div class="set one${setState(type, s)}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
+    return `<div class="set one${setState(type, s)}${extra ? " extra" : ""}">${setNum(attrs, i, s, type)}
       <div class="field"><input id="${f}-${pre}-${i}" ${attrs} data-f="${f}" inputmode="numeric" placeholder="${ph[f] ?? ""}" value="${s[f] ?? ""}" aria-label="Set ${i + 1} ${f === "s" ? "seconds" : "reps"}"><span>${f === "s" ? "sec" : "reps"}</span></div>
       ${tick}</div>`;
   }
-  return `<div class="set${setState(type, s)}${extra ? " extra" : ""}"><span class="n">${i + 1}</span>
+  return `<div class="set${setState(type, s)}${extra ? " extra" : ""}">${setNum(attrs, i, s, type)}
     <div class="field"><input id="w-${pre}-${i}" ${attrs} data-f="w" inputmode="decimal" placeholder="${ph.w ?? ""}" value="${s.w ?? ""}" aria-label="Set ${i + 1} weight"><span>kg</span></div>
     <span class="x">×</span>
     <div class="field"><input id="r-${pre}-${i}" ${attrs} data-f="r" inputmode="numeric" placeholder="${ph.r ?? ""}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
@@ -2149,6 +2178,7 @@ function renderLog(R) {
       // grey numbers follow the System target, so tapping the diamond on an empty set logs the target
       h += setRow(`data-ex="${esc(e.id)}" data-i="${i}"`, esc(e.id), i, s, e.type,
         tg ? { w: tg.w ?? (ls && ls.w != null ? +ls.w : ""), r: tg.r ?? e.hi, s: tg.s ?? e.lo } : { w: ls && ls.w != null ? +ls.w : "", r: ls && ls.r != null ? ls.r : e.hi, s: ls && ls.s != null ? ls.s : e.lo }, pen && !e.extra && i === e.sets - 1);
+      if (S.rate && S.rate.key === curKey() && S.rate.ex === e.id && S.rate.i === i && setOk(e.type, s)) h += rateRow(e.id, i, s.e);
     }
     const rest = restFor(e.id, e.type);
     h += `</div>${restSlot(e.id)}<div class="ex-actions">
@@ -2492,7 +2522,7 @@ function confirmSet(t) {
       render(); return;
     }
     x.ok = true;
-    if (t.dataset.bi == null) RT.start(id, type);
+    if (t.dataset.bi == null) { RT.start(id, type); S.rate = { key: curKey(), ex: id, i: j }; }
   }
   dirtySession(curKey()); render();
 }
@@ -3645,6 +3675,40 @@ function progressWeeks(days) {
   return out;
 }
 const sgn = v => v == null ? "" : `${v > 0 ? "+" : ""}${v}`;
+/* ---------- maintenance estimate (v9.5) ----------
+   From the last 28 days: average intake on logged days, minus the weight trend (least-squares slope) times 7,700 kcal per kg.
+   Needs at least 14 days of history, 10 days of food logged and 6 weigh-ins spread over 10+ days. Uses weights on this phone only. */
+function maintEstimate(days) {
+  const today = todayStr(), from = addDays(today, -28), win = days.filter(x => x.date >= from && x.date < today);
+  const F = win.filter(x => x.food && x.k > 0), W = win.filter(x => x.kg != null);
+  const first = days.find(x => x.food || x.kg != null), span = W.length ? (parseDate(W[W.length - 1].date) - parseDate(W[0].date)) / 864e5 : 0;
+  const hist = first ? (parseDate(today) - parseDate(first.date)) / 864e5 : 0;
+  const need = { days: Math.max(0, Math.ceil(14 - hist)), food: Math.max(0, 10 - F.length), weighs: Math.max(0, 6 - W.length), span: span < 10 };
+  if (need.days || need.food || need.weighs || need.span) return { need, F: F.length, W: W.length };
+  const xs = W.map(x => (parseDate(x.date) - parseDate(from)) / 864e5), ys = W.map(x => x.kg), n = xs.length;
+  const mx = xs.reduce((a, b) => a + b) / n, my = ys.reduce((a, b) => a + b) / n;
+  let sxx = 0, sxy = 0; for (let i = 0; i < n; i++) { sxx += (xs[i] - mx) ** 2; sxy += (xs[i] - mx) * (ys[i] - my); }
+  const slope = sxy / sxx, b0 = my - slope * mx;
+  let sse = 0; for (let i = 0; i < n; i++) sse += (ys[i] - (b0 + slope * xs[i])) ** 2;
+  const se = n > 2 ? Math.sqrt(sse / (n - 2) / sxx) : 0;
+  const intake = F.reduce((a, x) => a + x.k, 0) / F.length, tdee = intake - slope * 7700;
+  const r10 = v => Math.round(v / 10) * 10;
+  return { tdee: r10(tdee), intake: Math.round(intake), wk: Math.round(slope * 7 * 100) / 100, pm: r10(Math.min(600, 1.5 * se * 7700)), F: F.length, W: n, from };
+}
+function maintHTML() {
+  const m = maintEstimate(progressDays()), c = fuelCfg(S.me), kc = v => Math.round(v).toLocaleString("en-AU");
+  if (m.need) {
+    const bits = [m.need.food ? `${m.need.food} more day${m.need.food === 1 ? "" : "s"} of food logged` : "", m.need.weighs ? `${m.need.weighs} more weigh-in${m.need.weighs === 1 ? "" : "s"}` : "", m.need.days ? `${m.need.days} more day${m.need.days === 1 ? "" : "s"} of history` : "", !m.need.weighs && m.need.span ? "weigh-ins spread over at least 10 days" : ""].filter(Boolean);
+    return `<section class="fsec"><h3>Your maintenance<small>calories to hold your weight</small></h3><p class="sub">Worked out from what you eat and how your weight moves. It needs ${bits.join(", ")}. So far: ${m.F} day${m.F === 1 ? "" : "s"} of food and ${m.W} weigh-in${m.W === 1 ? "" : "s"} in the last 4 weeks.</p></section>`;
+  }
+  const rates = [[-0.75, "Lose 0.75 kg/wk"], [-0.5, "Lose 0.5 kg/wk"], [-0.25, "Lose 0.25 kg/wk"], [0, "Maintain"], [0.25, "Gain 0.25 kg/wk"]];
+  return `<section class="fsec maint"><h3>Your maintenance<small>last 4 weeks</small></h3>
+    <div class="mbig"><b>${kc(m.tdee)}</b><span>kcal a day${m.pm >= 30 ? ` · ±${kc(m.pm)}` : ""}</span></div>
+    <p class="sub">You averaged <b>${kc(m.intake)} kcal</b> on ${m.F} logged days while your weight trend moved <b>${m.wk > 0 ? "+" : ""}${m.wk} kg a week</b> (${m.W} weigh-ins). That puts your real burn at about ${kc(m.tdee)}.</p>
+    <p class="sub">Set a daily goal from it:</p>
+    <div class="vchips">${rates.map(([rt, n]) => { const k = Math.round((m.tdee + rt * 1100) / 10) * 10; return `<button class="vchip" data-act="mgoal" data-k="${k}" data-mode="${rt > 0 ? "min" : "max"}" aria-pressed="${c.k === k}">${n}<small>${kc(k)}</small></button>`; }).join("")}</div>
+    <p class="sub">${c.k ? `Your goal now: ${kc(c.k)}. ` : ""}Early numbers move around with water (creatine, salt, carbs, a big night). It settles after 3 to 4 weeks of steady logging. Unlogged days are left out, so log the big days too.</p></section>`;
+}
 function weeksHTML() {
   const W = progressWeeks(progressDays()).slice(-12).reverse();
   if (!W.length) return `<section class="fsec"><h3>Weekly progress</h3><p class="sub">Log food, training or a weigh-in to start filling this in.</p></section>`;
@@ -3708,6 +3772,7 @@ async function drawBody() {
       <div class="vchips">${[["kg", "Weight"], ...MEAS].filter(([k]) => k === "kg" || E.some(e => e[k] != null)).map(([k, n]) => `<button class="vchip" data-act="bchart" data-k="${k}" aria-pressed="${key === k}">${n}</button>`).join("")}
         ${[[30, "30 days"], [90, "90 days"], [0, "All"]].map(([d, n]) => `<button class="vchip" data-act="brange" data-d="${d}" aria-pressed="${BODY.range === d}">${n}</button>`).join("")}</div>
       ${pts.length > 1 ? lineChart([{ name: key === "kg" ? "Weight" : MEAS.find(m => m[0] === key)[1], color: "#4cc3ff", pts, thin: key === "kg" }, ...(avg.length ? [{ name: "7-day average", color: "#ffc861", pts: avg, dots: false }] : [])], key === "kg" ? "kg" : "cm", 170) : `<p class="sub">Log a couple of days to see the trend.</p>`}</section>
+    ${maintHTML()}
     ${weeksHTML()}
     <section class="fsec"><h3>Progress photos<small>${BODY.photos.length} saved</small></h3>
       <div class="ex-actions"><select id="bpose" aria-label="Pose">${POSES.map(p => `<option>${p}</option>`).join("")}</select>
@@ -3734,10 +3799,11 @@ async function drawBody() {
     $("#bcmp").innerHTML = ps.map((p, i) => `<figure><img src="${urls[i]}" alt=""><figcaption>${fmtDate(p.date)} · ${p.pose}</figcaption></figure>`).join("");
   }
 }
-const BACTS = new Set(["bopen", "bclose", "bunlock", "bsave", "bdel", "bchart", "brange", "bph", "bcmpclear", "bphdel", "bpinon", "bpinoff", "block", "bwipe", "bexport"]);
+const BACTS = new Set(["mgoal", "bopen", "bclose", "bunlock", "bsave", "bdel", "bchart", "brange", "bph", "bcmpclear", "bphdel", "bpinon", "bpinoff", "block", "bwipe", "bexport"]);
 function bodyClick(t, act) { if (!BACTS.has(act)) return false; bodyAct(t, act).catch(e => toast({ tag: "Body log", title: "Something went wrong", text: String(e.message || e) })); return true; }
 async function bodyAct(t, act) {
   if (act === "bopen") { openBody(); return true; }
+  if (act === "mgoal") { const h = S.hunters[S.me], k = +t.dataset.k, mode = t.dataset.mode; h.program ||= {}; h.program._fuel = { ...(h.program._fuel || {}), k, mode }; dirtyHunter(S.me); toast({ tag: "Fuel", title: `Daily goal: ${k.toLocaleString("en-AU")} kcal`, text: mode === "min" ? "Aim to reach it each day." : "Stay under it each day." }); drawBody(); return true; }
   if (act === "bclose") { closeBody(); return true; }
   const msg = m => { const x = $("#bmsg"); if (x) x.textContent = m; };
   if (act === "bunlock") { const ok = await unlockPin(($("#bpin").value || "").trim()); if (ok) drawBody(); else { msg("Wrong PIN."); buzz([40, 40, 40]); } return true; }
@@ -4066,6 +4132,12 @@ document.addEventListener("click", e => {
   const act = t.dataset.act, id = t.dataset.ex, i = +t.dataset.i;
   if (act === "sconf") { confirmSet(t); return; }
   if (act === "form") { openForm(t.dataset.ex); return; }
+  if (act === "rate") { const i = +t.dataset.i, same = S.rate && S.rate.ex === t.dataset.ex && S.rate.i === i && S.rate.key === curKey(); S.rate = same ? null : { key: curKey(), ex: t.dataset.ex, i }; render(); return; }
+  if (act === "eff") {
+    const b = session(true), arr = b.ex[t.dataset.ex] || [], x = arr[+t.dataset.i], n = +t.dataset.n; if (!x) return;
+    if (x.e === n) delete x.e; else x.e = n;
+    S.rate = null; dirtySession(curKey()); render(); return;
+  }
   if (act === "ckind") {
     S.ckind = t.dataset.k; S.pickKind = { key: curKey(), k: t.dataset.k };
     const b = session(false); if (b && b.cardio) { b.cardio.kind = t.dataset.k; dirtySession(curKey()); }
@@ -4378,7 +4450,7 @@ $("#timerStop").onclick = () => { clearInterval(tInt); $("#timer").hidden = true
 const backupJson = () => JSON.stringify({ app: "lift-log", version: 6, exported: new Date().toISOString(), hunters: S.hunters, custom: S.custom, sessions: S.sessions }, null, 1);
 function csvText() {
   const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal", "protein_g", "kcal_goal", "protein_goal", "kcal_goal_hit", "protein_goal_hit"];
+  const head = ["type", "person", "date", "day", "penalty_day", "quest_cleared", "excused", "item", "category", "stat", "in_plan", "set", "weight_kg", "reps", "seconds", "walk_min", "run_min", "total_min", "distance_km", "pace_min_per_km", "kcal", "protein_g", "kcal_goal", "protein_goal", "kcal_goal_hit", "protein_goal_hit", "effort"];
   const rows = [head];
   const R = replay(S.me), who = nameOf(S.me);
   const mine = Object.values(S.sessions).filter(b => b.profile === S.me && !isMeta(b)).sort((a, b) => a.date < b.date ? -1 : 1);
@@ -4390,7 +4462,7 @@ function csvText() {
     if (c.total || c.dist || c.kcal) row({ ...base, type: "cardio", item: KINDS[kindOf(c.kind)].name, category: "Program cardio", stat: "VIT", in_plan: "yes", walk_min: c.walk, run_min: c.run, total_min: c.total, distance_km: c.dist, pace_min_per_km: pace(c) ? pace(c).toFixed(2) : "", kcal: c.kcal });
     for (const [id, arr] of Object.entries(b.ex || {})) {
       const L = CX(id) || { name: id, cat: "", stat: "", type: "wr" };
-      arr.forEach((s, i) => { if (setOk(L.type, s)) row({ ...base, type: "lift", item: L.name, category: L.cat, stat: L.stat, in_plan: planIds.has(id) ? "yes" : "no", set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s }); });
+      arr.forEach((s, i) => { if (setOk(L.type, s)) row({ ...base, type: "lift", item: L.name, category: L.cat, stat: L.stat, in_plan: planIds.has(id) ? "yes" : "no", set: i + 1, weight_kg: s.w, reps: s.r, seconds: s.s, effort: s.e ? EFF[s.e][0].toLowerCase() : "" }); });
     }
     for (const e of b.bonus || []) {
       const L = CX(e.id); if (!L || !bonusLogged(e)) continue;
