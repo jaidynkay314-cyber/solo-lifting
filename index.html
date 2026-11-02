@@ -4413,11 +4413,16 @@ const OURA = {
     const D = this.data();
     if (!force && D.at && Date.now() - D.at < 30 * 60e3) return D;
     this.busy = true; this.err = "";
-    const end = addDays(todayStr(), 1), start = addDays(todayStr(), -35), q = { start_date: start, end_date: end };
-    const get = async path => { try { return (await this.api(path, q)).data || []; } catch (e) { if (/expired|relay|refused/i.test(e.message)) throw e; return []; } };
+    // first sync back-fills a year of history; after that, the last 35 days are refreshed and merged into what's saved
+    const firstRun = !Object.keys(D.days || {}).length;
+    const end = addDays(todayStr(), 1), start = addDays(todayStr(), firstRun ? -365 : -35), q = { start_date: start, end_date: end };
+    const get = async path => {
+      try { let out = [], nt = null, n = 0; do { const r = await this.api(path, nt ? { ...q, next_token: nt } : q); out = out.concat(r.data || []); nt = r.next_token; } while (nt && ++n < 20); return out; }
+      catch (e) { if (/expired|relay|refused/i.test(e.message)) throw e; return []; }
+    };
     try {
       const [rd, sl, ac, sp, st, vo, cv] = await Promise.all(["daily_readiness", "daily_sleep", "daily_activity", "sleep", "daily_stress", "vo2_max", "daily_cardiovascular_age"].map(get));
-      const days = {}, d = k => (days[k] ||= {});
+      const days = { ...(D.days || {}) }, d = k => (days[k] ||= {});
       for (const x of rd) Object.assign(d(x.day), { r: x.score, rc: x.contributors || {}, temp: x.temperature_deviation });
       for (const x of sl) Object.assign(d(x.day), { s: x.score, sc: x.contributors || {} });
       for (const x of ac) Object.assign(d(x.day), { a: x.score, steps: x.steps, kcal: x.total_calories, akcal: x.active_calories });
