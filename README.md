@@ -325,6 +325,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
 ## To revisit
+- Body log backup: on hold (3 Nov 2026). The fortnightly progress export covers weights and measurements; photos are accepted as losable. If a phone gets wiped, add an "import from progress export" option to restore weights and measurements from the CSV. Options discussed: encrypted backup file (no server), encrypted automatic backup of weights/measurements to Supabase.
 - **Muscle map colours:** the zone colours (dim blue, blue, cyan) may be too close together. Review after a few weeks of real data and add more contrast if needed (colours are in `MZ` and `mColor()`).
 - **Encrypted body log backup:** wanted later, needs more thought first.
 - **Record flash:** on the consider pile. Lift numbers are now private by default (v7.4), so any flash shown to others should follow `showNums()`.
