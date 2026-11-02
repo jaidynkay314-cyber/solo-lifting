@@ -4379,7 +4379,9 @@ const OURA = {
   last: null, busy: false,
   async api(path, q) {
     const o = this.get(); if (!o || o.expired) throw new Error("not connected");
-    const r = await fetch(`https://api.ouraring.com/v2/usercollection/${path}?${new URLSearchParams(q)}`, { headers: { Authorization: `Bearer ${o.token}` } });
+    // through the relay (supabase/functions/oura): Oura doesn't accept calls straight from a browser
+    const cfg = window.SL_CONFIG || {}, r = await fetch(`${cfg.url}/functions/v1/oura?${new URLSearchParams({ path, ...q })}`, { headers: { "x-oura-token": o.token, apikey: cfg.key } });
+    if (r.status === 404 && !(r.headers.get("content-type") || "").includes("json")) throw new Error("The Oura relay isn't set up in Supabase yet.");
     if (r.status === 401) { this.set({ ...o, exp: 0 }); throw new Error("Oura login expired. Connect again."); }
     if (r.status === 403) throw new Error("Oura refused (403). Check your Oura membership is active and the data type was approved.");
     if (!r.ok) throw new Error("Oura said " + r.status);
@@ -4394,7 +4396,7 @@ const OURA = {
       this.last = { ok: true, at: Date.now(), readiness: pick(rd), sleep: pick(sl), activity: pick(ac), n: (rd.data || []).length };
     } catch (e) {
       // a CORS block shows up as a TypeError with no status: that means Oura won't talk to a browser app directly
-      this.last = { ok: false, at: Date.now(), cors: e instanceof TypeError, msg: e instanceof TypeError ? "The browser blocked the request (Oura doesn't accept calls straight from web apps). We'll need the small relay." : String(e.message || e) };
+      this.last = { ok: false, at: Date.now(), cors: e instanceof TypeError, msg: e instanceof TypeError ? "Couldn't reach the Oura relay. Check it's deployed with Verify JWT turned off, and that you have signal." : String(e.message || e) };
     }
     this.busy = false;
     try { localStorage.setItem("solo.oura.test", JSON.stringify(this.last)); } catch (e) {}

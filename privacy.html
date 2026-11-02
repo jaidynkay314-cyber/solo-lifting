@@ -10,7 +10,7 @@
 <li><b>On the shared board (Supabase):</b> your display name, workouts, food log totals and goals, so the group can see each other's progress. Lift weights are hidden from others unless you choose to show them.</li>
 </ul>
 <h2>Oura</h2>
-<p>If you connect Oura, the app asks Oura for read-only access to the data types you approve. The access token and the data it fetches stay in your phone's browser storage and are only used to show your readiness, sleep and activity inside the app. Nothing from Oura is shared with other users, sold, or used to train any model. You can disconnect at any time in the app, and revoke access from your Oura account.</p>
+<p>If you connect Oura, the app asks Oura for read-only access to the data types you approve. The access token and the data it fetches stay in your phone's browser storage and are only used to show your readiness, sleep and activity inside the app. Because Oura doesn't accept requests straight from web apps, each request passes through a small relay on Solo Lifting's Supabase project, which forwards it to Oura and hands the answer back without storing or logging it. Nothing from Oura is shared with other users, sold, or used to train any model. You can disconnect at any time in the app, and revoke access from your Oura account.</p>
 <h2>No tracking</h2>
 <p>There are no ads, analytics or third-party trackers.</p>
 <h2>Deleting your data</h2>
