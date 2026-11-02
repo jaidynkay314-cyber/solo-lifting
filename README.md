@@ -319,6 +319,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Profile card.** Tiles with 14-day sparklines (readiness, sleep, HRV, resting HR), what's driving readiness (contributors, lowest first), 7-day steps and Oura burn, VO2 max and cardiovascular age.
 - **Monday report** adds the week's average readiness, sleep and HRV. **Your maintenance** shows Oura's burn estimate beside the weight-based number.
 - `privacy.html` and `terms.html` exist for the Oura app registration.
+- The progress export (Body log) adds oura_readiness, oura_sleep, oura_hrv_ms, oura_resting_hr, oura_steps, oura_total_kcal and oura_temp_dev columns for the last 35 days synced.
 
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).

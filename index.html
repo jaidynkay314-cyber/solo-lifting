@@ -3746,12 +3746,12 @@ function weeksHTML() {
 }
 function progressCsv() {
   const q = v => v == null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
-  const head = ["date", "weekday", "weight_kg", "weight_7day_avg_kg", ...MEAS.map(([k]) => k + "_cm"), "food_logged", "kcal", "protein_g", "kcal_goal", "kcal_goal_mode", "protein_goal", "kcal_goal_hit", "protein_goal_hit", "quest_points", "quest_cleared", "excused"];
+  const head = ["date", "weekday", "weight_kg", "weight_7day_avg_kg", ...MEAS.map(([k]) => k + "_cm"), "food_logged", "kcal", "protein_g", "kcal_goal", "kcal_goal_mode", "protein_goal", "kcal_goal_hit", "protein_goal_hit", "quest_points", "quest_cleared", "excused", "oura_readiness", "oura_sleep", "oura_hrv_ms", "oura_resting_hr", "oura_steps", "oura_total_kcal", "oura_temp_dev"];
   const rows = [head];
   for (const x of progressDays()) {
     const g = x.goal || {};
     rows.push([x.date, parseDate(x.date).toLocaleDateString("en-AU", { weekday: "short" }), x.kg, x.kg7, ...MEAS.map(([k]) => x.meas[k]), x.food ? "yes" : "no", x.food ? x.k : "", x.food ? x.p : "",
-      g.k || "", g.k ? (g.mode === "min" ? "at_least" : "stay_under") : "", g.p || "", x.food && g.k ? (x.hit.k ? "yes" : "no") : "", x.food && g.p ? (x.hit.p ? "yes" : "no") : "", x.pts, x.cleared ? "yes" : "no", x.excused ? "yes" : "no"]);
+      g.k || "", g.k ? (g.mode === "min" ? "at_least" : "stay_under") : "", g.p || "", x.food && g.k ? (x.hit.k ? "yes" : "no") : "", x.food && g.p ? (x.hit.p ? "yes" : "no") : "", x.pts, x.cleared ? "yes" : "no", x.excused ? "yes" : "no", ...(o => o ? [o.r, o.s, o.hrv != null ? Math.round(o.hrv) : "", o.rhr, o.steps, o.kcal, o.temp] : ["", "", "", "", "", "", ""])(OURA.get() && OURA.data().days[x.date])]);
   }
   return rows.map(r => r.map(q).join(",")).join("\n");
 }
