@@ -911,6 +911,7 @@ body.noscroll { overflow: hidden; }
 
 
 @media (prefers-reduced-motion: reduce) { .pov *, .pov *::before, .pov *::after, .cdet *, .cdet *::before, .cdet *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+.fsec.prefill { outline: 2px solid var(--glow); outline-offset: 4px; border-radius: 12px; }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
@@ -4324,11 +4325,17 @@ render();
 syncNow();
 /* home screen shortcuts (long-press the app icon): ?go=scan, ?go=food, ?go=quest */
 (() => {
-  const go = new URLSearchParams(location.search).get("go"); if (!go) return;
+  const qs = new URLSearchParams(location.search), go = qs.get("go"); if (!go) return;
+  let qa = null; try { qa = JSON.parse(qs.get("qa") || "null"); } catch (e) {}
   history.replaceState(null, "", location.pathname);
   if (!S.me) return;
   S.view = "log"; S.date = todayStr(); S.day = dayForDate(S.date); render();
   if (go === "food" || go === "scan") { openFood(); if (go === "scan") openScan(); }
+  /* from the Kitchen app: ?go=food&qa={"n","k","p"} fills Quick add, ready to tap Add */
+  if (go === "food" && qa && $("#fq-k")) {
+    $("#fq-n").value = String(qa.n || "").slice(0, 40); $("#fq-k").value = Math.max(0, Math.round(+qa.k || 0)); $("#fq-p").value = Math.max(0, Math.round((+qa.p || 0) * 10) / 10);
+    const q = $("#fq-k").closest(".fsec"); q.scrollIntoView({ block: "center" }); q.classList.add("prefill"); q.querySelector('[data-act="fquick"]').focus({ preventScroll: true });
+  }
 })();
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
 if ("serviceWorker" in navigator) addEventListener("load", async () => {

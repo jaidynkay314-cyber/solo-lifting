@@ -292,6 +292,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - GB is marked `"partial": true` in `cards/cards.js`: it rolls in packs but its set rewards stay locked until the set is complete. Remove the flag when GB 007-032 are added.
 - New set rewards: HG Guild Legend / Guild Crest, SL Monarch of Shadows / Shadow Monarch, GB Slayer of Gate Bosses / Gatebreaker's Crown.
 
+## v9.1
+- `?go=food&qa={"n","k","p"}` opens Fuel with Quick add filled in (name, kcal, protein), ready to tap Add. The Kitchen app's "Log to Solo Lifting" button uses it.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
