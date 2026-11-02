@@ -295,6 +295,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 ## v9.1
 - `?go=food&qa={"n","k","p"}` opens Fuel with Quick add filled in (name, kcal, protein), ready to tap Add. The Kitchen app's "Log to Solo Lifting" button uses it.
 
+## v9.2
+- Install banner. Android Chrome: our own "Install Solo Lifting" banner opens the browser's install dialog (`beforeinstallprompt`). iPhone: Safari has no install API, so the banner shows Share, Add to Home Screen (or "open in Safari" from other iOS browsers). Hidden when already installed, and for 14 days after "Not now" (`solo.install` in localStorage).
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
