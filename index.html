@@ -1753,7 +1753,7 @@ function replay(hid) {
       M.bestStreak = Math.max(M.bestStreak, cur);
       {
         const mon = mondayOf(d), qd = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(mon, i)).filter(x => isQuestDay(hid, x));
-        if (qd.length && qd[qd.length - 1] === d && mon >= R.first && qd.every(x => R.clr[x])) { M.perfectWeeks++; R.events.push({ d, type: "pw" }); box("B", "pw:" + d, d); }
+        if (qd.length && qd[qd.length - 1] === d && mon >= R.first && qd.every(x => R.clr[x])) { M.perfectWeeks++; R.events.push({ d, type: "pw" }); box("B", "pw:" + d, d); box("C", "pwc:" + d, d); }
       }
       if (addDays(d, 1).slice(0, 7) !== d.slice(0, 7)) {
         const ms = d.slice(0, 8) + "01";
@@ -2377,7 +2377,7 @@ const showNums = id => id === S.me || !!(((S.hunters[id] || {}).program || {})._
 const EV_TXT = {
   clear: e => ["⚔️", `cleared ${esc(e.txt)}`], pzs: () => ["💀", "survived the Penalty Zone"], pz: () => ["🩸", "was sent to the Penalty Zone"],
   pr: (e, id) => ["🏆", `set a new record${e.ex ? ` on ${esc(e.ex)}` : ""}${showNums(id) || !e.ex ? `: ${esc(e.ex ? e.txt.slice(e.ex.length + 2) : e.txt)}` : ""}`], boss: e => ["👹", `defeated the weekly boss: ${esc(e.txt)}`], lvl: e => ["⭐", `reached Level ${e.L}`],
-  ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week"],
+  ach: e => [e.a.icon, `unlocked <b style="color:${RAR[e.a.rar][2]}">${esc(e.a.name)}</b>`], pw: () => ["📆", "completed a perfect week: Blessed and Cursed loot boxes"],
   pm: () => ["🗓️", "completed a perfect month"], comeback: () => ["🔄", "made a comeback"],
   cos: e => ["🎁", `won the <b style="color:${TIERS[e.c.tier][1]}">${esc(e.c.name)}</b>`],
   side: e => ["🗺️", `completed a side quest: ${esc(e.txt)}`],
@@ -2638,7 +2638,7 @@ const TIERS = [["Common", "#9fb3cc"], ["Uncommon", "#5ee39a"], ["Rare", "#4c9bff
 const BOX = {
   R: { name: "Random Loot Box", c: ["#173c66", "#0a1a33", "#7fdcff"], odds: [62, 25, 9, 3, 1], how: "Random: every cleared quest and level up" },
   B: { name: "Blessed Loot Box", c: ["#6b4a10", "#2a1a04", "#fff0b8"], odds: [0, 30, 40, 22, 8], how: "Blessed: weekly bosses, perfect weeks and every 5th level, never Common" },
-  C: { name: "Cursed Loot Box", c: ["#4a0a18", "#14020a", "#ff4a6a"], odds: [34, 20, 18, 16, 12], cursed: true, how: "Cursed: escaping the Penalty Zone, high risk, high reward, with cursed-only prizes" }
+  C: { name: "Cursed Loot Box", c: ["#4a0a18", "#14020a", "#ff4a6a"], odds: [34, 20, 18, 16, 12], cursed: true, how: "Cursed: escaping the Penalty Zone or a perfect week, high risk, high reward, with cursed-only prizes" }
 };
 const PACK = {
   N: { name: "Hunter Pack", n: 3, tier: 0, cover: "bg001", p: ["#0c2a4a", "#2a7fc4", "#0a1a33"], note: "3 cards" },

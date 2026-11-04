@@ -331,6 +331,10 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
+## v10.3: perfect weeks pay more than the Penalty Zone
+- A perfect week now earns a Blessed **and** a Cursed loot box (box ids `pw:<date>` and `pwc:<date>`). Reason: escaping the Penalty Zone earns a Cursed box, so skipping days on purpose was close to a free loot upgrade. A perfect week now beats deliberate missing on XP, Random boxes, streak and top-tier odds, and still gives access to cursed-only prizes.
+- Applies to past perfect weeks too (additive only, nothing taken away).
+
 ## v10.2: full guides for every strength exercise
 - Every library exercise (bodyweight, free weights, machines and cables, 50 in all) now has a full written guide in `form-data.js`: where to feel it, setup, the rep, focus points and common mistakes. Total 74 guides; cardio and active/recovery entries have no Form button.
 - Optional `tempo` field overrides the default tempo line for holds (plank, side plank, wall sit), fast moves (burpees, jumps, mountain climbers, jumping jacks) and kettlebell swings.
