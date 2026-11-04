@@ -1,5 +1,7 @@
 # Exercise illustrations
 
-The images in this folder are from the **Everkinetic** open data project (https://github.com/everkinetic/data, based on everkinetic.com by Greg Priday), licensed under **Creative Commons Attribution-ShareAlike 4.0 International** (https://creativecommons.org/licenses/by-sa/4.0/).
+The images in this folder come from **Open Exercise Illustrations** (https://github.com/hitmanrepo/open-exercise-illustrations), released under **CC0 1.0 Universal** (public domain). They are resized and re-encoded as WebP for the app.
 
-Changes made: cropped, resized, and converted to line-only images (transparent background) so the app can colour them. These adapted images are shared under the same CC BY-SA 4.0 licence.
+The source project notes that the illustrations are AI-generated renders, checked by eye but not reviewed by a coach. Each one used here was also checked by eye against the Solo Lifting exercise it illustrates.
+
+The written steps shown for some library exercises come from the **Everkinetic** open data project (https://github.com/everkinetic/data), licensed **CC BY-SA 4.0**.

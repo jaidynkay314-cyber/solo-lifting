@@ -331,6 +331,12 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
+## v10.1: exact-match illustrations only
+- Illustrations now come from Open Exercise Illustrations (https://github.com/hitmanrepo/open-exercise-illustrations), CC0. They show the actual machine for every plan exercise (cable lateral raise, reverse pec deck, assisted pull-up machine, hip thrust machine and so on). AI-generated renders, each checked by eye against the exercise.
+- 72 exercises have an image: start and finish frames cross-fade, burpees use three frames, holds (plank, side plank, wall sit) show one still.
+- No exact image means no image: the guide shows text only. Lunges (only a reverse lunge exists) and any exercise not in the set are text only. The SVG figure engine (`form.js`) is no longer loaded.
+- `form-lib.js` maps id to `{img, frames, shown, note, steps}`. Everkinetic steps (CC BY-SA 4.0) are kept only for library exercises where Everkinetic has the same exercise.
+
 ## v10.0: real illustrations in the form guides
 - The drawn figures are replaced by illustrations from the **Everkinetic** open data project (https://github.com/everkinetic/data, CC BY-SA 4.0): a start and finish drawing per exercise, cross-faded on a loop (side by side when reduced motion is on). Images are cropped and converted to line-only WebP in `form-img/` (about 560 KB for 56 exercises, loaded only when a guide opens, then cached offline). The app colours the lines with a CSS mask. Licence and changes are noted in `form-img/LICENSE.md`, and each guide credits Everkinetic.
 - `form-lib.js` maps exercise ids to an illustration and Everkinetic's original steps. Where the drawing shows a close variant (dumbbell lateral raise for the cable one, floor bridge for the hip thrust, and so on), the guide says so.

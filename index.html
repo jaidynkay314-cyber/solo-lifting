@@ -1014,24 +1014,25 @@ button.exnote { border-top: 0; border-right: 0; border-bottom: 0; color: var(--f
 .exnote.edit { flex-direction: row; align-items: flex-start; gap: 8px; }
 .exnote.edit textarea { flex: 1; min-width: 0; background: var(--sunk); color: var(--fg); border: 1px solid var(--edge-dim); padding: 6px 8px; font: inherit; font-size: 14px; resize: vertical; }
 .fstage.img { padding: 10px; }
-.fimg { position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: 300px; }
-.fimg i { position: absolute; inset: 0; background: #d6ecff; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; -webkit-mask-size: contain; mask-size: contain; filter: drop-shadow(0 0 3px rgb(76 195 255 / .45)); }
-.fimg i.b { opacity: 0; }
+.fimg { position: relative; width: 100%; aspect-ratio: 1; max-height: 340px; margin: 0 auto; border-radius: 12px; overflow: hidden; background: #000; }
+.fimg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; }
+.fimg img:first-child { opacity: 1; }
 @media (prefers-reduced-motion: no-preference) {
-  .fimg i.a { animation: fA 4.4s ease-in-out infinite; } .fimg i.b { animation: fB 4.4s ease-in-out infinite; }
-  .fframes .d1 { animation: fA 4.4s ease-in-out infinite; } .fframes .d2 { animation: fB 4.4s ease-in-out infinite; }
+  .fimg.n2 img:nth-child(1), .fframes.n2 b:nth-child(1) { animation: f2a 4.4s ease-in-out infinite; } .fimg.n2 img:nth-child(2), .fframes.n2 b:nth-child(2) { animation: f2b 4.4s ease-in-out infinite; }
+  .fimg.n3 img:nth-child(1), .fframes.n3 b:nth-child(1) { animation: f3a 6s ease-in-out infinite; } .fimg.n3 img:nth-child(2), .fframes.n3 b:nth-child(2) { animation: f3b 6s ease-in-out infinite; } .fimg.n3 img:nth-child(3), .fframes.n3 b:nth-child(3) { animation: f3c 6s ease-in-out infinite; }
 }
-@keyframes fA { 0%, 30% { opacity: 1; } 40%, 82% { opacity: 0; } 92%, 100% { opacity: 1; } }
-@keyframes fB { 0%, 30% { opacity: 0; } 40%, 82% { opacity: 1; } 92%, 100% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .fimg { display: grid; grid-template-columns: 1fr 1fr; } .fimg i { position: relative; opacity: 1 !important; } .fimg i.b { opacity: 1; } }
-.fframes { position: absolute; right: 10px; bottom: 8px; display: flex; gap: 5px; } .fframes b { width: 7px; height: 7px; border-radius: 50%; background: var(--glow); opacity: .3; }
+@keyframes f2a { 0%, 30% { opacity: 1; } 40%, 82% { opacity: 0; } 92%, 100% { opacity: 1; } }
+@keyframes f2b { 0%, 30% { opacity: 0; } 40%, 82% { opacity: 1; } 92%, 100% { opacity: 0; } }
+@keyframes f3a { 0%, 25% { opacity: 1; } 33%, 92% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes f3b { 0%, 25% { opacity: 0; } 33%, 58% { opacity: 1; } 66%, 100% { opacity: 0; } }
+@keyframes f3c { 0%, 58% { opacity: 0; } 66%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fimg.n2, .fimg.n3 { display: grid; grid-auto-flow: column; aspect-ratio: auto; max-height: none; } .fimg img { position: relative; opacity: 1; } }
+.fframes { position: absolute; right: 18px; bottom: 16px; display: flex; gap: 5px; } .fframes b { width: 7px; height: 7px; border-radius: 50%; background: var(--glow); opacity: .3; }
 .fshown { margin: -6px 0 0; font-size: 12.5px; color: var(--muted); } .fshown a { color: var(--muted); }
-.fshown.sim { color: var(--fg); font-size: 13.5px; border-left: 3px solid var(--gold); padding-left: 8px; } .fshown.sim b { color: var(--gold); }
 div.fmis { cursor: default; }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
-<script src="form.js"></script>
 <script src="form-data.js"></script>
 <script src="form-lib.js"></script>
 </head>
@@ -4606,7 +4607,7 @@ setTimeout(() => OURA.sync().then(d => { if (d && OURA.get()) render(); }), 1500
 document.addEventListener("visibilitychange", () => { if (!document.hidden) OURA.sync().then(d => { if (d && OURA.get() && !FORM) render(); }); });
 
 /* ================= FORM GUIDES (v9.4) =================
-   Data in form-data.js (window.SL_FORM), figure engine in form.js. The sheet shows an animated figure,
+   Data in form-data.js (window.SL_FORM), illustrations mapped in form-lib.js (v10.1: exact matches only, else text only). The sheet shows the illustration,
    where you should feel it, setup, the rep, focus points, common mistakes (tap to see them animated) and a shoulder note. */
 const formLib = id => (window.SL_FORM_LIB || {})[id] || null;
 const formSpec = id => (window.SL_FORM && window.SL_FORM[id]) || (formLib(id) ? { libOnly: true } : null);
@@ -4614,16 +4615,16 @@ let FORM = null;
 function openForm(id) {
   const spec = formSpec(id), L = CX(id), lib = formLib(id); if (!spec || !L) return;
   closeForm();
-  const work = MMAP[id] || [], useImg = !!lib, anim = useImg ? [] : (spec.mistakes || []).map((m, i) => [m, i]).filter(([m]) => m[3]);
+  const work = MMAP[id] || [], anim = [];
   const ov = document.createElement("div"); ov.className = "fsheet"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", `Form: ${L.name}`);
   const rest = restFor(id, L.type), mm = v => `${Math.floor(v / 60)}:${pad(v % 60)}`;
-  const frame = (n, cls) => `<i class="${cls}" style="-webkit-mask-image:url(form-img/${lib.img}-${n}.webp);mask-image:url(form-img/${lib.img}-${n}.webp)"></i>`;
-  const stage = useImg
-    ? `<div class="fstage img"><div class="fimg" role="img" aria-label="Illustration of ${esc(lib.shown)}, start and finish positions">${frame(1, "a")}${frame(2, "b")}</div><span class="fframes"><b class="d1"></b><b class="d2"></b></span></div>
-       <p class="fshown${lib.exact ? "" : " sim"}">${lib.exact ? "" : `<b>Similar exercise shown: ${esc(lib.shown)}.</b> `}${lib.note ? esc(lib.note) + " " : ""}<a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Illustration: Everkinetic</a>, CC BY-SA 4.0.</p>`
-    : `<div class="fstage"><svg viewBox="0 0 320 250" role="img" aria-label="Animated figure showing ${esc(L.name)}"></svg><span class="fphase">Lift</span><span class="flegend"><i></i>Working</span></div>`;
+  const fr = lib ? lib.frames : [], LBL = { start: "start", mid: "middle", end: "finish", hold: "hold" };
+  const stage = lib
+    ? `<div class="fstage img"><div class="fimg n${fr.length}" role="img" aria-label="Illustration of ${esc(lib.shown)}: ${fr.map(f => LBL[f] || f).join(", ")} position${fr.length > 1 ? "s" : ""}">${fr.map(f => `<img src="form-img/${lib.img}-${f}.webp" alt="" decoding="async">`).join("")}</div>${fr.length > 1 ? `<span class="fframes n${fr.length}">${fr.map(() => "<b></b>").join("")}</span>` : ""}</div>
+       <p class="fshown">${lib.note ? esc(lib.note) + " " : ""}Illustration: <a href="https://github.com/hitmanrepo/open-exercise-illustrations" target="_blank" rel="noopener">Open Exercise Illustrations</a> (CC0, AI-generated, checked by eye).</p>`
+    : "";
   const body = spec.libOnly
-    ? `<section><h3>How to do it</h3><ol>${lib.steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol><p class="sub">Steps from Everkinetic (${esc(lib.shown)}), CC BY-SA 4.0. A full guide with focus points and common mistakes is coming for this one.</p></section>`
+    ? (lib.steps.length ? `<section><h3>How to do it</h3><ol>${lib.steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol><p class="sub">Steps from <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a>, CC BY-SA 4.0. A full guide with focus points and common mistakes is coming for this one.</p></section>` : `<p class="sub">A full written guide with focus points and common mistakes is coming for this one.</p>`)
     : `${spec.feel ? `<section><h3>Where you should feel it</h3><div class="ffeel"><div class="yes"><b>Yes</b>${esc(spec.feel[0])}</div><div class="no"><b>Not here</b>${esc(spec.feel[1])}</div></div></section>` : ""}
     <section><h3>Setup</h3><ul>${spec.setup.map(x => `<li>${esc(x)}</li>`).join("")}</ul></section>
     <section><h3>The rep</h3><ol>${spec.rep.map(x => `<li>${esc(x)}</li>`).join("")}</ol></section>
@@ -4639,15 +4640,6 @@ function openForm(id) {
     <p class="sub">Tempo: 1 s up, a short squeeze, 2 s down. Rest about ${mm(rest)} between sets.</p></div>`;
   document.body.appendChild(ov); document.body.classList.add("noscroll");
   FORM = { ov, v: -1, stop: null };
-  if (!useImg && window.SL_FORM_ENGINE) {
-    const svg = ov.querySelector("svg"), ph = ov.querySelector(".fphase"), lg = ov.querySelector(".flegend");
-    const variant = () => FORM && FORM.v >= 0 ? spec.mistakes[FORM.v][3] : null;
-    FORM.stop = SL_FORM_ENGINE.play(svg, { ...spec, work }, variant, r => {
-      const v = FORM && FORM.v >= 0 ? spec.mistakes[FORM.v] : null;
-      ph.textContent = v ? "Mistake · " + v[0].toLowerCase() : SL_FORM_ENGINE.PHASE[r.phase]; ph.classList.toggle("bad", !!v);
-      lg.classList.toggle("bad", !!(v && v[3] && (v[3].red || v[3].ring)));
-    });
-  }
   const setV = i => { FORM.v = FORM.v === i && i >= 0 ? -1 : i; ov.querySelectorAll("[data-fv]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.fv === FORM.v && b.dataset.fv !== ""))); };
   ov.addEventListener("click", e => {
     if (e.target === ov || e.target.closest('[data-fx="close"]')) return closeForm();
