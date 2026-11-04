@@ -321,6 +321,11 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - `privacy.html` and `terms.html` exist for the Oura app registration.
 - The progress export (Body log) adds oura_readiness, oura_sleep, oura_hrv_ms, oura_resting_hr, oura_steps, oura_total_kcal and oura_temp_dev columns for every day saved on the phone.
 
+## v9.8
+- **Week strip uses real dates.** The 7 tiles are Monday to Sunday of the week you're looking at, each with its date and that day's workout. Tapping a tile opens that date (with whatever was logged that day, or the scheduled workout). Ticks show on every cleared day, not just the selected one. ‹ › move a week at a time, and "Back to today" appears when you're on another date. Future days are dimmed. Rest days are dashed as before.
+- **Workout picker** (beside the date) replaces tapping a different day tile to log another day's workout on this date, e.g. doing Lower A on a Wednesday.
+- **Exercise notes.** "+ Note" on any exercise card adds a note for that session (up to 300 characters, saved as `notes[exerciseId]` on the session and synced like sets). The most recent earlier note (within 120 days) shows in gold on that exercise's card next time, e.g. "Note · 4 Nov: twinge in right glute, stopped after set 2". A session with only a note is kept.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 

@@ -999,6 +999,20 @@ button.n.e1::after { background: #5ee39a; border: 0; } button.n.e2::after { back
 .ocontrib div { display: grid; grid-template-columns: 1fr 90px 30px; gap: 8px; align-items: center; font-size: 13.5px; padding: 3px 0; }
 .ocontrib i { height: 4px; background: linear-gradient(90deg, var(--glow) var(--v), var(--edge-dim) var(--v)); }
 .ocontrib b { text-align: right; font-variant-numeric: tabular-nums; }
+.weeknav { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.weeknav > span { font-family: var(--font-display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; flex: 1; text-align: center; }
+.weeknav .wkbtn { min-height: 36px; padding: 2px 14px; font-size: 20px; line-height: 1; }
+.days.week button .dnum { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--fg); }
+.days.week button.today .dnum { color: var(--glow); font-weight: 700; }
+.days.week button.future { opacity: .5; }
+.days.week button.today:not([aria-pressed="true"]) { border-color: var(--edge); }
+.wsel { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); flex: 1; min-width: 0; }
+.wsel select { flex: 1; min-width: 0; }
+.exnote { margin: 0; font-size: 14px; display: flex; flex-direction: column; gap: 2px; padding: 6px 10px; border-left: 3px solid var(--gold); background: rgb(255 200 97 / .07); text-align: left; }
+.exnote span { font-family: var(--font-display); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+button.exnote { border-top: 0; border-right: 0; border-bottom: 0; color: var(--fg); font: inherit; font-size: 14px; }
+.exnote.edit { flex-direction: row; align-items: flex-start; gap: 8px; }
+.exnote.edit textarea { flex: 1; min-width: 0; background: var(--sunk); color: var(--fg); border: 1px solid var(--edge-dim); padding: 6px 8px; font: inherit; font-size: 14px; resize: vertical; }
 </style>
 <script src="config.js"></script>
 <script src="cards/cards.js"></script>
@@ -1564,6 +1578,7 @@ function isEmpty(b) {
   if (b.excused || b.vault) return false;
   const c = cardioOf(b); if (c.total || c.dist || c.kcal) return false;
   if ((b.extra || []).length || (b.bonus || []).length) return false;
+  if (b.notes && Object.values(b.notes).some(Boolean)) return false;
   return !Object.entries(b.ex || {}).some(([id, arr]) => arr.some(s => hasVals(typeOf(id), s)));
 }
 function levelOf(xp) {
@@ -1781,6 +1796,19 @@ function lastFor(id, beforeDate, type) {
   return best;
 }
 /* the last two sessions of an exercise, newest first */
+/* exercise notes (v9.8): b.notes[exerciseId] = text. The latest earlier note shows on the card next time. */
+function lastNoteFor(id, beforeDate) {
+  let best = null;
+  for (const b of Object.values(S.sessions)) if (b.profile === S.me && b.date < beforeDate && b.notes && b.notes[id] && b.date > addDays(beforeDate, -120) && (!best || b.date > best.date)) best = { date: b.date, text: b.notes[id] };
+  return best;
+}
+function noteHTML(e) {
+  const b = session(false), cur = (b && b.notes && b.notes[e.id]) || "", last = lastNoteFor(e.id, S.date), open = S.noteOpen === e.id;
+  let h = last ? `<p class="exnote prev"><span>Note · ${fmtShort(last.date)}</span>${esc(last.text)}</p>` : "";
+  if (open) h += `<div class="exnote edit"><textarea id="note-${esc(e.id)}" data-note="${esc(e.id)}" maxlength="300" rows="2" placeholder="e.g. twinge in right glute at the bottom, stopped after set 2">${esc(cur)}</textarea><button class="btn" data-act="notedone">Done</button></div>`;
+  else if (cur) h += `<button class="exnote mine" data-act="noteopen" data-ex="${esc(e.id)}"><span>Your note today</span>${esc(cur)}</button>`;
+  return h;
+}
 function histFor(id, beforeDate, type, n = 2) {
   const out = [];
   for (const b of Object.values(S.sessions)) {
@@ -2028,7 +2056,7 @@ function refreshLive() {
   const bo = $("#bossCard"); if (bo) bo.outerHTML = bossHTML(R);
   const fc = $("#fuelCard"); if (fc) fc.outerHTML = fuelCardHTML();
   const sc = $("#sideCard"); if (sc) sc.outerHTML = sideCardHTML();
-  for (const btn of document.querySelectorAll(".days button[data-day]")) btn.classList.toggle("clear", questDone(S.sessions[keyOf(S.me, S.date, btn.dataset.day)], penHere(R)));
+  for (const btn of document.querySelectorAll(".days.week button[data-date]")) btn.classList.toggle("clear", dateCleared(R, btn.dataset.date));
   const nt = $("#net"); if (nt) nt.textContent = netText();
 }
 
@@ -2145,11 +2173,31 @@ function setRow(attrs, pre, i, s, type, ph, extra) {
     <div class="field"><input id="r-${pre}-${i}" ${attrs} data-f="r" inputmode="numeric" placeholder="${ph.r ?? ""}" value="${s.r ?? ""}" aria-label="Set ${i + 1} reps"><span>reps</span></div>
     ${tick}</div>`;
 }
+/* ---------- week strip (v9.8): real dates. Tap a day to open that date; a tick shows any day whose quest was cleared. ---------- */
+function sessionDayFor(date) {
+  // the workout logged on that date (it may differ from the usual weekday if someone swapped days), else the scheduled one
+  const found = [...DAYS, "WK"].find(d => !isEmpty(S.sessions[keyOf(S.me, date, d)]));
+  if (found) return found;
+  const d = dayForDate(date);
+  return WEEKEND.has(d) && S.sessions[keyOf(S.me, date, "WK")] ? "WK" : d;
+}
+const dateCleared = (R, date) => !!R.clr[date] || [...DAYS, "WK"].some(d => questDone(S.sessions[keyOf(S.me, date, d)], !!R.pen[date]));
+function weekStripHTML(R) {
+  const mon = mondayOf(S.date), today = todayStr(), sched = schedFor(S.me, S.date);
+  const tiles = Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(mon, i), d = dayForDate(date), cl = dateCleared(R, date), on = date === S.date, fut = date > today;
+    const lab = sessionDayFor(date), plan = planFor(S.me, lab === "WK" ? d : lab, S.sessions[keyOf(S.me, date, lab)]);
+    return `<button data-date="${date}" aria-pressed="${on}" aria-label="${parseDate(date).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" })}${cl ? ", cleared" : ""}" class="${cl ? "clear" : ""}${sched.includes(d) ? "" : " rest"}${date === today ? " today" : ""}${fut ? " future" : ""}"><b>${PROGRAM[d].short}</b><span class="dnum">${parseDate(date).getDate()}</span><small>${esc(plan.label)}</small></button>`;
+  }).join("");
+  const opts = DAYS.map(d => `<option value="${d}" ${d === S.day || (S.day === "WK" && d === dayForDate(S.date)) ? "selected" : ""}>${esc(PROGRAM[d].short)} · ${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</option>`).join("");
+  return `<div class="weeknav"><button class="btn wkbtn" data-act="wk" data-d="-7" aria-label="Previous week">‹</button><span>${S.date === today ? "Today" : fmtDate(S.date)}</span>${S.date !== today ? `<button class="linkbtn" data-act="wktoday">Back to today</button>` : ""}<button class="btn wkbtn" data-act="wk" data-d="7" aria-label="Next week">›</button></div>
+  <div class="days week" role="group" aria-label="This week">${tiles}</div>
+  <div class="bar"><label class="wsel">Workout<select id="daySel" aria-label="Workout for this date">${opts}</select></label><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>`;
+}
+function goDate(date) { S.date = date; S.day = sessionDayFor(date); render(); }
 function renderLog(R) {
   const plan = curPlan(), b = session(false), pen = penHere(R), r = reqs(plan, S.day, pen), list = exList(R);
-  let h = `<div class="list"><div class="days" role="group" aria-label="Workout day">${DAYS.map(d =>
-    `<button data-day="${d}" aria-pressed="${d === S.day}" class="${questDone(S.sessions[keyOf(S.me, S.date, d)], pen) ? "clear" : ""}${schedFor(S.me, S.date).includes(d) ? "" : " rest"}"><b>${PROGRAM[d].short}</b><small>${esc(planFor(S.me, d, S.sessions[keyOf(S.me, S.date, d)]).label)}</small></button>`).join("")}</div>
-  <div class="bar"><input type="date" id="date" value="${S.date}" aria-label="Session date"></div>
+  let h = `<div class="list">${weekStripHTML(R)}
   ${reportHTML(R)}${ouraStripHTML()}<section class="win quest" id="quest">${questHTML(R)}</section>${sideCardHTML()}${bossHTML(R)}${fuelCardHTML()}`;
 
   const c = cardioOf(b), kind = curKind(b, plan), K = KINDS[kind];
@@ -2190,6 +2238,7 @@ function renderLog(R) {
         if (back && !opts.includes(back) && !inPlan.has(back)) opts.unshift(back);
         return opts.length ? opts.map(x => { const lf = lastFor(x, S.date, typeOf(x)); return `<button class="fchip" data-act="swapto" data-ex="${esc(e.id)}" data-to="${esc(x)}"><b>${x === back ? "↩ " : ""}${esc(CX(x).name)}</b><small>${lf ? `last ${lf.sets.map(s => setTxt(s, typeOf(x))).slice(0, 3).join(" · ")}` : "not done before"}</small></button>`; }).join("") : `<p class="sub">No close match in the library. Add one from the list at the bottom as a bonus exercise instead.</p>`;
       })()}</div></div>` : ""}
+      ${noteHTML(e)}
       <div class="sets">`;
     for (let i = 0; i < n; i++) {
       const s = arr[i] || {}, ls = last && last.sets[Math.min(i, last.sets.length - 1)];
@@ -2202,6 +2251,7 @@ function renderLog(R) {
     h += `</div>${restSlot(e.id)}<div class="ex-actions">
       ${tg && e.type === "wr" && tg.w ? `<button class="btn" data-act="uselast" data-ex="${esc(e.id)}">Fill target weights</button>` : ""}
       <button class="btn" data-act="addset" data-ex="${esc(e.id)}">+ Set</button>
+      ${S.noteOpen === e.id || ((session(false) || {}).notes || {})[e.id] ? "" : `<button class="btn" data-act="noteopen" data-ex="${esc(e.id)}">+ Note</button>`}
       ${formSpec(e.id) ? `<button class="btn fbtn" data-act="form" data-ex="${esc(e.id)}">Form</button>` : ""}
       ${e.extra ? "" : `<button class="btn" data-act="swapopen" data-ex="${esc(e.id)}" aria-pressed="${S.swapOpen === e.id}">Swap</button>`}
       <button class="btn" data-act="rest" data-name="${esc(e.name)}" data-sec="${rest}">Rest ${rest} s</button>
@@ -4149,10 +4199,15 @@ document.addEventListener("click", e => {
   if (t.dataset.view) { S.view = t.dataset.view; S.viewing = null; S.creating = false; render(); scrollTo(0, 0); return; }
   if (t.dataset.profile) { S.view = "profile"; S.viewing = t.dataset.profile; render(); scrollTo(0, 0); return; }
   if (t.dataset.day) { S.day = t.dataset.day; render(); return; }
+  if (t.dataset.date && t.closest(".days.week")) { goDate(t.dataset.date); return; }
   if (t.dataset.pday) { S.pday = t.dataset.pday; S.creating = false; renderProgram(); return; }
   const act = t.dataset.act, id = t.dataset.ex, i = +t.dataset.i;
   if (act === "sconf") { confirmSet(t); return; }
+  if (act === "wk") { goDate(addDays(S.date, +t.dataset.d)); return; }
+  if (act === "wktoday") { goDate(todayStr()); return; }
   if (act === "form") { openForm(t.dataset.ex); return; }
+  if (act === "noteopen") { S.noteOpen = t.dataset.ex; render(); const ta = document.getElementById("note-" + t.dataset.ex); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } return; }
+  if (act === "notedone") { S.noteOpen = null; render(); return; }
   if (act === "ouraconnect") { ouraConnect(); return; }
   if (act === "ouraoff") { OURA.off(); render(); return; }
   if (act === "ourasync") { OURA.sync(true).then(render); render(); return; }
@@ -4257,6 +4312,11 @@ document.addEventListener("input", e => {
   const t = e.target, d = t.dataset || {};
   if (t.id === "fs-q") { FS.q = t.value; FS.off = null; FS.pick = null; fsDraw(); return; }
   if (t.id === "fs-g" && FS.pick) { FS.g = num(t.value) || 0; const c = $("#fsCalc"); if (c) c.innerHTML = `<b>${Math.round(FS.pick.k100 * FS.g / 100)} kcal</b> · ${Math.round(FS.pick.p100 * FS.g / 10) / 10} g protein`; return; }
+  if (d.note) {
+    const b = session(true); b.notes ||= {}; const v = t.value.slice(0, 300);
+    if (v.trim()) b.notes[d.note] = v; else delete b.notes[d.note];
+    dirtySession(curKey()); return;
+  }
   if (d.ex && d.f) {
     const b = session(true), arr = (b.ex[d.ex] ||= []), i = +d.i, type = typeOf(d.ex);
     while (arr.length <= i) arr.push({});
@@ -4295,7 +4355,8 @@ document.addEventListener("change", e => {
       if (d.c) setCardio(d.c, v); else { const b = session(true), en = b.bonus[+d.bi]; if (en) { en[d.bf] = v; dirtySession(curKey()); render(); } }
     }
   }
-  if (t.id === "date" && t.value) { S.date = t.value; S.day = dayForDate(t.value); if (WEEKEND.has(S.day) && !S.sessions[curKey()] && S.sessions[keyOf(S.me, S.date, "WK")]) S.day = "WK"; render(); }
+  if (t.id === "date" && t.value) { goDate(t.value); }
+  if (t.id === "daySel" && t.value) { S.day = t.value; render(); }
   if (t.id === "addEx" && t.value) {
     const b = session(true), id = t.value.slice(2), L = CX(id);
     if (L.type === "min") b.bonus.push({ id }); else if (!b.extra.includes(id)) b.extra.push(id);
