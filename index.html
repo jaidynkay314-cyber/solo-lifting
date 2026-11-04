@@ -1026,6 +1026,7 @@ button.exnote { border-top: 0; border-right: 0; border-bottom: 0; color: var(--f
 @media (prefers-reduced-motion: reduce) { .fimg { display: grid; grid-template-columns: 1fr 1fr; } .fimg i { position: relative; opacity: 1 !important; } .fimg i.b { opacity: 1; } }
 .fframes { position: absolute; right: 10px; bottom: 8px; display: flex; gap: 5px; } .fframes b { width: 7px; height: 7px; border-radius: 50%; background: var(--glow); opacity: .3; }
 .fshown { margin: -6px 0 0; font-size: 12.5px; color: var(--muted); } .fshown a { color: var(--muted); }
+.fshown.sim { color: var(--fg); font-size: 13.5px; border-left: 3px solid var(--gold); padding-left: 8px; } .fshown.sim b { color: var(--gold); }
 div.fmis { cursor: default; }
 </style>
 <script src="config.js"></script>
@@ -4619,7 +4620,7 @@ function openForm(id) {
   const frame = (n, cls) => `<i class="${cls}" style="-webkit-mask-image:url(form-img/${lib.img}-${n}.webp);mask-image:url(form-img/${lib.img}-${n}.webp)"></i>`;
   const stage = useImg
     ? `<div class="fstage img"><div class="fimg" role="img" aria-label="Illustration of ${esc(lib.shown)}, start and finish positions">${frame(1, "a")}${frame(2, "b")}</div><span class="fframes"><b class="d1"></b><b class="d2"></b></span></div>
-       <p class="fshown">${lib.note ? esc(lib.note) + " " : ""}<a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Illustration: Everkinetic</a>, CC BY-SA 4.0.</p>`
+       <p class="fshown${lib.exact ? "" : " sim"}">${lib.exact ? "" : `<b>Similar exercise shown: ${esc(lib.shown)}.</b> `}${lib.note ? esc(lib.note) + " " : ""}<a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Illustration: Everkinetic</a>, CC BY-SA 4.0.</p>`
     : `<div class="fstage"><svg viewBox="0 0 320 250" role="img" aria-label="Animated figure showing ${esc(L.name)}"></svg><span class="fphase">Lift</span><span class="flegend"><i></i>Working</span></div>`;
   const body = spec.libOnly
     ? `<section><h3>How to do it</h3><ol>${lib.steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol><p class="sub">Steps from Everkinetic (${esc(lib.shown)}), CC BY-SA 4.0. A full guide with focus points and common mistakes is coming for this one.</p></section>`

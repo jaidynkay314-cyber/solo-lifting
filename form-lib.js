@@ -10,7 +10,8 @@ window.SL_FORM_LIB = {
 "Press out, extending your arms as far as possible in a steady motion.",
 "Pause for a moment and then return slowly to starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "incline-press": {
 "img": "incline-chest-press",
@@ -20,7 +21,8 @@ window.SL_FORM_LIB = {
 "Slowly press the handles forward until your hands are fully extended, do not lock your elbows.",
 "Pause for a moment and then with a controlled movement lower your hands back to starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "shoulder-press": {
 "img": "seated-shoulder-press-machine",
@@ -30,7 +32,8 @@ window.SL_FORM_LIB = {
 "Place your hands on the bars and with smooth even motions press upward extending your arms, but not locking them.",
 "At the top pause then with controlled motion lower the bars to your starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "lateral-raise": {
 "img": "lateral-dumbbell-raises",
@@ -43,7 +46,8 @@ window.SL_FORM_LIB = {
 "Hold the position for a moment then in a controlled movement lower your arms to the starting position.",
 "Repeat"
 ],
-"note": "Shown with dumbbells. On the cable the arm path is the same."
+"note": "Drawn with dumbbells. On the cable the arm path is the same: out to the side, stop at shoulder height.",
+"exact": false
 },
 "rear-delt": {
 "img": "bent-over-rear-deltoid-raise-with-head-on-bench",
@@ -55,7 +59,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment and then return to the starting position.",
 "Repeat."
 ],
-"note": "Shown with dumbbells, chest on a bench. The reverse pec deck is the same movement."
+"note": "Drawn with dumbbells, chest on a bench. The reverse pec deck is the same movement on a machine.",
+"exact": false
 },
 "lat-pulldown": {
 "img": "wide-grip-lat-pull-down",
@@ -67,7 +72,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment and then return the bar to the starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "pullup": {
 "img": "pull-ups",
@@ -81,7 +87,8 @@ window.SL_FORM_LIB = {
 "<h3> Tip</h3>",
 "Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary as it moves through space and only the arms should move. The forearms should do no other work other than hold the bar."
 ],
-"note": "Shown unassisted. The assisted machine is the same movement."
+"note": "Drawn unassisted. On the assisted machine you kneel on the pad, and the pull is the same.",
+"exact": false
 },
 "cable-row": {
 "img": "seated-cable-rows",
@@ -93,7 +100,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment then return slowly return the pulleys to the starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "cs-row": {
 "img": "seated-cable-rows",
@@ -105,7 +113,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment then return slowly return the pulleys to the starting position.",
 "Repeat."
 ],
-"note": "Shown on the seated cable row. The chest-supported row is the same pull."
+"note": "Drawn on the seated cable row. On the chest-supported machine your chest stays on the pad; the pull is the same.",
+"exact": false
 },
 "leg-press": {
 "img": "leg-press",
@@ -117,7 +126,8 @@ window.SL_FORM_LIB = {
 "Slowly lower the weight towards your body, keeping your abs drawn in and your knees moving in the same direction as your feet to a 90 degree angle.",
 "Do not lock your knees or bounce the weight."
 ],
-"note": null
+"note": "Drawn on a 45° sled. A seated (horizontal) leg press is the same movement.",
+"exact": false
 },
 "leg-press-wide": {
 "img": "leg-press",
@@ -129,7 +139,8 @@ window.SL_FORM_LIB = {
 "Slowly lower the weight towards your body, keeping your abs drawn in and your knees moving in the same direction as your feet to a 90 degree angle.",
 "Do not lock your knees or bounce the weight."
 ],
-"note": "Shown with feet in the middle. For this version, place them high and wide."
+"note": "Drawn on a 45° sled with feet in the middle. For this version, place them high and wide.",
+"exact": false
 },
 "leg-ext": {
 "img": "leg-extensions",
@@ -141,7 +152,8 @@ window.SL_FORM_LIB = {
 "Hold for a moment and then with controlled movements return to the starting position.",
 "Note: Use controlled movements for this exercise, do not swing the weight up."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "seated-curl": {
 "img": "seated-leg-curl",
@@ -152,7 +164,8 @@ window.SL_FORM_LIB = {
 "Slowly curl your legs back towards you and hold for a moment.",
 "With controlled movement return to the starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "lying-curl": {
 "img": "lying-leg-curl-machine",
@@ -163,7 +176,8 @@ window.SL_FORM_LIB = {
 "Hold for a moment and then return to starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "hip-thrust": {
 "img": "bridging",
@@ -172,7 +186,8 @@ window.SL_FORM_LIB = {
 "Lie on your back with your knees bent and your feet flat on the floor.",
 "Lift up hips and bum off the floor as you draw your abs in and keep your gluts tight."
 ],
-"note": "Shown as a floor bridge. The machine hip thrust is the same hip drive, from a bench."
+"note": "Drawn as a floor bridge. On the machine your upper back is against the pad; the hip drive is the same.",
+"exact": false
 },
 "kickback": {
 "img": "one-legged-cable-kickback",
@@ -183,7 +198,8 @@ window.SL_FORM_LIB = {
 "Slowly kick your ankle back in and arc as high as you are able to.",
 "Return to starting position and switch ankles."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "abductor": {
 "img": "thigh-abductor",
@@ -194,7 +210,8 @@ window.SL_FORM_LIB = {
 "Slowly return to the starting position and repeat.",
 "Note: Maintain the same level of resistance throughout this exercise for best results."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "adductor": {
 "img": "thigh-adductor",
@@ -205,7 +222,8 @@ window.SL_FORM_LIB = {
 "Slowly return to the starting position and repeat.",
 "Note: Maintain the same level of resistance throughout this exercise for best results."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "calf": {
 "img": "standing-calf-raises-using-machine",
@@ -216,7 +234,8 @@ window.SL_FORM_LIB = {
 "Raise up on the balls of your feet, lifting your heels off the pad.",
 "Hold for a moment and then return to the starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "crunch": {
 "img": "seated-ab-crunch-with-cable",
@@ -229,7 +248,8 @@ window.SL_FORM_LIB = {
 "Return to the starting position.",
 "Note: Perform this exercise in a slow controlled manner."
 ],
-"note": "Shown seated. Kneeling is the same curl."
+"note": "Drawn seated. Kneeling is the same curl.",
+"exact": false
 },
 "back-ext": {
 "img": "hyperextensions",
@@ -240,7 +260,8 @@ window.SL_FORM_LIB = {
 "Slowly return to the starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "cable-curl": {
 "img": "standing-biceps-curl-with-cable",
@@ -253,7 +274,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment and then return to the starting position.",
 "Note: Do not swing your hips or back during this exercise."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "pushdown": {
 "img": "triceps-pushdown-with-rope-and-cable",
@@ -266,7 +288,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment and then return to the starting position.",
 "Note: You may want to stager one foot in front of the other for a better stance."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "oh-ext": {
 "img": "standing-overhead-triceps-extension-with-barbell",
@@ -278,7 +301,8 @@ window.SL_FORM_LIB = {
 "Slowly raise the bar back up to the starting position.",
 "Note: Keep your elbows close to your head during the exercise"
 ],
-"note": "Shown with a barbell. A dumbbell or rope works the same way."
+"note": "Drawn with a barbell. A dumbbell or rope works the same way.",
+"exact": false
 },
 "pushups": {
 "img": "push-ups",
@@ -292,7 +316,8 @@ window.SL_FORM_LIB = {
 "Exhale out as you lower your body back to the ground.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "diamond-pushups": {
 "img": "close-triceps-pushup",
@@ -304,7 +329,8 @@ window.SL_FORM_LIB = {
 "Slowly lower your body towards the floor, by bending your arms, until you are nearly touching the floor.",
 "In a controlled manner raise your body back up to the starting position."
 ],
-"note": null
+"note": "Hands close together under your chest.",
+"exact": true
 },
 "pullups-bw": {
 "img": "pull-ups",
@@ -318,7 +344,8 @@ window.SL_FORM_LIB = {
 "<h3> Tip</h3>",
 "Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary as it moves through space and only the arms should move. The forearms should do no other work other than hold the bar."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "dips": {
 "img": "chest-dips",
@@ -330,7 +357,8 @@ window.SL_FORM_LIB = {
 "Raise yourself back up to the starting position and repeat.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "crunches": {
 "img": "crunches",
@@ -343,7 +371,8 @@ window.SL_FORM_LIB = {
 "Hold the position for a moment and then lower to the starting position.",
 "Note: Keep your hips straight and your lower back against the floor during this exercise."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "situps": {
 "img": "crunches",
@@ -356,7 +385,8 @@ window.SL_FORM_LIB = {
 "Hold the position for a moment and then lower to the starting position.",
 "Note: Keep your hips straight and your lower back against the floor during this exercise."
 ],
-"note": "Shown as a crunch."
+"note": "Drawn as a crunch. A sit-up continues until you are sitting upright.",
+"exact": false
 },
 "leg-raises": {
 "img": "flat-bench-leg-raises",
@@ -369,7 +399,8 @@ window.SL_FORM_LIB = {
 "Pause at the top and lower your legs in slow controlled manner back to the starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "superman": {
 "img": "supermans",
@@ -380,7 +411,8 @@ window.SL_FORM_LIB = {
 "Return to the starting position on the floor.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "side-plank": {
 "img": "side-plank",
@@ -391,7 +423,8 @@ window.SL_FORM_LIB = {
 "Hold this position and slowly return back to the starting position.",
 "Repeat on other side."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "lunges": {
 "img": "walking-lunges",
@@ -404,7 +437,8 @@ window.SL_FORM_LIB = {
 "Lower your body to just above the floor and hold for a moment before pushing off with the back foot.",
 "Step through and repeat the exercise with the other leg."
 ],
-"note": null
+"note": "Drawn as walking lunges. Stationary lunges are the same step.",
+"exact": false
 },
 "step-ups": {
 "img": "step-ups-with-dumbbells",
@@ -417,7 +451,8 @@ window.SL_FORM_LIB = {
 "Repeat starting with your right leg.",
 "Note: Use a lighter weight until you are used to the motion of this exercise."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "glute-bridge": {
 "img": "bridging",
@@ -426,7 +461,8 @@ window.SL_FORM_LIB = {
 "Lie on your back with your knees bent and your feet flat on the floor.",
 "Lift up hips and bum off the floor as you draw your abs in and keep your gluts tight."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "bench-press": {
 "img": "bench-press",
@@ -439,7 +475,8 @@ window.SL_FORM_LIB = {
 "Raise the bar till your arms are fully extended and your elbows are locked.",
 "Return to starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "db-bench": {
 "img": "bench-press-dumbbell",
@@ -454,7 +491,8 @@ window.SL_FORM_LIB = {
 "With a controlled motion return back to your starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "ohp": {
 "img": "barbell-shoulder-press",
@@ -465,7 +503,8 @@ window.SL_FORM_LIB = {
 "While maintaining  good posture, straighten your arms and raise the bar up above your head.",
 "Pause for a moment and then in a controlled movement lower the bar to the starting position."
 ],
-"note": null
+"note": "Drawn seated. Standing is the same press, with your core braced.",
+"exact": false
 },
 "db-shoulder": {
 "img": "dumbbell-shoulder-press",
@@ -478,7 +517,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment and then in a controlled movement lower the dumbbells to the starting position.",
 "Repeat"
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "bb-row": {
 "img": "reverse-grips-bent-over-barbell-rows",
@@ -490,7 +530,8 @@ window.SL_FORM_LIB = {
 "Return the barbell to the starting position.",
 "Repeat."
 ],
-"note": "Shown with an underhand grip."
+"note": "Drawn with an underhand grip. An overhand grip is the same row.",
+"exact": false
 },
 "db-row": {
 "img": "rear-deltoid-row-dumbbell",
@@ -504,7 +545,8 @@ window.SL_FORM_LIB = {
 "Switch arms by doing the opposite positioning.",
 "Repeat."
 ],
-"note": "Shown as a one-arm dumbbell row."
+"note": "A one-arm dumbbell row.",
+"exact": true
 },
 "db-curl": {
 "img": "biceps-curl-with-dumbbell",
@@ -517,7 +559,8 @@ window.SL_FORM_LIB = {
 "In a slow controlled manner, lower your arms to the starting position.",
 "Note: Do not swing your body as you perform this exercise."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "hammer-curl": {
 "img": "bicep-hammer-curl-with-dumbbell",
@@ -531,7 +574,8 @@ window.SL_FORM_LIB = {
 "Lower your arms in a steady controlled motion and repeat.",
 "Note: Do not turn your wrists during this exercise."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "skullcrusher": {
 "img": "lying-triceps-press-with-barbell",
@@ -544,7 +588,8 @@ window.SL_FORM_LIB = {
 "Return the bar to the starting position.",
 "Note: Keep your arms straight throughout this exercise moving only your elbows."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "db-fly": {
 "img": "dumbbell-flys",
@@ -556,7 +601,8 @@ window.SL_FORM_LIB = {
 "Slowly return the dumbbells over your chest to the starting position in a controlled motion.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "db-lat-raise": {
 "img": "lateral-dumbbell-raises",
@@ -569,7 +615,8 @@ window.SL_FORM_LIB = {
 "Hold the position for a moment then in a controlled movement lower your arms to the starting position.",
 "Repeat"
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "shrugs": {
 "img": "barbell-shrugs",
@@ -582,7 +629,8 @@ window.SL_FORM_LIB = {
 "Pause for a moment at the top and then return to starting position in a controlled motion.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "squat": {
 "img": "barbell-squat",
@@ -595,7 +643,8 @@ window.SL_FORM_LIB = {
 "Lower yourself as far as you can control without letting your body shift towards your toes (this will cause you to loose balance).",
 "Pause in the downward position and slowly return upright to the starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "goblet-squat": {
 "img": "squats-using-dumbbells",
@@ -609,7 +658,8 @@ window.SL_FORM_LIB = {
 "Pause in the downward position and slowly return upright to the starting position.",
 "Note: Practicing the squat without any weight will allow you to become comfortable with the movements."
 ],
-"note": "Shown holding two dumbbells. For a goblet squat, hold one at your chest."
+"note": "Drawn with two dumbbells. For a goblet squat, hold one at your chest.",
+"exact": false
 },
 "deadlift": {
 "img": "barbell-dead-lifts",
@@ -621,7 +671,8 @@ window.SL_FORM_LIB = {
 "Straighten your back as you hold the bar at arm’s length.",
 "Bend over again lowering the bar to just above the floor."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "rdl": {
 "img": "romanian-dead-lift",
@@ -634,7 +685,8 @@ window.SL_FORM_LIB = {
 "Stand with the bar resting against your thighs.",
 "Lower the bar to the floor with a slight bend in your knees flexing your hips back for stability."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "db-lunge": {
 "img": "dumbbell-lunges",
@@ -647,7 +699,8 @@ window.SL_FORM_LIB = {
 "Lower your body so that the rear knee is just above the floor and hold for a moment before returning to the starting position.",
 "Repeat on opposite side."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "bb-hip-thrust": {
 "img": "bridging",
@@ -656,7 +709,8 @@ window.SL_FORM_LIB = {
 "Lie on your back with your knees bent and your feet flat on the floor.",
 "Lift up hips and bum off the floor as you draw your abs in and keep your gluts tight."
 ],
-"note": "Shown as a floor bridge. With a barbell, your upper back is on a bench."
+"note": "Drawn as a floor bridge. With a barbell your upper back is on a bench.",
+"exact": false
 },
 "pec-deck": {
 "img": "butterfly-machine",
@@ -669,7 +723,8 @@ window.SL_FORM_LIB = {
 "Return your arms to the stretched out starting position in a controlled motion.",
 "Repeat."
 ],
-"note": null
+"note": "Also called the butterfly machine.",
+"exact": true
 },
 "cable-fly": {
 "img": "cable-crossover",
@@ -681,7 +736,8 @@ window.SL_FORM_LIB = {
 "When your hands meet at the midpoint of your chest, hold for a moment.",
 "With a slow controlled motion return to starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "preacher-curl": {
 "img": "preacher-curl-with-machine",
@@ -691,7 +747,8 @@ window.SL_FORM_LIB = {
 "Adjust the seat of the bench so your arms are level with the top of the bench. Rest your arms against the bench and extend them fully. Grasp the bar underhand (palms facing up) and pull it towards your head. Pause for a moment and then lower the bar back to starting position.",
 "Note: Perform this exercise in a slow controlled manner for best results. Read the instructions on the machine before performing this exercise."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "dip-machine": {
 "img": "tricep-dips",
@@ -701,7 +758,8 @@ window.SL_FORM_LIB = {
 "Grasping the handles, press down with equal pressure until your arms are fully extended.",
 "Pause, and then return to the starting position."
 ],
-"note": "Shown on bars. The machine is the same movement."
+"note": null,
+"exact": true
 },
 "smith-bench": {
 "img": "smith-machine-bench-press",
@@ -713,7 +771,8 @@ window.SL_FORM_LIB = {
 "Extend your arms fully and raise the bar to the starting position.",
 "Repeat."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "hack-squat": {
 "img": "hack-squat-machine",
@@ -727,7 +786,8 @@ window.SL_FORM_LIB = {
 "Lower your body to a squatting position so you knees are bent as if you were sitting down.",
 "Return to the starting position."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "smith-squat": {
 "img": "smith-machine-squats",
@@ -741,7 +801,8 @@ window.SL_FORM_LIB = {
 "Pause in the downward squatting position and slowly return upright to the starting position.",
 "If needed, a pad on the bar or towel on your shoulders can help improve your grip and the reduce the discomfort of the bar against your back. First practice the squat without any weight to allow yourself to become comfortable with the movements."
 ],
-"note": null
+"note": null,
+"exact": true
 },
 "seated-calf": {
 "img": "seated-calf-raise-with-barbell",
@@ -751,7 +812,8 @@ window.SL_FORM_LIB = {
 "Sit on the bench with a barbell across your upper thighs and the balls of your feet on the block.",
 "Slowly raise and lower your toes up as high as possible without lifting your foot off the block."
 ],
-"note": null
+"note": "Drawn with a barbell across the knees. The seated calf machine is the same movement.",
+"exact": false
 },
 "ab-machine": {
 "img": "seated-ab-crunch-with-cable",
@@ -764,7 +826,8 @@ window.SL_FORM_LIB = {
 "Return to the starting position.",
 "Note: Perform this exercise in a slow controlled manner."
 ],
-"note": "Shown on the cable. The ab machine is the same curl."
+"note": "Drawn on the cable. The ab machine is the same curl.",
+"exact": false
 },
 "bw-squat": {
 "img": "squats-using-dumbbells",
@@ -778,6 +841,7 @@ window.SL_FORM_LIB = {
 "Pause in the downward position and slowly return upright to the starting position.",
 "Note: Practicing the squat without any weight will allow you to become comfortable with the movements."
 ],
-"note": "Shown with dumbbells. Same squat without weight."
+"note": "Drawn with dumbbells. Same squat without weight.",
+"exact": false
 }
 };
