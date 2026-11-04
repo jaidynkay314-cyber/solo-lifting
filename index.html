@@ -1630,12 +1630,12 @@ function replay(hid) {
   // a week's boss comes from the plans the hunter actually used before that week, so editing a program never rewrites past bosses
   const seen = new Set();
   const poolFor = w => { const ids = new Set(seen); if (w === thisWeek) for (const id of current) ids.add(id); return ids.size ? [...ids].sort() : current; };
-  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, peak: 1, ach: {}, events: [], best: {}, bestReps: {}, streak: 0, boss: null, boxes: [] };
+  const R = { id: hid, first: dates[0] || null, pen: {}, clr: {}, exc: {}, missed: [], M: newM(), xp: 0, xpBy: { sets: 0, bonus: 0, cardio: 0, food: 0, side: 0, quest: 0, penalty: 0, boss: 0, ach: 0, cards: 0 }, peak: 1, ach: {}, events: [], best: {}, bestReps: {}, streak: 0, boss: null, boxes: [] };
   const M = R.M;
   const box = (k, id, d) => { R.boxes.push({ id, k, d }); R.events.push({ d, type: "box", txt: id, k }); };
   const checkAch = d => {
     const st = statsOf(M);
-    for (const a of ACH) if (!R.ach[a.id] && metricVal(M, a.metric, st) >= a.n) { R.ach[a.id] = d; R.xp += a.xp; R.events.push({ d, type: "ach", a }); }
+    for (const a of ACH) if (!R.ach[a.id] && metricVal(M, a.metric, st) >= a.n) { R.ach[a.id] = d; R.xp += a.xp; R.xpBy.ach += a.xp; R.events.push({ d, type: "ach", a }); }
   };
   const levelUp = d => {
     const lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
@@ -1661,7 +1661,7 @@ function replay(hid) {
       const logSets = (id, f, type, isPlan, label) => {
         const L = CX(id) || { stat: "STR", type };
         M.sets += f.length;
-        if (isPlan) xp += f.length * 10; else bonusXp += f.length * 10;
+        if (isPlan) { xp += f.length * 10; R.xpBy.sets += f.length * 10; } else bonusXp += f.length * 10;
         if (type !== "s") { M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0)); }
         M.machine[id] = (M.machine[id] || 0) + 1;
         M.statSets[L.stat || "STR"] += f.length;
@@ -1670,7 +1670,7 @@ function replay(hid) {
         if (id === "plank" || id === "side-plank") M.plankSec += sumBy(f, s => s.s);
         if (type === "wr") {
           const top = Math.max(...f.map(s => +s.w || 0));
-          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.events.push({ d, type: "boss", txt: label }); box("B", "boss:" + w, d); }
+          if (id === bossId && !bossWon && bossBest != null && top > bossBest) { bossWon = true; M.bossWins++; xp += 100; R.xpBy.boss += 100; R.events.push({ d, type: "boss", txt: label }); box("B", "boss:" + w, d); }
           if (top > 0) {
             if (R.best[id] != null && top > R.best[id]) { M.prs++; R.events.push({ d, type: "pr", txt: `${label}: ${top} kg`, ex: label }); }
             if (R.best[id] == null || top > R.best[id]) R.best[id] = top;
@@ -1693,7 +1693,7 @@ function replay(hid) {
           logSets(id, f, type, planIds.has(id), CX(id) ? CX(id).name : id);
         }
         const c = cardioOf(b);
-        if (c.total) { M.cardioMin += c.total; xp += Math.round(c.total * 2); M.statMin.VIT += c.total; }
+        if (c.total) { M.cardioMin += c.total; xp += Math.round(c.total * 2); R.xpBy.cardio += Math.round(c.total * 2); M.statMin.VIT += c.total; }
         if (c.dist) M.km += c.dist;
         for (const e of b.bonus || []) {
           const L = CX(e.id); if (!L || !bonusLogged(e)) continue;
@@ -1711,25 +1711,25 @@ function replay(hid) {
       for (const b of bs) for (const e of planFor(hid, b.day, b).ex) if (typeOf(e[0]) === "wr" && e[0] !== "back-ext") seen.add(e[0]);
       { const fd = fuelDay(hid, d), fh = fuelHits(fd);
         if (fd.items.length) M.fuelDays++;
-        if (fh.p) { M.proteinDays++; xp += 10; }
-        if (fh.k) { M.kcalDays++; xp += 10; } }
+        if (fh.p) { M.proteinDays++; xp += 10; R.xpBy.food += 10; }
+        if (fh.k) { M.kcalDays++; xp += 10; R.xpBy.food += 10; } }
       if (origDone(hid, d)) { M.origQ++; if (M.origQ === 1) box("B", "orig:" + d, d); }
-      if (d <= today) { const sp = sideProgress(hid, d, undefined, owed); if (sp.done) { M.sideQ++; xp += 25; R.events.push({ d, type: "side", txt: sp.q.t }); if (M.sideQ % 5 === 0) box("R", "sq:" + M.sideQ, d); } }
+      if (d <= today) { const sp = sideProgress(hid, d, undefined, owed); if (sp.done) { M.sideQ++; xp += 25; R.xpBy.side += 25; R.events.push({ d, type: "side", txt: sp.q.t }); if (M.sideQ % 5 === 0) box("R", "sq:" + M.sideQ, d); } }
       if (dawn) M.dawn++;
       if (night) M.night++;
-      xp += Math.min(BONUS_CAP, bonusXp);
+      xp += Math.min(BONUS_CAP, bonusXp); R.xpBy.bonus += Math.min(BONUS_CAP, bonusXp);
       if (done) {
-        M.quests++; xp += 50;
+        M.quests++; xp += 50; R.xpBy.quest += 50;
         { const f = dayFocus(bs); if (f === "upper") M.upperQ++; else if (f === "lower") M.lowerQ++; }
         if (done.day === "FR") M.friQ++;
         if (WEEKEND.has(done.day)) M.wkQ++;
-        if (owed) { M.penSurvived++; xp += 25; R.events.push({ d, type: "pzs" }); box("C", "pz:" + d, d); }
+        if (owed) { M.penSurvived++; xp += 25; R.xpBy.penalty += 25; R.events.push({ d, type: "pzs" }); box("C", "pz:" + d, d); }
         else { R.events.push({ d, type: "clear", txt: planFor(hid, done.day, done).name }); box("R", "q:" + d, d); }
         owed = false; cur++;
       } else if (R.exc[d]) { /* excused: nothing changes */ }
       else if (isQuestDay(hid, d) && d < today) {
         if (!owed) R.events.push({ d: addDays(d, 1), type: "pz" });
-        owed = true; R.missed.push(d); xp -= 25; cur = 0;
+        owed = true; R.missed.push(d); xp -= 25; R.xpBy.penalty -= 25; cur = 0;
       }
       M.bestStreak = Math.max(M.bestStreak, cur);
       {
@@ -1754,7 +1754,7 @@ function replay(hid) {
   }
   if (!R.boss || R.boss.week !== thisWeek) R.boss = { id: bossFor(thisWeek, poolFor(thisWeek)), best: null, won: false, week: thisWeek };
   const perk = cardBonus(hid).xp;
-  if (perk && R.xp > 0) { R.cardXp = Math.round(R.xp * perk / 100); R.xp += R.cardXp; }
+  if (perk && R.xp > 0) { R.cardXp = Math.round(R.xp * perk / 100); R.xp += R.cardXp; R.xpBy.cards = R.cardXp; }
   R.lv = levelOf(Math.max(R.xp, floorXp(R.peak), 0));
   R.stats = statsOf(M);
   R.inPz = !!(R.pen[today] && !R.clr[today] && !R.exc[today]);
