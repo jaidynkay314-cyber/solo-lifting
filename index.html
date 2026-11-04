@@ -1661,7 +1661,9 @@ function replay(hid) {
       const logSets = (id, f, type, isPlan, label) => {
         const L = CX(id) || { stat: "STR", type };
         M.sets += f.length;
-        if (isPlan) { xp += f.length * 10; R.xpBy.sets += f.length * 10; } else bonusXp += f.length * 10;
+        // custom timed exercises (e.g. a stair machine done as 60 s "sets") earn like cardio: 2 XP a minute, not 10 a set
+        const sx = id.startsWith("c-") && type === "s" ? Math.round(sumBy(f, s => +s.s || 0) / 60 * 2) : f.length * 10;
+        if (isPlan) { xp += sx; R.xpBy.sets += sx; } else bonusXp += sx;
         if (type !== "s") { M.reps += sumBy(f, s => s.r); M.volume += sumBy(f, s => (s.w || 0) * (s.r || 0)); }
         M.machine[id] = (M.machine[id] || 0) + 1;
         M.statSets[L.stat || "STR"] += f.length;
@@ -2518,6 +2520,11 @@ function suspects(hid) {
         out.push({ b, txt: `${nm} set ${i + 1}: ${setTxt(x, type)}${type === "wr" && x.w ? " kg" : ""}`, why: m && type === "wr" ? `usually about ${m} kg` : "very high" });
     });
     const c = cardioOf(b);
+    // two or more full workouts logged on the same date usually means sessions were entered on the wrong day
+    const same = mine.filter(x => x.date === b.date && x !== b && Object.values(x.ex || {}).some(arr => arr.some(s => setOk("wr", s) || setOk("r", s) || setOk("s", s))));
+    const full = Object.entries(b.ex || {}).filter(([id, arr]) => arr.some(s => setOk(typeOf(id), s))).length;
+    if (full >= 3 && same.some(x => Object.entries(x.ex || {}).filter(([id, arr]) => arr.some(s => setOk(typeOf(id), s))).length >= 3) && b.day < same[0].day)
+      out.push({ b, txt: `${same.length + 1} workouts logged on ${fmtShort(b.date)}`, why: "check they're on the right dates" });
     if ((c.total || 0) > 240 || (c.dist || 0) > 60) out.push({ b, txt: `Cardio: ${Math.round(c.total || 0)} min${c.dist ? `, ${c.dist} km` : ""}`, why: "very long" });
     for (const e of b.bonus || []) { const L = CX(e.id); if (L && L.type === "min" && ((+e.min || 0) > 300 || (+e.km || 0) > 100)) out.push({ b, txt: `${L.name}: ${e.min || 0} min${e.km ? `, ${e.km} km` : ""}`, why: "very long" }); }
   }

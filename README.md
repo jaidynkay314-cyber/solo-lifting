@@ -326,6 +326,11 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - **Workout picker** (beside the date) replaces tapping a different day tile to log another day's workout on this date, e.g. doing Lower A on a Wednesday.
 - **Exercise notes.** "+ Note" on any exercise card adds a note for that session (up to 300 characters, saved as `notes[exerciseId]` on the session and synced like sets). The most recent earlier note (within 120 days) shows in gold on that exercise's card next time, e.g. "Note · 4 Nov: twinge in right glute, stopped after set 2". A session with only a note is kept.
 
+## v9.9: XP fairness fixes (from the 4 Nov audit)
+- Custom exercises timed in seconds (for example a stair machine logged as 60 s "sets") now earn like cardio, 2 XP per minute, instead of 10 XP per set. Built-in holds like the plank are unchanged.
+- "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
+- `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
