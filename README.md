@@ -331,6 +331,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
+## v10.5: loaded morning shake
+- New meal plan food "Morning shake + berries, chia, cocoa" (605 kcal, 48 g protein, about 17 g fibre). The plain morning shake stays.
+
 ## v10.4: meal plan foods updated
 - Trim milk everywhere (250 ml in shakes), wholemeal/wholegrain English muffins, brown rice in the preps. Morning shake 455/43, post-gym shake 200/36, coffee with a splash of trim 25/2, breakie burgers +1 g protein, preps matched to the Kitchen recipes (fried rice 568/53, chilli 600/45, burrito 660/55, smalls 380/36, 400/30, 440/37).
 - Past logs keep the values they were logged with. **Copy yesterday** swaps any meal plan food to today's values, and the old full-cream coffee is mapped to the trim one (`RETIRED`). Names are compared on their first 40 characters, as that's what logs store.
