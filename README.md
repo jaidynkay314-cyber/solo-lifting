@@ -331,6 +331,13 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
+## v10.0: real illustrations in the form guides
+- The drawn figures are replaced by illustrations from the **Everkinetic** open data project (https://github.com/everkinetic/data, CC BY-SA 4.0): a start and finish drawing per exercise, cross-faded on a loop (side by side when reduced motion is on). Images are cropped and converted to line-only WebP in `form-img/` (about 560 KB for 56 exercises, loaded only when a guide opens, then cached offline). The app colours the lines with a CSS mask. Licence and changes are noted in `form-img/LICENSE.md`, and each guide credits Everkinetic.
+- `form-lib.js` maps exercise ids to an illustration and Everkinetic's original steps. Where the drawing shows a close variant (dumbbell lateral raise for the cable one, floor bridge for the hip thrust, and so on), the guide says so.
+- All 24 plan exercises keep their full written guides (setup, the rep, focus points, mistakes, shoulder notes). Mistakes are now a plain list, since the illustrations can't animate them.
+- About 40 library exercises (free weights, cables, machines, bodyweight) gain a basic guide: illustration plus Everkinetic's steps. Their Form button shows when they're in your plan or added as an extra.
+- `form.js` (the figure engine) remains as a fallback for any guide without an illustration.
+
 ## Removing a hunter from the board
 Run `remove-old-hunter.sql` in Supabase (SQL Editor): step 1 lists every hunter with their session count, step 2 deletes the one you name. Phones forget hunters that are no longer on the board the next time the app starts and syncs (`pull()`, once per start; skipped if the board returns no hunters at all, and never removes you). A phone-only leftover with no sessions is dropped too; one with sessions is kept but hidden from the board when a real hunter has the same name (`boardIds()`).
 
