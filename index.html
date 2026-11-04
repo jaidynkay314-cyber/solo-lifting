@@ -3177,19 +3177,23 @@ function vaultClick(t, act) {
 // one row per day: <hunter>_<date>_FOOD, body.food = { items: [{ id, n, k, p, q }], goal: { k, mode, p } }
 // goals and saved foods live in hunters.program._fuel = { k, mode, p, foods: [{ id, n, k, p }] }
 const STARTER = [
-  ["Morning shake (WPI, milk, banana, oats)", 470, 40], ["Breakie burger", 295, 23], ["Breakie burger, double lean patty", 405, 40], ["Breakie burger + egg", 365, 29], ["Prepped chicken fried rice", 550, 50],
-  ["Prepped chilli con carne + rice", 580, 43], ["Prepped chicken burrito", 650, 50], ["Post-gym shake (WPI + milk)", 270, 35],
+  ["Morning shake (WPI, milk, banana, oats)", 455, 43], ["Breakie burger", 295, 24], ["Breakie burger, double lean patty", 405, 41], ["Breakie burger + egg", 365, 30], ["Prepped chicken fried rice", 568, 53],
+  ["Prepped chilli con carne + rice", 600, 45], ["Prepped chicken burrito", 660, 55], ["Post-gym shake (WPI + milk)", 200, 36],
   ["Protein shake (WPI + water)", 110, 27], ["Dinner: 200 g meat, carbs, veg", 650, 45], ["Dinner: 150 g meat, carbs, veg", 450, 32],
-  ["Greek yoghurt (150 g)", 100, 15], ["Boiled egg", 70, 6], ["Banana", 105, 1], ["Coffee, splash of milk (60 ml full cream)", 40, 2],
+  ["Greek yoghurt (150 g)", 100, 15], ["Boiled egg", 70, 6], ["Banana", 105, 1], ["Coffee, splash of milk (60 ml trim)", 25, 2],
   ["Friday: 2 tuna tins + 4 Vita-Weat", 300, 40], ["Friday: salmon pouch + 4 Vita-Weat", 280, 25], ["Friday: protein milk + 40 g jerky", 340, 48],
   ["Friday: lean chicken and veg bowl", 410, 47], ["Friday: beef meatballs in tomato and veg", 360, 42], ["Friday: lean beef and bean chilli", 375, 43],
   ["Friday: 4 frittata muffins", 275, 32], ["High-protein yoghurt (200 g)", 140, 20], ["Schooner of pale ale", 180, 1], ["Schooner of lager", 165, 1], ["Schooner of mid-strength", 130, 1],
   // smaller serves of the batch preps (about two thirds; rice dishes with less rice). Kept at the end so earlier ids don't shift.
-  ["Prepped chicken fried rice (small)", 365, 33], ["Prepped chilli con carne + rice (small)", 390, 28], ["Prepped chicken burrito (small)", 450, 37],
+  ["Prepped chicken fried rice (small)", 380, 36], ["Prepped chilli con carne + rice (small)", 400, 30], ["Prepped chicken burrito (small)", 440, 37],
   ["Friday: lean chicken and veg bowl (small)", 275, 31], ["Friday: beef meatballs in tomato and veg (small)", 240, 28],
   ["Friday: lean beef and bean chilli (small)", 250, 29], ["Friday: 3 frittata muffins (small)", 205, 24],
   ["YoPRO yoghurt", 120, 20]
 ].map(([n, k, p], i) => ({ id: "s" + i, n, k, p }));
+/* v10.4: trim milk (250 ml in shakes), wholemeal/wholegrain muffins, brown rice. Retired names stay out of Recent so old values aren't re-used by mistake. */
+const RETIRED = { "Coffee, splash of milk (60 ml full cream)": "Coffee, splash of milk (60 ml trim)" };
+const n40 = n => String(n).slice(0, 40).toLowerCase(); // logged names are cut to 40 characters
+const starterFor = n => { const r = Object.keys(RETIRED).find(o => n40(o) === n40(n)); return STARTER.find(y => n40(y.n) === n40(r ? RETIRED[r] : n)) || null; };
 /* generic foods per 100 g (or 100 ml), with a typical serve: [name, kcal, protein, serve g, serve label] */
 const GENERIC = [
   ["Chicken breast, raw", 106, 23, 200, "1 breast"], ["Chicken breast, cooked", 165, 31, 150, ""], ["Chicken thigh, raw, skinless", 121, 19.5, 150, ""],
@@ -3354,8 +3358,8 @@ function fuelCardHTML() {
 function renderFood() {
   syncRC();
   const f = fuelDay(S.me, FD), c = fuelCfg(S.me), mine = c.foods || [];
-  const recent = [], seen = new Set(mine.map(x => x.n.toLowerCase()).concat(STARTER.map(x => x.n.toLowerCase())));
-  for (let i = 1; i <= 14 && recent.length < 12; i++) for (const x of fuelDay(S.me, addDays(FD, -i)).items) { const n = x.n.toLowerCase(); if (!seen.has(n)) { seen.add(n); recent.push(x); } }
+  const recent = [], seen = new Set(mine.map(x => x.n.toLowerCase()).concat(STARTER.map(x => x.n.toLowerCase()), STARTER.map(x => n40(x.n)), Object.keys(RETIRED).map(n40)));
+  for (let i = 1; i <= 14 && recent.length < 12; i++) for (const x of fuelDay(S.me, addDays(FD, -i)).items) { const n = x.n.toLowerCase(); if (!seen.has(n) && !seen.has(n40(n))) { seen.add(n); recent.push(x); } }
   const chip = (x, src) => `<button class="fchip" data-act="fadd" data-src="${src}" data-id="${esc(x.id)}"><b>${x.rc ? "🍲 " : ""}${esc(x.n)}</b><small>${x.k} kcal · ${x.p} g${x.rc ? " a portion" : ""}</small></button>`;
   const yday = fuelDay(S.me, addDays(FD, -1));
   $("#foodBody").innerHTML = `
@@ -3464,7 +3468,7 @@ function foodClick(t, act) {
   if (act === "fdel" && items) { items.splice(i, 1); dirtySession(foodKey(S.me, FD)); renderFood(); refreshLive(); return true; }
   if (act === "fkeep" && items && items[i]) { const x = items[i]; saveCfg({ foods: [...(c.foods || []), { id: rnd().slice(0, 6), n: x.n, k: x.k, p: x.p }] }); renderFood(); return true; }
   if (act === "funsave") { saveCfg({ foods: (c.foods || []).filter((_, j) => j !== i) }); renderFood(); return true; }
-  if (act === "fcopy") { for (const x of fuelDay(S.me, addDays(FD, -1)).items) addFood(x, x.q || 1); renderFood(); refreshLive(); return true; }
+  if (act === "fcopy") { for (const x of fuelDay(S.me, addDays(FD, -1)).items) { const st = starterFor(x.n); addFood(st ? { ...x, n: st.n, k: st.k, p: st.p } : x, x.q || 1); } renderFood(); refreshLive(); return true; }
   if (act === "fgoal") {
     const k = num($("#fg-k").value), p = num($("#fg-p").value);
     if ((k != null && (k < 800 || k > 6000)) || (p != null && (p < 20 || p > 400))) { toast({ tag: "Check your goals", title: "Calories 800 to 6000, protein 20 to 400 g" }); return true; }
