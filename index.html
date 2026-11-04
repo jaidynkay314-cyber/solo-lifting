@@ -4637,7 +4637,7 @@ function openForm(id) {
     ${anim.length ? `<div class="fchips2" role="group" aria-label="Show"><button class="fchip2" data-fv="-1" aria-pressed="true">Good rep</button>${anim.map(([m, i]) => `<button class="fchip2 bad" data-fv="${i}" aria-pressed="false">${esc(m[0])}</button>`).join("")}</div>` : ""}
     ${work.length ? `<p class="fworks">${work.map(([m, w]) => `<span class="${w >= 1 ? "main" : ""}">${esc(MUSCLES[m])}</span>`).join("")}</p>` : ""}
     ${body}
-    <p class="sub">Tempo: 1 s up, a short squeeze, 2 s down. Rest about ${mm(rest)} between sets.</p></div>`;
+    <p class="sub">${esc(spec.tempo || "Tempo: 1 s up, a short squeeze, 2 s down.")} Rest about ${mm(rest)} between sets.</p></div>`;
   document.body.appendChild(ov); document.body.classList.add("noscroll");
   FORM = { ov, v: -1, stop: null };
   const setV = i => { FORM.v = FORM.v === i && i >= 0 ? -1 : i; ov.querySelectorAll("[data-fv]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.fv === FORM.v && b.dataset.fv !== ""))); };

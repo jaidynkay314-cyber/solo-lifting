@@ -331,6 +331,11 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
+## v10.2: full guides for every strength exercise
+- Every library exercise (bodyweight, free weights, machines and cables, 50 in all) now has a full written guide in `form-data.js`: where to feel it, setup, the rep, focus points and common mistakes. Total 74 guides; cardio and active/recovery entries have no Form button.
+- Optional `tempo` field overrides the default tempo line for holds (plank, side plank, wall sit), fast moves (burpees, jumps, mountain climbers, jumping jacks) and kettlebell swings.
+- Library guides have no shoulder section, so nothing personal shows for other users.
+
 ## v10.1: exact-match illustrations only
 - Illustrations now come from Open Exercise Illustrations (https://github.com/hitmanrepo/open-exercise-illustrations), CC0. They show the actual machine for every plan exercise (cable lateral raise, reverse pec deck, assisted pull-up machine, hip thrust machine and so on). AI-generated renders, each checked by eye against the exercise.
 - 72 exercises have an image: start and finish frames cross-fade, burpees use three frames, holds (plank, side plank, wall sit) show one still.
