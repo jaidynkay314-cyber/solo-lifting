@@ -332,7 +332,7 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
 ## v10.5: loaded morning shake
-- New meal plan food "Morning shake + berries, chia, cocoa" (605 kcal, 48 g protein, about 17 g fibre). The plain morning shake stays.
+- New meal plan food "Morning shake + berries, chia, cocoa" (435 kcal, 43 g protein, about 12 g fibre, no oats) plus "Oats add-on, 1/2 cup raw (45 g)" (170 kcal, 5 g). The plain morning shake stays.
 
 ## v10.4: meal plan foods updated
 - Trim milk everywhere (250 ml in shakes), wholemeal/wholegrain English muffins, brown rice in the preps. Morning shake 455/43, post-gym shake 200/36, coffee with a splash of trim 25/2, breakie burgers +1 g protein, preps matched to the Kitchen recipes (fried rice 568/53, chilli 600/45, burrito 660/55, smalls 380/36, 400/30, 440/37).
