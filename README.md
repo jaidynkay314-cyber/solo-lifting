@@ -331,6 +331,9 @@ Supabase pauses free projects after a week with no activity. Daily gym use keeps
 - "Check my log" (Records tab) flags dates with two or more full workouts, which usually means sessions were entered on the wrong day. The Fix button opens that date.
 - `R.xpBy` (since v9.8.1) splits every hunter's XP by source (sets, bonus, cardio, food, side, quest, penalty, boss, ach, cards) for audits.
 
+## v10.6: shake add-ons
+- New "Shake add-ons" group above Meal plan foods: trim milk 250 ml (90/9), WPI 30 g (110/27), banana (105/1), frozen berries 1/2 cup (35/0.5), chia 1 tbsp (60/2), cocoa 10 g (35/2), baby spinach 50 g (12/1), oats 1/2 cup (170/5). Tap them on top of a standard shake. Listed by name in `SHAKE_ADD`.
+
 ## v10.5: loaded morning shake
 - New meal plan food "Morning shake + berries, chia, cocoa" (445 kcal, 44 g protein, about 14 g fibre, with 50 g frozen spinach, no oats) plus "Oats add-on, 1/2 cup raw (45 g)" (170 kcal, 5 g). The plain morning shake stays.
 

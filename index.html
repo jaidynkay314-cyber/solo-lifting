@@ -3190,9 +3190,13 @@ const STARTER = [
   ["Friday: lean beef and bean chilli (small)", 250, 29], ["Friday: 3 frittata muffins (small)", 205, 24],
   ["YoPRO yoghurt", 120, 20],
   // v10.5: 250 ml trim, 30 g WPI, 5 g creatine, ice, banana, 1/2 cup frozen berries, 1 tbsp chia, 10 g cocoa, 50 g frozen spinach, no oats (about 14 g fibre)
-  ["Morning shake + berries, chia, cocoa", 445, 44], ["Oats add-on, 1/2 cup raw (45 g)", 170, 5]
+  ["Morning shake + berries, chia, cocoa", 445, 44], ["Oats add-on, 1/2 cup raw (45 g)", 170, 5],
+  // v10.6: single shake ingredients, shown in their own "Shake add-ons" group. Creatine and ice have no calories, so no button.
+  ["Trim milk (250 ml)", 90, 9], ["WPI (30 g scoop)", 110, 27], ["Frozen mixed berries (1/2 cup)", 35, 0.5],
+  ["Chia seeds (1 tbsp, 12 g)", 60, 2], ["Cocoa powder (10 g)", 35, 2], ["Baby spinach (50 g)", 12, 1]
 ].map(([n, k, p], i) => ({ id: "s" + i, n, k, p }));
 /* v10.4: trim milk (250 ml in shakes), wholemeal/wholegrain muffins, brown rice. Retired names stay out of Recent so old values aren't re-used by mistake. */
+const SHAKE_ADD = ["Trim milk (250 ml)", "WPI (30 g scoop)", "Banana", "Frozen mixed berries (1/2 cup)", "Chia seeds (1 tbsp, 12 g)", "Cocoa powder (10 g)", "Baby spinach (50 g)", "Oats add-on, 1/2 cup raw (45 g)"];
 const RETIRED = { "Coffee, splash of milk (60 ml full cream)": "Coffee, splash of milk (60 ml trim)" };
 const n40 = n => String(n).slice(0, 40).toLowerCase(); // logged names are cut to 40 characters
 const starterFor = n => { const r = Object.keys(RETIRED).find(o => n40(o) === n40(n)); return STARTER.find(y => n40(y.n) === n40(r ? RETIRED[r] : n)) || null; };
@@ -3380,7 +3384,8 @@ function renderFood() {
       <div class="ex-actions"><button class="btn" data-act="rcnew">New recipe</button></div></section>`}
     ${mine.length ? `<section class="fsec"><h3>My foods<small>tap to add</small></h3><div class="fchips">${mine.map(x => chip(x, "mine")).join("")}</div></section>` : ""}
     ${recent.length ? `<section class="fsec"><h3>Recent</h3><div class="fchips">${recent.map(x => chip(x, "recent")).join("")}</div></section>` : ""}
-    <section class="fsec"><h3>Meal plan foods<small>from the nutrition plans</small></h3><div class="fchips">${STARTER.map(x => chip(x, "starter")).join("")}</div></section>
+    <section class="fsec"><h3>Shake add-ons<small>on top of a standard shake</small></h3><div class="fchips">${SHAKE_ADD.map(n => STARTER.find(x => x.n === n)).filter(Boolean).map(x => chip(x, "starter")).join("")}</div></section>
+    <section class="fsec"><h3>Meal plan foods<small>from the nutrition plans</small></h3><div class="fchips">${STARTER.filter(x => x.n === "Banana" || !SHAKE_ADD.includes(x.n)).map(x => chip(x, "starter")).join("")}</div></section>
     <section class="fsec"><h3>${FD === todayStr() ? "Today" : fmtDate(FD)}<small>${f.items.length} item${f.items.length === 1 ? "" : "s"}</small></h3>
       ${f.items.length ? `<div class="flog">${f.items.map((x, i) => `<div><span><b>${esc(x.n)}</b><small>${Math.round(x.k * x.q)} kcal · ${Math.round(x.p * x.q * 10) / 10} g${x.q !== 1 ? ` · ${x.q} serves` : ""}</small></span>
         <span class="step"><button class="btn" data-act="fqty" data-i="${i}" data-d="-0.5" aria-label="Less">−</button><b>${x.q}</b><button class="btn" data-act="fqty" data-i="${i}" data-d="0.5" aria-label="More">+</button></span>
